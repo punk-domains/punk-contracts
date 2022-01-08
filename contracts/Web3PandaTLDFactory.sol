@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Web3PandaTLD.sol";
@@ -11,7 +10,7 @@ contract Web3PandaTLDFactory is Ownable {
 
   // STATE
   string[] public tlds; // an array of existing TLD names
-  mapping (string => address) public tldAddressNames; // a mapping of TLDs (string => TLDaddress); if not address(0), it means the TLD has already been created
+  mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress); if not address(0), it means the TLD has already been created
   
   string[] public forbidden; // forbidden TLDs (for example .eth, unstoppable domains, and TLDs that already exist in web2, like .com)
   
@@ -45,7 +44,7 @@ contract Web3PandaTLDFactory is Ownable {
       "The dot must be at the start of the TLD name"
     );
 
-    require(tldAddressNames[_name] == address(0), "TLD with this name already exists");
+    require(tldNamesAddresses[_name] == address(0), "TLD with this name already exists");
     
     _;
    }
@@ -73,8 +72,6 @@ contract Web3PandaTLDFactory is Ownable {
   function getForbiddenTldsArray() public view returns(string[] memory) {
     return forbidden;
   }
-
-  // get TLD from array by index (this is probably auto-created because tlds array is public)
 
   // WRITE
 
@@ -119,7 +116,7 @@ contract Web3PandaTLDFactory is Ownable {
       address(this)
     );
 
-    tldAddressNames[_name] = address(tld); // store TLD name and address into mapping
+    tldNamesAddresses[_name] = address(tld); // store TLD name and address into mapping
     tlds.push(_name); // store TLD name into array
 
     emit TldCreated(msg.sender, _name, address(tld));

@@ -122,7 +122,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
 
     const newPrice = ethers.utils.parseUnits("2", "ether");
 
-    await contract.changePrice(newPrice); // enable buying TLDs
+    await contract.changePrice(newPrice);
 
     const priceAfter = await contract.price();
     expect(priceAfter).to.equal(newPrice);

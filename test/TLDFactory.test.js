@@ -34,6 +34,10 @@ describe("Web3PandaTLDFactory", function () {
         value: tldPrice // pay 1 ETH for the TLD
       }
     )).to.emit(contract, "TldCreated");
+
+    // get TLD from array by index
+    const firstTld = await contract.tlds(0);
+    expect(firstTld).to.equal(".web3");
   });
 
   it("should fail to create a new valid TLD if buying TLDs is disabled", async function () {
