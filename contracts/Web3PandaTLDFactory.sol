@@ -13,13 +13,13 @@ contract Web3PandaTLDFactory is Ownable {
   mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress); if not address(0), it means the TLD has already been created
   mapping (string => bool) public forbidden; // forbidden TLDs (for example .eth, unstoppable domains, and TLDs that already exist in web2, like .com)
   
-  uint public price; // price for creating a new TLD
-  uint public royaltyPercentage; // payment percentage that Web3PandaDAO gets when a new domain is registered (injected in every newly created TLD contract)
+  uint256 public price; // price for creating a new TLD
+  uint256 public royaltyPercentage; // payment percentage that Web3PandaDAO gets when a new domain is registered (injected in every newly created TLD contract)
   bool public buyingEnabled = false; // buying TLDs enabled (true/false)
-  uint public nameMaxLength = 40; // the maximum length of a TLD name
+  uint256 public nameMaxLength = 40; // the maximum length of a TLD name
 
   // EVENTS
-  event TldCreated(address indexed user, string indexed tldName, address indexed tldAddress);
+  event TldCreated(address indexed user, address indexed owner, string indexed tldName, address tldAddress);
 
   // MODIFIERS
   modifier validTldName(string memory _name) {
@@ -48,10 +48,10 @@ contract Web3PandaTLDFactory is Ownable {
     require(tldNamesAddresses[_name] == address(0), "TLD with this name already exists");
     
     _;
-   }
+  }
 
   // CONSTRUCTOR
-  constructor(uint _price) {
+  constructor(uint256 _price) {
     // forbidden TLDs
 
     forbidden[".eth"] = true;
@@ -77,7 +77,7 @@ contract Web3PandaTLDFactory is Ownable {
     string memory _name,
     string memory _symbol,
     address _tldOwner,
-    uint _domainPrice,
+    uint256 _domainPrice,
     bool _buyingEnabled
   ) public payable returns(address) {
     require(buyingEnabled == true, "Buying TLDs is disabled");
@@ -98,7 +98,7 @@ contract Web3PandaTLDFactory is Ownable {
     string memory _name,
     string memory _symbol,
     address _tldOwner,
-    uint _domainPrice,
+    uint256 _domainPrice,
     bool _buyingEnabled
   ) internal validTldName(_name) returns(address) {
 
@@ -116,7 +116,7 @@ contract Web3PandaTLDFactory is Ownable {
     tldNamesAddresses[_name] = address(tld); // store TLD name and address into mapping
     tlds.push(_name); // store TLD name into array
 
-    emit TldCreated(msg.sender, _name, address(tld));
+    emit TldCreated(msg.sender, _tldOwner, _name, address(tld));
 
     return address(tld);
   }
@@ -128,7 +128,7 @@ contract Web3PandaTLDFactory is Ownable {
     string memory _name,
     string memory _symbol,
     address _tldOwner,
-    uint _domainPrice,
+    uint256 _domainPrice,
     bool _buyingEnabled
   ) public onlyOwner returns(address) {
 
@@ -143,7 +143,7 @@ contract Web3PandaTLDFactory is Ownable {
   }
 
   // change the payment amount for a new TLD
-  function changePrice(uint _price) public onlyOwner {
+  function changePrice(uint256 _price) public onlyOwner {
     price = _price;
   }
 
@@ -163,7 +163,7 @@ contract Web3PandaTLDFactory is Ownable {
   }
   
   // change nameMaxLength (max length of a TLD name)
-  function changeNameMaxLength(uint _maxLength) public onlyOwner {
+  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
     nameMaxLength = _maxLength;
   }
 }

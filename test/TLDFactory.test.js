@@ -41,6 +41,10 @@ describe("Web3PandaTLDFactory", function () {
     // get TLD from array by index
     const firstTld = await contract.tlds(0);
     expect(firstTld).to.equal(".web3");
+
+    // get TLD address by name
+    const firstTldAddress = await contract.tldNamesAddresses(".web3");
+    expect(firstTldAddress.startsWith("0x")).to.be.true;
   });
 
   it("should fail to create a new valid TLD if buying TLDs is disabled", async function () {
