@@ -23,6 +23,33 @@ contract Web3PandaTLDFactory is Ownable {
   // EVENTS
   event TldCreated(address indexed user, string indexed tldName, address indexed tldAddress);
 
+  // MODIFIERS
+  modifier validTldName(string memory _name) {
+    require(
+      strings.len(strings.toSlice(_name)) > 1,
+      "The TLD name must be longer than 1 character"
+    );
+
+    require(
+      bytes(_name).length < nameMaxLength,
+      "The TLD name is too long"
+    );
+
+    require(
+      strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1,
+      "There should be exactly one dot in the name"
+    );
+
+    require(
+      strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true,
+      "The dot must be at the start of the TLD name"
+    );
+
+    require(tldAddressNames[_name] == address(0), "TLD with this name already exists");
+    
+    _;
+   }
+
   // CONSTRUCTOR
   constructor(uint _price) {
     // forbidden TLDs
@@ -79,29 +106,7 @@ contract Web3PandaTLDFactory is Ownable {
     address _tldOwner,
     uint _domainPrice,
     bool _buyingEnabled
-  ) internal returns(address) {
-
-    require(
-      strings.len(strings.toSlice(_name)) > 1,
-      "The TLD name must be longer than 1 character"
-    );
-
-    require(
-      bytes(_name).length < nameMaxLength,
-      "The TLD name is too long"
-    );
-
-    require(
-      strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1,
-      "There should be exactly one dot in the name"
-    );
-
-    require(
-      strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true,
-      "The dot must be at the start of the TLD name"
-    );
-
-    require(tldAddressNames[_name] == address(0), "TLD with this name already exists");
+  ) internal validTldName(_name) returns(address) {
 
     // create a new TLD contract
     Web3PandaTLD tld = new Web3PandaTLD(
@@ -144,17 +149,28 @@ contract Web3PandaTLDFactory is Ownable {
   }
 
   // change the payment amount for a new TLD
+  function changePrice(uint _price) public onlyOwner {
+    price = _price;
+  }
 
   // enable/disable buying TLDs (except for the owner)
   function toggleBuyingTlds() public onlyOwner {
     buyingEnabled = !buyingEnabled;
   }
 
-    // add a new TLD to forbidden TLDs
+  // add a new TLD to forbidden TLDs
+  function addForbiddenTld(string memory _name) public onlyOwner validTldName(_name) {
+    forbidden.push(_name);
+  }
 
-    // remove a TLD from forbidden TLDs
-      // array[index] = array[array.length-1]; // replace TLD with the last one added
-      // array.pop(); // delete the last one added
-    
-    // change nameMaxLength (max length of a TLD name)
+  // remove a TLD from forbidden TLDs
+  function removeForbiddenTld(uint _index) public onlyOwner {
+    forbidden[_index] = forbidden[forbidden.length-1]; // replace TLD with the last one added
+    forbidden.pop(); // delete the last item (so that it's not in array twice)
+  }
+  
+  // change nameMaxLength (max length of a TLD name)
+  function changeNameMaxLength(uint _maxLength) public onlyOwner {
+    nameMaxLength = _maxLength;
+  }
 }
