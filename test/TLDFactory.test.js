@@ -13,9 +13,12 @@ describe("Web3PandaTLDFactory", function () {
     contract = await Web3PandaTLDFactory.deploy(tldPrice);
   });
 
-  it("should return 4 forbidden TLD names defined in the constructor", async function () {
-    const forbiddenArray = await contract.getForbiddenTldsArray();
-    expect(forbiddenArray).to.have.members([".com", ".eth", ".org", ".net"]);
+  it("should confirm forbidden TLD names defined in the constructor", async function () {
+    const forbiddenCom = await contract.forbidden(".com");
+    expect(forbiddenCom).to.be.true;
+
+    const forbiddenEth = await contract.forbidden(".eth");
+    expect(forbiddenEth).to.be.true;
   });
 
   it("should create a new valid TLD", async function () {
@@ -212,6 +215,26 @@ describe("Web3PandaTLDFactory", function () {
         value: tldPrice // pay 1 ETH for the TLD
       }
     )).to.be.revertedWith('The TLD name is too long');
+
+  });
+
+  it("should fail to create a new valid TLD if TLD name is forbidden", async function () {
+    await contract.toggleBuyingTlds(); // enable buying TLDs
+
+    const price = await contract.price();
+    expect(price).to.equal(tldPrice);
+
+    // try to create a TLD that's on the forbidden list
+    await expect(contract.createTld(
+      ".com", // TLD
+      "COM", // symbol
+      signer.address, // TLD owner
+      ethers.utils.parseUnits("0.2", "ether"), // domain price
+      false, // buying enabled
+      {
+        value: tldPrice // pay 1 ETH for the TLD
+      }
+    )).to.be.revertedWith('The chosen TLD name is on the forbidden list');
 
   });
 

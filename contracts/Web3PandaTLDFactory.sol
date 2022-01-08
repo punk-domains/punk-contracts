@@ -11,8 +11,7 @@ contract Web3PandaTLDFactory is Ownable {
   // STATE
   string[] public tlds; // an array of existing TLD names
   mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress); if not address(0), it means the TLD has already been created
-  
-  string[] public forbidden; // forbidden TLDs (for example .eth, unstoppable domains, and TLDs that already exist in web2, like .com)
+  mapping (string => bool) public forbidden; // forbidden TLDs (for example .eth, unstoppable domains, and TLDs that already exist in web2, like .com)
   
   uint public price; // price for creating a new TLD
   uint public royaltyPercentage; // payment percentage that Web3PandaDAO gets when a new domain is registered (injected in every newly created TLD contract)
@@ -44,6 +43,8 @@ contract Web3PandaTLDFactory is Ownable {
       "The dot must be at the start of the TLD name"
     );
 
+    require(forbidden[_name] == false, "The chosen TLD name is on the forbidden list");
+
     require(tldNamesAddresses[_name] == address(0), "TLD with this name already exists");
     
     _;
@@ -52,10 +53,11 @@ contract Web3PandaTLDFactory is Ownable {
   // CONSTRUCTOR
   constructor(uint _price) {
     // forbidden TLDs
-    forbidden.push(".eth");
-    forbidden.push(".com");
-    forbidden.push(".org");
-    forbidden.push(".net");
+
+    forbidden[".eth"] = true;
+    forbidden[".com"] = true;
+    forbidden[".org"] = true;
+    forbidden[".net"] = true;
 
     // set TLD price
     price = _price;
@@ -66,11 +68,6 @@ contract Web3PandaTLDFactory is Ownable {
   // get the array of existing TLDs - is this needed?
   function getTldsArray() public view returns(string[] memory) {
     return tlds;
-  }
-
-  // get the array of forbidden TLDs
-  function getForbiddenTldsArray() public view returns(string[] memory) {
-    return forbidden;
   }
 
   // WRITE
@@ -157,13 +154,12 @@ contract Web3PandaTLDFactory is Ownable {
 
   // add a new TLD to forbidden TLDs
   function addForbiddenTld(string memory _name) public onlyOwner validTldName(_name) {
-    forbidden.push(_name);
+    forbidden[_name] = true;
   }
 
   // remove a TLD from forbidden TLDs
-  function removeForbiddenTld(uint _index) public onlyOwner {
-    forbidden[_index] = forbidden[forbidden.length-1]; // replace TLD with the last one added
-    forbidden.pop(); // delete the last item (so that it's not in array twice)
+  function removeForbiddenTld(string memory _name) public onlyOwner {
+    forbidden[_name] = false;
   }
   
   // change nameMaxLength (max length of a TLD name)

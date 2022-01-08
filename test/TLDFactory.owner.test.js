@@ -134,29 +134,33 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
   });
 
   it("should add a new forbidden domain", async function () {
-    const forbiddenArrayBefore = await contract.getForbiddenTldsArray();
-    expect(forbiddenArrayBefore).to.have.members([".com", ".eth", ".org", ".net"]);
+    const tld = ".co";
 
-    await contract.addForbiddenTld(".co");
+    const forbiddenTldBefore = await contract.forbidden(tld);
+    expect(forbiddenTldBefore).to.be.false;
 
-    const forbiddenArrayAfter = await contract.getForbiddenTldsArray();
-    expect(forbiddenArrayAfter).to.have.members([".com", ".eth", ".org", ".net", ".co"]);
+    await contract.addForbiddenTld(tld);
+
+    const forbiddenTldAfter = await contract.forbidden(tld);
+    expect(forbiddenTldAfter).to.be.true;
 
     // fail if sender is not owner
     await expect(contract.connect(nonOwner).addForbiddenTld(".io")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should remove a forbidden domain", async function () {
-    const forbiddenArrayBefore = await contract.getForbiddenTldsArray();
-    expect(forbiddenArrayBefore).to.have.members([".eth", ".com", ".org", ".net"]);
+    const tld = ".eth";
 
-    await contract.removeForbiddenTld(0); // remove .eth from forbidden domains (index = 0)
+    const forbiddenTldBefore = await contract.forbidden(tld);
+    expect(forbiddenTldBefore).to.be.true;
 
-    const forbiddenArrayAfter = await contract.getForbiddenTldsArray();
-    expect(forbiddenArrayAfter).to.have.members([".com", ".org", ".net"]);
+    await contract.removeForbiddenTld(tld);
+
+    const forbiddenTldAfter = await contract.forbidden(tld);
+    expect(forbiddenTldAfter).to.be.false;
 
     // fail if sender is not owner
-    await expect(contract.connect(nonOwner).removeForbiddenTld(0)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(contract.connect(nonOwner).removeForbiddenTld(".net")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change max length for a TLD name", async function () {
