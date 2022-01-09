@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -92,8 +91,8 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // READ
 
-  // get domain holder's address
-  // get domain holder's profile image (NFT address and token ID)
+  // TODO: get domain holder's address
+  // TODO: get domain holder's profile image (NFT address and token ID)
 
   function getFactoryOwner() public view returns(address) {
     Ownable factory = Ownable(factoryAddress);
@@ -101,7 +100,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     return factory.owner();
   }
 
-  // function tokenURI(uint256) public view override returns (string memory)
+  // TODO: function tokenURI(uint256) public view override returns (string memory)
 
   // WRITE
   function editDescription(string memory _domainName, string memory _description) public {

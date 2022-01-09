@@ -1,4 +1,10 @@
-# Web3panda contracts
+# Web3panda Domains core contracts
+
+Web3Panda Domains allow anyone to either create a top-level domain (TLD) such as .web3 or a normal domain such as techie.web3. In addition, users can add some other data to their domain:
+
+- description
+- redirect URL (useful together with the Web3Panda browser extension)
+- profile picture (an address and token ID of an NFT)
 
 See instructions below to run the code on localhost and for blockchain deployment.
 
