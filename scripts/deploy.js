@@ -9,12 +9,14 @@ async function main() {
 
   // deploy contract1
   const contract1 = await ethers.getContractFactory(contractName1);
-  const instance1 = await contract1.deploy();
 
-  console.log("Token address:", instance1.address);
+  const tldPrice = ethers.utils.parseUnits("0.1", "ether");
+  const instance1 = await contract1.deploy(tldPrice);
+
+  console.log("Contract address:", instance1.address);
 
   console.log("Wait a minute and then run this command:");
-  console.log("npx hardhat verify --network " + network.name + " " + instance1.address);
+  console.log("npx hardhat verify --network " + network.name + " " + instance1.address + '"' + tldPrice + '"');
 }
 
 function sleep(ms) {

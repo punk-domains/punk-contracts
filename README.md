@@ -68,5 +68,9 @@ etherscan: {
 Then run this command:
 
 ```bash
-npx hardhat verify --network mumbai <contract-address>
+npx hardhat verify --network mumbai <contract-address> "argument"
 ```
+
+### Verify TLD contracts
+
+Verifying TLD contracts generated through the factory is a bit tricky, but there is a way around the issue. See scripts/deployTld.js for instructions.
