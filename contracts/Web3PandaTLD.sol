@@ -36,6 +36,7 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // EVENTS
   event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
+  event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
   event PfpValidated(address indexed user, address indexed owner, bool valid);
 
   // MODIFIERS
@@ -86,6 +87,23 @@ contract Web3PandaTLD is ERC721, Ownable {
   // function tokenURI(uint256) public view override returns (string memory)
 
   // WRITE
+  function editPfp(string memory _domainName, address _pfpAddress, uint256 _pfpTokenId) public {
+    require(
+      domains[_domainName].holder == msg.sender,
+      "Only domain holder can edit their PFP"
+    );
+
+    ERC721 pfpContract = ERC721(_pfpAddress); // get PFP contract
+
+    require(
+      pfpContract.ownerOf(_pfpTokenId) == msg.sender,
+      "Sender must be the owner of the specified PFP"
+    );
+
+    domains[_domainName].pfpAddress = _pfpAddress;
+    domains[_domainName].pfpTokenId = _pfpTokenId;
+    emit PfpChanged(msg.sender, _pfpAddress, _pfpTokenId);
+  }
 
   function mint(
     string memory _domainName, 
@@ -144,28 +162,40 @@ contract Web3PandaTLD is ERC721, Ownable {
       domains[domainIdsNames[tokenId]].holder = to;
     }
 
-    // call the function that checks if holder of that tokenId owns their chosen pfp
-    // this function runs on minting, too
-    validatePfp(tokenId, to);
+    // check if new owner holds the NFT speicifed in Domain data
+    address pfpAddress = domains[domainIdsNames[tokenId]].pfpAddress;
+
+    if (pfpAddress != address(0)) {
+      uint256 pfpTokenId = domains[domainIdsNames[tokenId]].pfpTokenId;
+
+      ERC721 pfpContract = ERC721(pfpAddress); // get PFP contract
+
+      if (pfpContract.ownerOf(pfpTokenId) != to) {
+        // if user does not own that PFP, delete the PFP address from user's Domain struct 
+        // (PFP token ID can be left alone to save on gas)
+        domains[domainIdsNames[tokenId]].pfpAddress = address(0);
+      }
+    }
   }
 
   // check if holder of a domain (based on domain token ID) still owns their chosen pfp
   // anyone can do this validation for any user
-  function validatePfp(uint256 _tokenId, address _user) public {
+  function validatePfp(uint256 _tokenId) public {
     address pfpAddress = domains[domainIdsNames[_tokenId]].pfpAddress;
+    address holder = domains[domainIdsNames[_tokenId]].holder;
 
     if (pfpAddress != address(0)) {
       uint256 pfpTokenId = domains[domainIdsNames[_tokenId]].pfpTokenId;
 
       ERC721 pfpContract = ERC721(pfpAddress); // get PFP contract
 
-      if (pfpContract.ownerOf(pfpTokenId) != _user) {
+      if (pfpContract.ownerOf(pfpTokenId) != holder) {
         // if user does not own that PFP, delete the PFP address from user's Domain struct 
         // (PFP token ID can be left alone to save on gas)
         domains[domainIdsNames[_tokenId]].pfpAddress = address(0);
-        emit PfpValidated(msg.sender, _user, false);
+        emit PfpValidated(msg.sender, holder, false);
       } else {
-        emit PfpValidated(msg.sender, _user, true); // PFP image is valid
+        emit PfpValidated(msg.sender, holder, true); // PFP image is valid
       }
     }
     
@@ -173,7 +203,7 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // OWNER
 
-  // function: create a new domain for a specified address for free
+  // TODO function: create a new domain for a specified address for free
 
   // change the payment amount for a new domain
   function changePrice(uint256 _price) public onlyOwner {
@@ -192,5 +222,5 @@ contract Web3PandaTLD is ERC721, Ownable {
   
   // FACTORY OWNER (current owner address of Web3PandaTLDFactory)
 
-  // function: change percentage of each domain purchase that goes to Web3Panda DAO
+  // TODO function: change percentage of each domain purchase that goes to Web3Panda DAO
 }
