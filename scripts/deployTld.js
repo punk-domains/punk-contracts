@@ -5,6 +5,7 @@ How to use:
 - First deploy the Factory contract
 - Then in deployTld.js replace the owner and factory addresses with the ones you want
 - Then deploy the Web3PandaTLD contract: npx hardhat run scripts/deployTld.js --network mumbai
+- Go to arguments.js file and enter correct addresses (and other data if changed in deployTld.js)
 - Verify it (see command line for the Verify command). Something like: npx hardhat verify --network mumbai --constructor-args scripts/arguments.js <deployed-contract-address>
 - After successful verification, every TLD contract created through the factory will show contract code. 
 - The Web3PandaTLD contract that you deployed using this script can be ignored (factory does not know about it). It
