@@ -105,21 +105,24 @@ contract Web3PandaTLD is ERC721, Ownable {
     emit PfpChanged(msg.sender, _pfpAddress, _pfpTokenId);
   }
 
+  // TODO: function editDescription
+  // TODO: function editUrl
+
   // mint with mandatory params only
   function mint(
     string memory _domainName, 
-    address _domainOwner
+    address _domainHolder
   ) public payable returns(uint256) {
     require(buyingEnabled == true, "Buying TLDs is disabled");
     require(msg.value >= price, "Value below price");
 
-    return _mintDomain(_domainName, _domainOwner, "", "", address(0), 0);
+    return _mintDomain(_domainName, _domainHolder, "", "", address(0), 0);
   }
 
   // mint with both mandatory and optional params
   function mint(
     string memory _domainName, 
-    address _domainOwner,
+    address _domainHolder,
     string memory _description,
     string memory _url,
     address _pfpAddress,
@@ -128,12 +131,12 @@ contract Web3PandaTLD is ERC721, Ownable {
     require(buyingEnabled == true, "Buying TLDs is disabled");
     require(msg.value >= price, "Value below price");
 
-    return _mintDomain(_domainName, _domainOwner, _description, _url, _pfpAddress, _pfpTokenId);
+    return _mintDomain(_domainName, _domainHolder, _description, _url, _pfpAddress, _pfpTokenId);
   }
 
   function _mintDomain(
     string memory _domainName, 
-    address _domainOwner,
+    address _domainHolder,
     string memory _description,
     string memory _url,
     address _pfpAddress,
@@ -142,7 +145,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     uint256 tokId = totalSupply;
     totalSupply++;
 
-    _safeMint(_domainOwner, tokId);
+    _safeMint(_domainHolder, tokId);
 
     string memory fullDomainName = string(abi.encodePacked(_domainName, name()));
 
@@ -150,7 +153,7 @@ contract Web3PandaTLD is ERC721, Ownable {
 
     newDomain.name = _domainName;
     newDomain.tokenId = tokId;
-    newDomain.holder = _domainOwner;
+    newDomain.holder = _domainHolder;
     newDomain.description = _description;
     newDomain.url = _url;
     newDomain.pfpAddress = _pfpAddress;
@@ -160,11 +163,10 @@ contract Web3PandaTLD is ERC721, Ownable {
     domains[_domainName] = newDomain;
     domainIdsNames[tokId] = _domainName;
     
-    emit DomainCreated(msg.sender, _domainOwner, fullDomainName);
+    emit DomainCreated(msg.sender, _domainHolder, fullDomainName);
 
     return tokId;
   }
-
 
   // check if holder of a domain (based on domain token ID) still owns their chosen pfp
   // anyone can do this validation for any user
@@ -188,7 +190,6 @@ contract Web3PandaTLD is ERC721, Ownable {
     }
     
   }
-
 
   // HOOK
 
@@ -228,9 +229,9 @@ contract Web3PandaTLD is ERC721, Ownable {
   // create a new domain for a specified address for free
   function ownerMintDomain(
     string memory _domainName, 
-    address _domainOwner
+    address _domainHolder
   ) public onlyOwner returns(uint256) {
-    return _mintDomain(_domainName, _domainOwner, "", "", address(0), 0);
+    return _mintDomain(_domainName, _domainHolder, "", "", address(0), 0);
   }
 
   // change the payment amount for a new domain
