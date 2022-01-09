@@ -13,7 +13,7 @@ contract Web3PandaTLD is ERC721, Ownable {
   uint256 public price; // price (how much a user needs to pay for a domain)
   bool public buyingEnabled; // buying domains enabled (true/false)
   address public factoryAddress; // Web3PandaTLDFactory address
-  uint256 public royaltyPercentage; // percentage of each domain purchase that goes to Web3Panda DAO
+  uint256 public royalty; // share of each domain purchase (in bips) that goes to Web3Panda DAO
   uint256 public totalSupply;
   uint256 public nameMaxLength = 140; // the maximum length of a domain name
 
@@ -40,6 +40,15 @@ contract Web3PandaTLD is ERC721, Ownable {
   event PfpValidated(address indexed user, address indexed owner, bool valid);
 
   // MODIFIERS
+  modifier onlyFactoryOwner() {
+    require(
+      getFactoryOwner() == msg.sender,
+      "Sender is not Web3PandaTLDFactory owner"
+    );
+
+    _;
+  }
+
   modifier validName(string memory _name) {
     require(
       strings.len(strings.toSlice(_name)) > 1,
@@ -73,7 +82,7 @@ contract Web3PandaTLD is ERC721, Ownable {
   ) ERC721(_name, _symbol) {
     price = _domainPrice;
     buyingEnabled = _buyingEnabled;
-    royaltyPercentage = _royalty;
+    royalty = _royalty;
     factoryAddress = _factoryAddress;
 
     transferOwnership(_tldOwner);
@@ -83,6 +92,12 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // get domain holder's address
   // get domain holder's profile image (NFT address and token ID)
+
+  function getFactoryOwner() public view returns(address) {
+    Ownable factory = Ownable(factoryAddress);
+
+    return factory.owner();
+  }
 
   // function tokenURI(uint256) public view override returns (string memory)
 
@@ -116,6 +131,8 @@ contract Web3PandaTLD is ERC721, Ownable {
     require(buyingEnabled == true, "Buying TLDs is disabled");
     require(msg.value >= price, "Value below price");
 
+    _sendPayment(msg.value);
+
     return _mintDomain(_domainName, _domainHolder, "", "", address(0), 0);
   }
 
@@ -130,6 +147,8 @@ contract Web3PandaTLD is ERC721, Ownable {
   ) public payable returns(uint256) {
     require(buyingEnabled == true, "Buying TLDs is disabled");
     require(msg.value >= price, "Value below price");
+
+    _sendPayment(msg.value);
 
     return _mintDomain(_domainName, _domainHolder, _description, _url, _pfpAddress, _pfpTokenId);
   }
@@ -166,6 +185,20 @@ contract Web3PandaTLD is ERC721, Ownable {
     emit DomainCreated(msg.sender, _domainHolder, fullDomainName);
 
     return tokId;
+  }
+
+  function _sendPayment(uint256 _paymentAmount) internal {
+    uint256 royaltyAmount;
+
+    if (royalty > 0) {
+      // chip away royalty and send it to factory owner address
+      royaltyAmount = _paymentAmount * royalty / 10000;
+      _paymentAmount -= royaltyAmount;
+      payable(getFactoryOwner()).transfer(royaltyAmount);
+    }
+    
+    // send the rest to the TLD owner address
+    payable(owner()).transfer(_paymentAmount);
   }
 
   // check if holder of a domain (based on domain token ID) still owns their chosen pfp
@@ -251,5 +284,8 @@ contract Web3PandaTLD is ERC721, Ownable {
   
   // FACTORY OWNER (current owner address of Web3PandaTLDFactory)
 
-  // TODO function: change percentage of each domain purchase that goes to Web3Panda DAO
+  // change percentage of each domain purchase that goes to Web3Panda DAO
+  function changeRoyalty(uint256 _royalty) public onlyFactoryOwner {
+    royalty = _royalty;
+  }
 }

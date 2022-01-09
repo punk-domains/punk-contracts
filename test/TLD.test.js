@@ -9,7 +9,7 @@ describe("Web3PandaTLD", function () {
   const domainName = ".web3";
   const domainSymbol = "WEB3";
   const domainPrice = ethers.utils.parseUnits("1", "ether");
-  const domainRoyalty = 0; // royalty in bips
+  const domainRoyalty = 10; // royalty in bips (10 bips is 0.1%)
 
   beforeEach(async function () {
     [signer, anotherUser] = await ethers.getSigners();

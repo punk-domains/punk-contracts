@@ -101,4 +101,19 @@ describe("Web3PandaTLD (onlyOwner)", function () {
     await expect(contract.connect(anotherUser).changeNameMaxLength(70)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
+  it("should change the royalty amount", async function () {
+    const royaltyBefore = await contract.royalty();
+    expect(royaltyBefore).to.equal(0);
+
+    const newRoyalty = 10;
+    
+    await contract.changeRoyalty(newRoyalty);
+
+    const royaltyAfter = await contract.royalty();
+    expect(royaltyAfter).to.equal(10);
+
+    // if user is not owner, the tx should revert
+    await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender is not Web3PandaTLDFactory owner');
+  });
+
 });

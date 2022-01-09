@@ -14,7 +14,7 @@ contract Web3PandaTLDFactory is Ownable {
   mapping (string => bool) public forbidden; // forbidden TLDs (for example .eth, unstoppable domains, and TLDs that already exist in web2, like .com)
   
   uint256 public price; // price for creating a new TLD
-  uint256 public royaltyPercentage; // payment percentage that Web3PandaDAO gets when a new domain is registered (injected in every newly created TLD contract)
+  uint256 public royalty = 0; // payment amount in bips that Web3PandaDAO gets when a new domain is registered (injected in every newly created TLD contract)
   bool public buyingEnabled = false; // buying TLDs enabled (true/false)
   uint256 public nameMaxLength = 40; // the maximum length of a TLD name
 
@@ -109,7 +109,7 @@ contract Web3PandaTLDFactory is Ownable {
       _tldOwner, 
       _domainPrice, 
       _buyingEnabled,
-      royaltyPercentage,
+      royalty,
       address(this)
     );
 
@@ -122,6 +122,26 @@ contract Web3PandaTLDFactory is Ownable {
   }
 
   // OWNER
+
+  // add a new TLD to forbidden TLDs
+  function addForbiddenTld(string memory _name) public onlyOwner validTldName(_name) {
+    forbidden[_name] = true;
+  }
+
+  // change nameMaxLength (max length of a TLD name)
+  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
+    nameMaxLength = _maxLength;
+  }
+
+  // change the payment amount for a new TLD
+  function changePrice(uint256 _price) public onlyOwner {
+    price = _price;
+  }
+    
+  // change nameMaxLength (max length of a TLD name)
+  function changeRoyalty(uint256 _royalty) public onlyOwner {
+    royalty = _royalty;
+  }
 
   // create a new TLD for a specified address for free (only owner)
   function ownerCreateTld(
@@ -142,28 +162,13 @@ contract Web3PandaTLDFactory is Ownable {
 
   }
 
-  // change the payment amount for a new TLD
-  function changePrice(uint256 _price) public onlyOwner {
-    price = _price;
+  // remove a TLD from forbidden TLDs
+  function removeForbiddenTld(string memory _name) public onlyOwner {
+    forbidden[_name] = false;
   }
 
   // enable/disable buying TLDs (except for the owner)
   function toggleBuyingTlds() public onlyOwner {
     buyingEnabled = !buyingEnabled;
-  }
-
-  // add a new TLD to forbidden TLDs
-  function addForbiddenTld(string memory _name) public onlyOwner validTldName(_name) {
-    forbidden[_name] = true;
-  }
-
-  // remove a TLD from forbidden TLDs
-  function removeForbiddenTld(string memory _name) public onlyOwner {
-    forbidden[_name] = false;
-  }
-  
-  // change nameMaxLength (max length of a TLD name)
-  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
-    nameMaxLength = _maxLength;
   }
 }
