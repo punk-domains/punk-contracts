@@ -210,4 +210,86 @@ describe("Web3PandaTLD", function () {
     expect(firstDomainDataAfter.pfpTokenId).to.equal(0);
 
   });
+
+  it("should change domain description", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    const newDomainName = "techie";
+
+    // mint domain
+    await expect(contract["mint(string,address)"](
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.emit(contract, "DomainCreated");
+
+    // get domain data by domain name (before)
+    const firstDomainDataBefore = await contract.domains(newDomainName);
+    expect(firstDomainDataBefore.description).to.equal("");
+
+    const newDescription = "This is my new description";
+
+    // set new description
+    await expect(contract.editDescription(
+      newDomainName, // domain name (without TLD)
+      newDescription
+    )).to.emit(contract, "DescriptionChanged");
+
+    // get domain data by domain name (after)
+    const firstDomainDataAfter = await contract.domains(newDomainName);
+    expect(firstDomainDataAfter.description).to.equal(newDescription);
+
+    // fail at changing description if msg.sender is not domain holder
+    await expect(contract.connect(anotherUser).editDescription(
+      newDomainName, // domain name (without TLD)
+      "No change"
+    )).to.be.revertedWith('Only domain holder can edit their description');
+
+  });
+
+  it("should change domain URL", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    const newDomainName = "techie";
+
+    // mint domain
+    await expect(contract["mint(string,address)"](
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.emit(contract, "DomainCreated");
+
+    // get domain data by domain name (before)
+    const firstDomainDataBefore = await contract.domains(newDomainName);
+    expect(firstDomainDataBefore.url).to.equal("");
+
+    const newUrl = "https://ethereum.org";
+
+    // set new URL
+    await expect(contract.editUrl(
+      newDomainName, // domain name (without TLD)
+      newUrl
+    )).to.emit(contract, "UrlChanged");
+
+    // get domain data by domain name (after)
+    const firstDomainDataAfter = await contract.domains(newDomainName);
+    expect(firstDomainDataAfter.url).to.equal(newUrl);
+
+    // fail at changing url if msg.sender is not domain holder
+    await expect(contract.connect(anotherUser).editUrl(
+      newDomainName, // domain name (without TLD)
+      "https://facebook.com"
+    )).to.be.revertedWith('Only domain holder can edit their URL');
+
+  });
 });

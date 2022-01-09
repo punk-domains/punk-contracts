@@ -36,6 +36,8 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // EVENTS
   event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
+  event DescriptionChanged(address indexed user, string description);
+  event UrlChanged(address indexed user, string url);
   event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
   event PfpValidated(address indexed user, address indexed owner, bool valid);
 
@@ -102,6 +104,17 @@ contract Web3PandaTLD is ERC721, Ownable {
   // function tokenURI(uint256) public view override returns (string memory)
 
   // WRITE
+  function editDescription(string memory _domainName, string memory _description) public {
+    require(
+      domains[_domainName].holder == msg.sender,
+      "Only domain holder can edit their description"
+    );
+
+    domains[_domainName].description = _description;
+
+    emit DescriptionChanged(msg.sender, _description);
+  }
+
   function editPfp(string memory _domainName, address _pfpAddress, uint256 _pfpTokenId) public {
     require(
       domains[_domainName].holder == msg.sender,
@@ -120,8 +133,16 @@ contract Web3PandaTLD is ERC721, Ownable {
     emit PfpChanged(msg.sender, _pfpAddress, _pfpTokenId);
   }
 
-  // TODO: function editDescription
-  // TODO: function editUrl
+  function editUrl(string memory _domainName, string memory _url) public {
+    require(
+      domains[_domainName].holder == msg.sender,
+      "Only domain holder can edit their URL"
+    );
+
+    domains[_domainName].url = _url;
+
+    emit UrlChanged(msg.sender, _url);
+  }
 
   // mint with mandatory params only
   function mint(
@@ -284,8 +305,8 @@ contract Web3PandaTLD is ERC721, Ownable {
   
   // FACTORY OWNER (current owner address of Web3PandaTLDFactory)
 
-  // change percentage of each domain purchase that goes to Web3Panda DAO
+  // change the share of each domain purchase that goes to Web3Panda DAO
   function changeRoyalty(uint256 _royalty) public onlyFactoryOwner {
-    royalty = _royalty;
+    royalty = _royalty; // royalty is in bips
   }
 }
