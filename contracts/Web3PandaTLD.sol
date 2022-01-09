@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "base64-sol/base64.sol";
 
 contract Web3PandaTLD is ERC721, Ownable {
   using strings for string;
@@ -91,8 +92,27 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // READ
 
-  // TODO: get domain holder's address
-  // TODO: get domain holder's profile image (NFT address and token ID)
+  // Note that you can get all Domain data by calling domains(domainName)
+
+  function getDomainDescription(string memory _domainName) public view returns(string memory) {
+    return domains[_domainName].description;
+  }
+
+  function getDomainHolder(string memory _domainName) public view returns(address) {
+    return domains[_domainName].holder;
+  }
+
+  function getDomainPfpAddress(string memory _domainName) public view returns(address) {
+    return domains[_domainName].pfpAddress;
+  }
+
+  function getDomainPfpTokenId(string memory _domainName) public view returns(uint256) {
+    return domains[_domainName].pfpTokenId;
+  }
+
+  function getDomainUrl(string memory _domainName) public view returns(string memory) {
+    return domains[_domainName].url;
+  }
 
   function getFactoryOwner() public view returns(address) {
     Ownable factory = Ownable(factoryAddress);
@@ -100,7 +120,42 @@ contract Web3PandaTLD is ERC721, Ownable {
     return factory.owner();
   }
 
-  // TODO: function tokenURI(uint256) public view override returns (string memory)
+  function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+    string memory domainName = domains[domainIdsNames[_tokenId]].name;
+    string memory description = domains[domainIdsNames[_tokenId]].description;
+
+    string memory fullDomainName = string(abi.encodePacked(domainName, name()));
+
+    return string(
+      abi.encodePacked(
+        "data:application/json;base64,",
+        Base64.encode(
+          bytes(
+            abi.encodePacked(
+              '{"name":"', fullDomainName, '", ',
+              '"description": "', description, '", ',
+              '"image": "', _getImage(fullDomainName), '"}'
+            )
+          )
+        )
+      )
+    );
+  }
+
+  function _getImage(string memory _fullDomainName) internal pure returns (string memory) {
+    string memory baseURL = "data:image/svg+xml;base64,";
+
+    string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">',
+        '<text style="white-space: pre; fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 41.1px;" x="138.221" y="263.804">',
+        _fullDomainName,
+        '</text>',
+        '<text style="white-space: pre; fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 25.6px;" x="162.163" y="441.07">web3panda.org</text>',
+      '</svg>'
+    ))));
+
+    return string(abi.encodePacked(baseURL,svgBase64Encoded));
+  }
 
   // WRITE
   function editDescription(string memory _domainName, string memory _description) public {
