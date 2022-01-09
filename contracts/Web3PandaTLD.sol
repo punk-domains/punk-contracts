@@ -105,25 +105,39 @@ contract Web3PandaTLD is ERC721, Ownable {
     emit PfpChanged(msg.sender, _pfpAddress, _pfpTokenId);
   }
 
+  // mint with mandatory params only
   function mint(
     string memory _domainName, 
     address _domainOwner
-    // TODO: description
-    // TODO: url
-    // TODO: pfp
   ) public payable {
     require(buyingEnabled == true, "Buying TLDs is disabled");
     require(msg.value >= price, "Value below price");
 
-    _mintDomain(_domainName, _domainOwner);
+    _mintDomain(_domainName, _domainOwner, "", "", address(0), 0);
+  }
+
+  // mint with both mandatory and optional params
+  function mint(
+    string memory _domainName, 
+    address _domainOwner,
+    string memory _description,
+    string memory _url,
+    address _pfpAddress,
+    uint256 _pfpTokenId
+  ) public payable {
+    require(buyingEnabled == true, "Buying TLDs is disabled");
+    require(msg.value >= price, "Value below price");
+
+    _mintDomain(_domainName, _domainOwner, _description, _url, _pfpAddress, _pfpTokenId);
   }
 
   function _mintDomain(
     string memory _domainName, 
-    address _domainOwner
-    // TODO: description
-    // TODO: url
-    // TODO: pfp
+    address _domainOwner,
+    string memory _description,
+    string memory _url,
+    address _pfpAddress,
+    uint256 _pfpTokenId
   ) internal validName(_domainName) {
     uint tokId = totalSupply;
     totalSupply++;
@@ -137,8 +151,10 @@ contract Web3PandaTLD is ERC721, Ownable {
     newDomain.name = _domainName;
     newDomain.tokenId = tokId;
     newDomain.holder = _domainOwner;
-
-    // TODO: description, url, pfp
+    newDomain.description = _description;
+    newDomain.url = _url;
+    newDomain.pfpAddress = _pfpAddress;
+    newDomain.pfpTokenId = _pfpTokenId;
 
     // add to both mappings
     domains[_domainName] = newDomain;

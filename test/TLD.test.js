@@ -42,7 +42,9 @@ describe("Web3PandaTLD", function () {
 
     const newDomainName = "techie";
 
-    await expect(contract.mint(
+    // mint a new valid domain
+    // note that mint() needs to be called this way ("mint(string,address)") due to function overloading
+    await expect(contract["mint(string,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
       {
@@ -66,7 +68,7 @@ describe("Web3PandaTLD", function () {
     const newDomainName = "techie";
     const tokenId = 0;
 
-    await expect(contract.mint(
+    await expect(contract["mint(string,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
       {
@@ -125,7 +127,7 @@ describe("Web3PandaTLD", function () {
     const newDomainName = "techie";
 
     // mint domain
-    await expect(contract.mint(
+    await expect(contract["mint(string,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
       {
@@ -175,7 +177,7 @@ describe("Web3PandaTLD", function () {
     const newDomainName = "techie";
 
     // mint domain
-    await expect(contract.mint(
+    await expect(contract["mint(string,address)"](
       newDomainName, // domain name (without TLD)
       anotherUser.address, // domain owner (another user!!!)
       {
