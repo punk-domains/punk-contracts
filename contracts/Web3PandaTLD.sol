@@ -33,9 +33,11 @@ contract Web3PandaTLD is ERC721, Ownable {
   
   mapping (string => Domain) public domains; // mapping (domain name => Domain struct)
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
+  mapping (address => string) public defaultNames; // mapping (holder address => default domain), in case user has multiple domain names
 
   // EVENTS
   event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
+  event DefaultDomainChanged(address indexed user, string defaultDomain);
   event DescriptionChanged(address indexed user, string description);
   event UrlChanged(address indexed user, string url);
   event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
@@ -92,8 +94,7 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // READ
 
-  // Note that you can get all Domain data by calling domains(domainName)
-
+  // Domain getters - you can also get all Domain data by calling the auto-generated domains(domainName) method
   function getDomainDescription(string memory _domainName) public view returns(string memory) {
     return domains[_domainName].description;
   }
@@ -103,7 +104,16 @@ contract Web3PandaTLD is ERC721, Ownable {
   }
 
   function getDomainPfpAddress(string memory _domainName) public view returns(address) {
-    return domains[_domainName].pfpAddress;
+    ERC721 pfpContract = ERC721(domains[_domainName].pfpAddress); // get PFP contract
+
+    // if domain holder really owns that NFT, return the NFT address
+    if (pfpContract.ownerOf(domains[_domainName].pfpTokenId) == domains[_domainName].holder) {
+      return domains[_domainName].pfpAddress;
+    } else {
+      // otherwise return 0x0 address
+      return address(0);
+    }
+    
   }
 
   function getDomainPfpTokenId(string memory _domainName) public view returns(uint256) {
@@ -158,6 +168,17 @@ contract Web3PandaTLD is ERC721, Ownable {
   }
 
   // WRITE
+  function editDefaultDomain(string memory _domainName) public {
+    require(
+      domains[_domainName].holder == msg.sender,
+      "You can only set default domain to the domain you own"
+    );
+
+    defaultNames[msg.sender] = _domainName;
+
+    emit DefaultDomainChanged(msg.sender, _domainName);
+  }
+
   function editDescription(string memory _domainName, string memory _description) public {
     require(
       domains[_domainName].holder == msg.sender,
@@ -245,17 +266,35 @@ contract Web3PandaTLD is ERC721, Ownable {
 
     Domain memory newDomain;
 
+    // validate if domain holder really owns the specified PFP
+    if (_pfpAddress != address(0)) {
+      ERC721 pfpContract = ERC721(_pfpAddress); // get PFP contract
+
+      require(
+        pfpContract.ownerOf(_pfpTokenId) == _domainHolder,
+        "Domain holder must be the owner of the specified PFP"
+      );
+
+      // store PFP data in Domain struct
+      newDomain.pfpAddress = _pfpAddress;
+      newDomain.pfpTokenId = _pfpTokenId;
+    }
+    
+    // store data in Domain struct
     newDomain.name = _domainName;
     newDomain.tokenId = tokId;
     newDomain.holder = _domainHolder;
     newDomain.description = _description;
     newDomain.url = _url;
-    newDomain.pfpAddress = _pfpAddress;
-    newDomain.pfpTokenId = _pfpTokenId;
 
     // add to both mappings
     domains[_domainName] = newDomain;
     domainIdsNames[tokId] = _domainName;
+
+    // if default domain name is not set for that holder, set it now
+    if (bytes(defaultNames[_domainHolder]).length == 0) {
+      defaultNames[_domainHolder] = _domainName;
+    }
     
     emit DomainCreated(msg.sender, _domainHolder, fullDomainName);
 
@@ -301,10 +340,7 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // HOOK
 
-  /**
-    * @dev Hook that is called before any token transfer. This includes minting
-    * and burning.
-    */
+  //@dev Hook that is called before any token transfer. This includes minting and burning.
   function _beforeTokenTransfer(
     address from,
     address to,
@@ -314,20 +350,33 @@ contract Web3PandaTLD is ERC721, Ownable {
     if (from != address(0)) { // this runs on every transfer but not on mint
       // change holder address in struct data (URL and description stay the same)
       domains[domainIdsNames[tokenId]].holder = to;
-    }
 
-    // check if new owner holds the NFT speicifed in Domain data
-    address pfpAddress = domains[domainIdsNames[tokenId]].pfpAddress;
+      string memory domainName = domains[domainIdsNames[tokenId]].name;
+      string memory fromDefaultName = defaultNames[from];
 
-    if (pfpAddress != address(0)) {
-      uint256 pfpTokenId = domains[domainIdsNames[tokenId]].pfpTokenId;
+      // if default domain name is not set for that holder, set it now
+      if (bytes(defaultNames[to]).length == 0) {
+        defaultNames[to] = domainName;
+      }
 
-      ERC721 pfpContract = ERC721(pfpAddress); // get PFP contract
+      // if previous owner had this domain name as default, unset it as default
+      if (strings.equals(strings.toSlice(domainName), strings.toSlice(fromDefaultName))) {
+        defaultNames[from] = "";
+      }
 
-      if (pfpContract.ownerOf(pfpTokenId) != to) {
-        // if user does not own that PFP, delete the PFP address from user's Domain struct 
-        // (PFP token ID can be left alone to save on gas)
-        domains[domainIdsNames[tokenId]].pfpAddress = address(0);
+      // validate if new owner holds the NFT speicifed in Domain data
+      address pfpAddress = domains[domainIdsNames[tokenId]].pfpAddress;
+
+      if (pfpAddress != address(0)) {
+        uint256 pfpTokenId = domains[domainIdsNames[tokenId]].pfpTokenId;
+
+        ERC721 pfpContract = ERC721(pfpAddress); // get PFP contract
+
+        if (pfpContract.ownerOf(pfpTokenId) != to) {
+          // if user does not own that PFP, delete the PFP address from user's Domain struct 
+          // (PFP token ID can be left alone to save on gas)
+          domains[domainIdsNames[tokenId]].pfpAddress = address(0);
+        }
       }
     }
   }
