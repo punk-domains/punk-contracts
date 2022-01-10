@@ -1,5 +1,21 @@
 const { expect } = require("chai");
 
+function calculateGasCosts(receipt) {
+  console.log("mint gasUsed: " + receipt.gasUsed);
+
+  // coin prices in USD
+  const matic = 2;
+  const eth = 3000;
+  
+  const gasCostMatic = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("35", "gwei")) * Number(receipt.gasUsed)), "ether");
+  const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("100", "gwei")) * Number(receipt.gasUsed)), "ether");
+  const gasCostArbitrum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("1.47", "gwei")) * Number(receipt.gasUsed)), "ether");
+
+  console.log("transferFrom gas cost (Ethereum): $" + String(Number(gasCostEthereum)*eth));
+  console.log("transferFrom gas cost (Arbitrum): $" + String(Number(gasCostArbitrum)*eth));
+  console.log("transferFrom gas cost (Polygon): $" + String(Number(gasCostMatic)*matic));
+}
+
 describe("Web3PandaTLD", function () {
   let contract;
   let factoryContract;
@@ -44,13 +60,35 @@ describe("Web3PandaTLD", function () {
 
     // mint a new valid domain
     // note that mint() needs to be called this way ("mint(string,address)") due to function overloading
-    await expect(contract["mint(string,address)"](
+
+    /*
+    const tx = await expect(contract["mint(string,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
       {
         value: domainPrice // pay  for the domain
       }
     )).to.emit(contract, "DomainCreated");
+    */
+
+    const tx = await contract["mint(string,address)"]( // this approach is better for getting gasUsed value from receipt
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts(receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("DomainCreated");
 
     // get domain name by token ID
     const firstDomainName = await contract.domainIdsNames(0);
@@ -101,11 +139,30 @@ describe("Web3PandaTLD", function () {
     expect(firstDomainDataBefore.pfpAddress).to.equal(pandaContract.address);
 
     // transfer domain from signer to another user
+    /*
     await expect(contract.transferFrom(
       signer.address, // from
       anotherUser.address, // to
       tokenId // token ID
     )).to.emit(contract, "Transfer");
+    */
+
+    const tx = await contract.transferFrom( // this approach is better for getting gasUsed value from receipt
+      signer.address, // from
+      anotherUser.address, // to
+      tokenId // token ID
+    );
+
+    const receipt = await tx.wait()
+
+    calculateGasCosts(receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("Transfer");
 
     // get owner
     const domainOwnerAfter = await contract.ownerOf(tokenId);
