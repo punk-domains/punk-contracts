@@ -41,7 +41,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('There should be exactly one dot in the name');
+    )).to.be.revertedWith('Name must have 1 dot');
   });
 
   it("should fail to create a new valid TLD if no dot in the name", async function () {
@@ -51,7 +51,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('There should be exactly one dot in the name');
+    )).to.be.revertedWith('Name must have 1 dot');
   });
 
   it("should fail to create a new valid TLD if name does not start with dot", async function () {
@@ -61,7 +61,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('The dot must be at the start of the TLD name');
+    )).to.be.revertedWith('Name must start with dot');
   });
 
   it("should fail to create a new valid TLD if name is of length 1", async function () {
@@ -71,7 +71,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('The TLD name must be longer than 1 character');
+    )).to.be.revertedWith('TLD too short');
   });
 
   it("should fail to create a new valid TLD with empty name", async function () {
@@ -81,10 +81,10 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('The TLD name must be longer than 1 character');
+    )).to.be.revertedWith('TLD too short');
   });
 
-  it("should fail to create a new valid TLD if TLD with this name already exists", async function () {
+  it("should fail to create a new valid TLD if TLD already exists", async function () {
     // create a valid TLD
     await expect(contract.ownerCreateTld(
       ".web3", // TLD
@@ -101,7 +101,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('TLD with this name already exists');
+    )).to.be.revertedWith('TLD already exists');
   });
 
   it("should fail to create a new valid TLD if TLD name is too long", async function () {
@@ -112,7 +112,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('The TLD name is too long');
+    )).to.be.revertedWith('TLD too long');
 
   });
 

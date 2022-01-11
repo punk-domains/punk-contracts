@@ -47,7 +47,7 @@ describe("Web3PandaTLDFactory", function () {
     expect(firstTldAddress.startsWith("0x")).to.be.true;
   });
 
-  it("should fail to create a new valid TLD if buying TLDs is disabled", async function () {
+  it("should fail to create a new valid TLD if Buying TLDs disabled", async function () {
     const price = await contract.price();
     expect(price).to.equal(tldPrice);
 
@@ -60,7 +60,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('Buying TLDs is disabled');
+    )).to.be.revertedWith('Buying TLDs disabled');
   });
 
   it("should fail to create a new valid TLD if payment is too low", async function () {
@@ -96,7 +96,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('There should be exactly one dot in the name');
+    )).to.be.revertedWith('Name must have 1 dot');
   });
 
   it("should fail to create a new valid TLD if no dot in the name", async function () {
@@ -114,7 +114,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('There should be exactly one dot in the name');
+    )).to.be.revertedWith('Name must have 1 dot');
   });
 
   it("should fail to create a new valid TLD if name does not start with dot", async function () {
@@ -132,7 +132,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('The dot must be at the start of the TLD name');
+    )).to.be.revertedWith('Name must start with dot');
   });
 
   it("should fail to create a new valid TLD if name is of length 1", async function () {
@@ -150,7 +150,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('The TLD name must be longer than 1 character');
+    )).to.be.revertedWith('TLD too short');
   });
 
   it("should fail to create a new valid TLD with empty name", async function () {
@@ -168,10 +168,10 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('The TLD name must be longer than 1 character');
+    )).to.be.revertedWith('TLD too short');
   });
 
-  it("should fail to create a new valid TLD if TLD with this name already exists", async function () {
+  it("should fail to create a new valid TLD if TLD already exists", async function () {
     await contract.toggleBuyingTlds(); // enable buying TLDs
 
     const price = await contract.price();
@@ -199,7 +199,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('TLD with this name already exists');
+    )).to.be.revertedWith('TLD already exists');
   });
 
   it("should fail to create a new valid TLD if TLD name is too long", async function () {
@@ -218,7 +218,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('The TLD name is too long');
+    )).to.be.revertedWith('TLD too long');
 
   });
 
@@ -238,7 +238,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('The chosen TLD name is on the forbidden list');
+    )).to.be.revertedWith('Forbidden TLD');
 
   });
 

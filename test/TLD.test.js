@@ -331,7 +331,7 @@ describe("Web3PandaTLD", function () {
       {
         value: domainPrice // pay  for the domain
       }
-    )).to.be.revertedWith('Domain holder must be the owner of the specified PFP');
+    )).to.be.revertedWith('Domain holder not owner of the PFP');
 
     // get default name (after)
     const defaultNameAfter = await contract.defaultNames(anotherUser.address);
@@ -373,7 +373,7 @@ describe("Web3PandaTLD", function () {
       newDomainName, // domain name (without TLD)
       pandaContract.address, // PFP address
       0 // PFP token ID (note that this tokenId is owned by signer, not by anotherUser)
-    )).to.be.revertedWith('Sender must be the owner of the specified PFP');
+    )).to.be.revertedWith('Sender not PFP owner');
 
     // get domain data by domain name (after)
     const firstDomainDataAfter = await contract.domains(newDomainName);
@@ -428,7 +428,7 @@ describe("Web3PandaTLD", function () {
     // fail at changing default domain if msg.sender is not domain holder
     await expect(contract.connect(anotherUser).editDefaultDomain(
       newDomainName // trying to change back to techie (but msg.sender is not domain holder)
-    )).to.be.revertedWith('You can only set default domain to the domain you own');
+    )).to.be.revertedWith('You do not own the selected domain');
 
   });
 
@@ -510,7 +510,7 @@ describe("Web3PandaTLD", function () {
     await expect(contract.connect(anotherUser).editUrl(
       newDomainName, // domain name (without TLD)
       "https://facebook.com"
-    )).to.be.revertedWith('Only domain holder can edit their URL');
+    )).to.be.revertedWith('Not domain holder');
 
   });
 });

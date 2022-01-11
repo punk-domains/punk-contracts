@@ -113,7 +113,7 @@ describe("Web3PandaTLD (onlyOwner)", function () {
     expect(royaltyAfter).to.equal(10);
 
     // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender is not Web3PandaTLDFactory owner');
+    await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender not factory owner');
   });
 
 });
