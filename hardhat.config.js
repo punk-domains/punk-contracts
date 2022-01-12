@@ -8,11 +8,6 @@ require('dotenv').config();
 module.exports = {
   defaultNetwork: 'hardhat',
 
-  etherscan: {
-    apiKey: process.env.POLYGONSCAN_API_KEY
-    //apiKey: process.env.ETHERSCAN_API_KEY
-  },
-
   networks: {
     localhost: {
       url: 'http://127.0.0.1:8545/',
@@ -28,12 +23,19 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
     },
-    mumbai: {
+    polygonMumbai: {
       url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,
       chainId: 80001,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
+    }
+  },
+
+  etherscan: {
+    apiKey: {
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY,
+      ropsten: process.env.ETHERSCAN_API_KEY
     }
   },
 

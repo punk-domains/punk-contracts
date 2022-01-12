@@ -51,17 +51,19 @@ npx hardhat run scripts/deploy.js --network localhost
 ### Deploy to Mumbai testnet
 
 ```bash
-npx hardhat run scripts/deploy.js --network mumbai
+npx hardhat run scripts/deploy.js --network polygonMumbai
 ```
 
 ### Verify contract on Etherscan/Polygonscan:
 
-First make sure to have the correct key uncommented (Polygonscan for Mumbai or Etherscan for Ropsten):
+Make sure to enter correct network names ([see here](https://hardhat.org/plugins/nomiclabs-hardhat-etherscan.html#multiple-api-keys-and-alternative-block-explorers)):
 
 ```bash
 etherscan: {
-  apiKey: process.env.POLYGONSCAN_API_KEY
-  //apiKey: process.env.ETHERSCAN_API_KEY
+  apiKey: {
+    polygonMumbai: process.env.POLYGONSCAN_API_KEY,
+    ropsten: process.env.ETHERSCAN_API_KEY
+  }
 },
 ```
 
