@@ -21,16 +21,6 @@ contract Web3PandaTLDFactory is Ownable {
 
   event TldCreated(address indexed user, address indexed owner, string indexed tldName, address tldAddress);
 
-  modifier validTldName(string memory _name) {
-    require(strings.len(strings.toSlice(_name)) > 1,"TLD too short");
-    require(bytes(_name).length < nameMaxLength,"TLD too long");
-    require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1,"Name must have 1 dot");
-    require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true,"Name must start with dot");
-    require(forbidden[_name] == false, "Forbidden TLD");
-    require(tldNamesAddresses[_name] == address(0), "TLD already exists");
-    _;
-  }
-
   constructor(uint256 _price) {
     forbidden[".eth"] = true;
     forbidden[".com"] = true;
@@ -42,6 +32,16 @@ contract Web3PandaTLDFactory is Ownable {
   // READ
   function getTldsArray() public view returns(string[] memory) {
     return tlds;
+  }
+
+  function _validTldName(string memory _name) view internal {
+    // ex-modifier turned into internal function to optimize contract size
+    require(strings.len(strings.toSlice(_name)) > 1,"TLD too short");
+    require(bytes(_name).length < nameMaxLength,"TLD too long");
+    require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1,"Name must have 1 dot");
+    require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true,"Name must start with dot");
+    require(forbidden[_name] == false, "Forbidden TLD");
+    require(tldNamesAddresses[_name] == address(0), "TLD already exists");
   }
 
   // WRITE
@@ -56,6 +56,8 @@ contract Web3PandaTLDFactory is Ownable {
   ) public payable returns(address) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
+
+    payable(owner()).transfer(address(this).balance);
 
     return _createTld(
       _name, 
@@ -74,7 +76,9 @@ contract Web3PandaTLDFactory is Ownable {
     address _tldOwner,
     uint256 _domainPrice,
     bool _buyingEnabled
-  ) internal validTldName(_name) returns(address) {
+  ) internal returns(address) {
+    _validTldName(_name);
+
     Web3PandaTLD tld = new Web3PandaTLD(
       _name, 
       _symbol, 
@@ -94,7 +98,8 @@ contract Web3PandaTLDFactory is Ownable {
   }
 
   // OWNER
-  function addForbiddenTld(string memory _name) public onlyOwner validTldName(_name) {
+  function addForbiddenTld(string memory _name) public onlyOwner {
+    _validTldName(_name);
     forbidden[_name] = true;
   }
 
@@ -140,4 +145,5 @@ contract Web3PandaTLDFactory is Ownable {
   function toggleBuyingTlds() public onlyOwner {
     buyingEnabled = !buyingEnabled;
   }
+
 }

@@ -39,14 +39,6 @@ contract Web3PandaTLD is ERC721, Ownable {
   event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
   event PfpValidated(address indexed user, address indexed owner, bool valid);
 
-  modifier validName(string memory _name) {
-    require(strings.len(strings.toSlice(_name)) > 1,"Domain must be longer than 1 char");
-    require(bytes(_name).length < nameMaxLength,"Domain name is too long");
-    require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 0,"There should be no dots in the name");
-    require(domains[_name].holder == address(0), "Domain with this name already exists");
-    _;
-  }
-
   constructor(
     string memory _name,
     string memory _symbol,
@@ -85,6 +77,10 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   function getDomainPfpTokenId(string memory _domainName) public view returns(uint256) {
     return domains[_domainName].pfpTokenId;
+  }
+
+  function getDomainDescription(string memory _domainName) public view returns(string memory) {
+    return domains[_domainName].description;
   }
 
   function getDomainUrl(string memory _domainName) public view returns(string memory) {
@@ -189,7 +185,12 @@ contract Web3PandaTLD is ERC721, Ownable {
     string memory _url,
     address _pfpAddress,
     uint256 _pfpTokenId
-  ) internal validName(_domainName) returns(uint256) {
+  ) internal returns(uint256) {
+    require(strings.len(strings.toSlice(_domainName)) > 1,"Domain must be longer than 1 char");
+    require(bytes(_domainName).length < nameMaxLength,"Domain name is too long");
+    require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0,"There should be no dots in the name");
+    require(domains[_domainName].holder == address(0), "Domain with this name already exists");
+
     _safeMint(_domainHolder, totalSupply);
 
     Domain memory newDomain;
@@ -227,12 +228,10 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   function _sendPayment(uint256 _paymentAmount) internal {
     if (royalty > 0) {
-      uint256 royaltyAmount = _paymentAmount * royalty / 10000;
-      _paymentAmount -= royaltyAmount;
-      payable(getFactoryOwner()).transfer(royaltyAmount);
+      payable(getFactoryOwner()).transfer((_paymentAmount * royalty) / 10000); // royalty for factory owner
     }
     
-    payable(owner()).transfer(_paymentAmount);
+    payable(owner()).transfer(address(this).balance); // send the rest to TLD owner
   }
 
   // check if holder of a domain (based on domain token ID) still owns their chosen pfp (anyone can do this validation for any user)
