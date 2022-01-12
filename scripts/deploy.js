@@ -16,7 +16,7 @@ async function main() {
   console.log("Contract address:", instance1.address);
 
   console.log("Wait a minute and then run this command:");
-  console.log("npx hardhat verify --network " + network.name + " " + instance1.address + '"' + tldPrice + '"');
+  console.log("npx hardhat verify --network " + network.name + " " + instance1.address + '" ' + tldPrice + '"');
 }
 
 function sleep(ms) {

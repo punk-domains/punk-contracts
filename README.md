@@ -48,10 +48,14 @@ In a separate terminal tab then run the following command:
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
-### Deploy to Mumbai testnet
+### Deploy to testnets
 
 ```bash
 npx hardhat run scripts/deploy.js --network polygonMumbai
+```
+
+```bash
+npx hardhat run scripts/deploy.js --network ropsten
 ```
 
 ### Verify contract on Etherscan/Polygonscan:
