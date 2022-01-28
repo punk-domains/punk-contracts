@@ -135,7 +135,7 @@ describe("Web3PandaTLD", function () {
     const tx = await contract["mint(string,address,string,string,address,uint256)"]( // this approach is better for getting gasUsed value from receipt
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
-      "My domain description",
+      "{'description': 'my domain description'}",
       "http://etherscan.com",
       pandaContract.address, // PFP address
       0, // PFP token ID
@@ -324,7 +324,7 @@ describe("Web3PandaTLD", function () {
     await expect(contract["mint(string,address,string,string,address,uint256)"](
       newDomainName, // domain name (without TLD)
       anotherUser.address, // domain owner (another user!!!)
-      "My domain description",
+      "{'description': 'my domain description'}",
       "http://haveibeenpwned.com",
       pandaContract.address, // PFP address
       0, // PFP token ID (note that this tokenId is owned by signer, not by anotherUser)
@@ -432,7 +432,7 @@ describe("Web3PandaTLD", function () {
 
   });
 
-  it("should change domain description", async function () {
+  it("should change domain data", async function () {
     await contract.toggleBuyingDomains(); // enable buying domains
 
     const price = await contract.price();
@@ -451,25 +451,25 @@ describe("Web3PandaTLD", function () {
 
     // get domain data by domain name (before)
     const firstDomainDataBefore = await contract.domains(newDomainName);
-    expect(firstDomainDataBefore.description).to.equal("");
+    expect(firstDomainDataBefore.data).to.equal("");
 
-    const newDescription = "This is my new description";
+    const newData = "{'description': 'This is my NEW domain description'}";
 
-    // set new description
-    await expect(contract.editDescription(
+    // set new data
+    await expect(contract.editData(
       newDomainName, // domain name (without TLD)
-      newDescription
-    )).to.emit(contract, "DescriptionChanged");
+      newData
+    )).to.emit(contract, "DataChanged");
 
     // get domain data by domain name (after)
     const firstDomainDataAfter = await contract.domains(newDomainName);
-    expect(firstDomainDataAfter.description).to.equal(newDescription);
+    expect(firstDomainDataAfter.data).to.equal(newData);
 
-    // fail at changing description if msg.sender is not domain holder
-    await expect(contract.connect(anotherUser).editDescription(
+    // fail at changing data if msg.sender is not domain holder
+    await expect(contract.connect(anotherUser).editData(
       newDomainName, // domain name (without TLD)
       "No change"
-    )).to.be.revertedWith('Only domain holder can edit their description');
+    )).to.be.revertedWith('Only domain holder can edit their data');
 
   });
 

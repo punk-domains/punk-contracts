@@ -21,7 +21,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     string name; // domain name that goes before the TLD name; example: "tempetechie" in "tempetechie.web3"
     uint256 tokenId;
     address holder;
-    string description; // optional
+    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."]}
     string url; // optional: domain holder can specify a URL that his domain redirects to
     // optional: domain holder can set up a profile picture (an NFT that they hold)
     address pfpAddress;
@@ -34,7 +34,7 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
-  event DescriptionChanged(address indexed user, string description);
+  event DataChanged(address indexed user);
   event UrlChanged(address indexed user, string url);
   event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
   event PfpValidated(address indexed user, address indexed owner, bool valid);
@@ -79,8 +79,8 @@ contract Web3PandaTLD is ERC721, Ownable {
     return domains[_domainName].pfpTokenId;
   }
 
-  function getDomainDescription(string memory _domainName) public view returns(string memory) {
-    return domains[_domainName].description;
+  function getDomainData(string memory _domainName) public view returns(string memory) {
+    return domains[_domainName].data; // should be a JSON object
   }
 
   function getDomainUrl(string memory _domainName) public view returns(string memory) {
@@ -98,7 +98,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
         '{"name":"', fullDomainName, '", ',
-        '"description": "', domains[domainIdsNames[_tokenId]].description, '", ',
+        '"description": "Web3Panda digital identity (web3panda.org, panda.web3).", ',
         '"image": "', _getImage(fullDomainName), '"}'))))
     );
   }
@@ -124,10 +124,10 @@ contract Web3PandaTLD is ERC721, Ownable {
     emit DefaultDomainChanged(msg.sender, _domainName);
   }
 
-  function editDescription(string memory _domainName, string memory _description) external {
-    require(domains[_domainName].holder == msg.sender,"Only domain holder can edit their description");
-    domains[_domainName].description = _description;
-    emit DescriptionChanged(msg.sender, _description);
+  function editData(string memory _domainName, string memory _data) external {
+    require(domains[_domainName].holder == msg.sender,"Only domain holder can edit their data");
+    domains[_domainName].data = _data;
+    emit DataChanged(msg.sender);
   }
 
   function editPfp(string memory _domainName, address _pfpAddress, uint256 _pfpTokenId) public {
@@ -165,7 +165,7 @@ contract Web3PandaTLD is ERC721, Ownable {
   function mint(
     string memory _domainName,
     address _domainHolder,
-    string memory _description,
+    string memory _data,
     string memory _url,
     address _pfpAddress,
     uint256 _pfpTokenId
@@ -175,13 +175,13 @@ contract Web3PandaTLD is ERC721, Ownable {
 
     _sendPayment(msg.value);
 
-    return _mintDomain(_domainName, _domainHolder, _description, _url, _pfpAddress, _pfpTokenId);
+    return _mintDomain(_domainName, _domainHolder, _data, _url, _pfpAddress, _pfpTokenId);
   }
 
   function _mintDomain(
     string memory _domainName, 
     address _domainHolder,
-    string memory _description,
+    string memory _data,
     string memory _url,
     address _pfpAddress,
     uint256 _pfpTokenId
@@ -209,7 +209,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     newDomain.name = _domainName;
     newDomain.tokenId = totalSupply;
     newDomain.holder = _domainHolder;
-    newDomain.description = _description;
+    newDomain.data = _data;
     newDomain.url = _url;
 
     // add to both mappings
@@ -254,7 +254,8 @@ contract Web3PandaTLD is ERC721, Ownable {
   function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
 
     if (from != address(0)) { // run on every transfer but not on mint
-      domains[domainIdsNames[tokenId]].holder = to; // change holder address in struct data (URL and description stay the same)
+      domains[domainIdsNames[tokenId]].holder = to; // change holder address in struct data
+      domains[domainIdsNames[tokenId]].data = ""; // reset data
       
       if (bytes(defaultNames[to]).length == 0) {
         defaultNames[to] = domains[domainIdsNames[tokenId]].name; // if default domain name is not set for that holder, set it now
