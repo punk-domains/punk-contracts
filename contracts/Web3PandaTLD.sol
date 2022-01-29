@@ -98,7 +98,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
         '{"name":"', fullDomainName, '", ',
-        '"description": "Web3Panda digital identity (web3panda.org, panda.web3).", ',
+        '"description": "Web3Panda digital identity.", ',
         '"image": "', _getImage(fullDomainName), '"}'))))
     );
   }
