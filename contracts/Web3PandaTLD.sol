@@ -108,8 +108,8 @@ contract Web3PandaTLD is ERC721, Ownable {
     IWeb3PandaTLDFactory factory = IWeb3PandaTLDFactory(factoryAddress);
 
     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500"><text style="white-space: pre; fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 41.1px;" x="138.221" y="263.804">',
-        _fullDomainName,'</text><text style="white-space: pre; fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 25.6px;" x="162.163" y="441.07">',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500"><rect x="0" y="0" width="500" height="500" fill="black"/><text x="50%" y="50%" dominant-baseline="middle" fill="white" text-anchor="middle" font-size="x-large">',
+        _fullDomainName,'</text><text x="50%" y="70%" dominant-baseline="middle" fill="white" text-anchor="middle">',
         factory.projectName(),'</text>',
       '</svg>'
     ))));
