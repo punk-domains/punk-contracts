@@ -36,10 +36,10 @@ contract Web3PandaTLDFactory is Ownable {
 
   function _validTldName(string memory _name) view internal {
     // ex-modifier turned into internal function to optimize contract size
-    require(strings.len(strings.toSlice(_name)) > 1,"TLD too short");
-    require(bytes(_name).length < nameMaxLength,"TLD too long");
-    require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1,"Name must have 1 dot");
-    require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true,"Name must start with dot");
+    require(strings.len(strings.toSlice(_name)) > 1, "TLD too short");
+    require(bytes(_name).length < nameMaxLength, "TLD too long");
+    require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1, "Name must have 1 dot");
+    require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true, "Name must start with dot");
     require(forbidden[_name] == false, "Forbidden TLD");
     require(tldNamesAddresses[_name] == address(0), "TLD already exists");
   }

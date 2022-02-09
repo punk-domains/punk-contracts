@@ -119,23 +119,23 @@ contract Web3PandaTLD is ERC721, Ownable {
 
   // WRITE
   function editDefaultDomain(string memory _domainName) public {
-    require(domains[_domainName].holder == msg.sender,"You do not own the selected domain");
+    require(domains[_domainName].holder == msg.sender, "You do not own the selected domain");
     defaultNames[msg.sender] = _domainName;
     emit DefaultDomainChanged(msg.sender, _domainName);
   }
 
   function editData(string memory _domainName, string memory _data) external {
-    require(domains[_domainName].holder == msg.sender,"Only domain holder can edit their data");
+    require(domains[_domainName].holder == msg.sender, "Only domain holder can edit their data");
     domains[_domainName].data = _data;
     emit DataChanged(msg.sender);
   }
 
   function editPfp(string memory _domainName, address _pfpAddress, uint256 _pfpTokenId) public {
-    require(domains[_domainName].holder == msg.sender,"Only domain holder can edit their PFP");
+    require(domains[_domainName].holder == msg.sender, "Only domain holder can edit their PFP");
 
     ERC721 pfpContract = ERC721(_pfpAddress); // get PFP contract
 
-    require(pfpContract.ownerOf(_pfpTokenId) == msg.sender,"Sender not PFP owner");
+    require(pfpContract.ownerOf(_pfpTokenId) == msg.sender, "Sender not PFP owner");
 
     domains[_domainName].pfpAddress = _pfpAddress;
     domains[_domainName].pfpTokenId = _pfpTokenId;
@@ -143,7 +143,7 @@ contract Web3PandaTLD is ERC721, Ownable {
   }
 
   function editUrl(string memory _domainName, string memory _url) external {
-    require(domains[_domainName].holder == msg.sender,"Not domain holder");
+    require(domains[_domainName].holder == msg.sender, "Not domain holder");
     domains[_domainName].url = _url;
     emit UrlChanged(msg.sender, _url);
   }
@@ -186,9 +186,9 @@ contract Web3PandaTLD is ERC721, Ownable {
     address _pfpAddress,
     uint256 _pfpTokenId
   ) internal returns(uint256) {
-    require(strings.len(strings.toSlice(_domainName)) > 1,"Domain must be longer than 1 char");
-    require(bytes(_domainName).length < nameMaxLength,"Domain name is too long");
-    require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0,"There should be no dots in the name");
+    require(strings.len(strings.toSlice(_domainName)) > 1, "Domain must be longer than 1 char");
+    require(bytes(_domainName).length < nameMaxLength, "Domain name is too long");
+    require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0, "There should be no dots in the name");
     require(domains[_domainName].holder == address(0), "Domain with this name already exists");
 
     _safeMint(_domainHolder, totalSupply);
@@ -198,7 +198,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     // validate if domain holder really owns the specified PFP
     if (_pfpAddress != address(0)) {
       ERC721 pfpContract = ERC721(_pfpAddress);
-      require(pfpContract.ownerOf(_pfpTokenId) == _domainHolder,"Domain holder not owner of the PFP");
+      require(pfpContract.ownerOf(_pfpTokenId) == _domainHolder, "Domain holder not owner of the PFP");
 
       // store PFP data in Domain struct
       newDomain.pfpAddress = _pfpAddress;
@@ -227,7 +227,7 @@ contract Web3PandaTLD is ERC721, Ownable {
   }
 
   function _sendPayment(uint256 _paymentAmount) internal {
-    if (royalty > 0) {
+    if (royalty > 0 && royalty < 5000) { // royalty must be less than 50% (5000 bips)
       payable(getFactoryOwner()).transfer((_paymentAmount * royalty) / 10000); // royalty for factory owner
     }
     
@@ -295,7 +295,7 @@ contract Web3PandaTLD is ERC721, Ownable {
   
   // FACTORY OWNER (current owner address of Web3PandaTLDFactory)
   function changeRoyalty(uint256 _royalty) public {
-    require(getFactoryOwner() == msg.sender,"Sender not factory owner");
-    royalty = _royalty; // royalty is in bips
+    require(getFactoryOwner() == msg.sender, "Sender not factory owner");
+    royalty = _royalty; // royalty is in bips; see line 230 for max royalty
   }
 }
