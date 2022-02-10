@@ -22,10 +22,10 @@ async function main() {
   console.log("Wait a minute and then run these two commands to verify contracts on Etherscan:");
 
   console.log("Command 1 (verify Forbiddent TLDs contract):");
-  console.log("npx hardhat verify --network " + network.name + " " + instanceForb.address + ' "');
+  console.log("npx hardhat verify --network " + network.name + " " + instanceForb.address);
   
   console.log("Command 2 (verify Factory contract):");
-  console.log("npx hardhat verify --network " + network.name + " " + instanceFactory.address + ' "' + tldPrice + '"');
+  console.log("npx hardhat verify --network " + network.name + " " + instanceFactory.address + ' "' + tldPrice + '" ' + instanceForb.address);
 }
 
 function sleep(ms) {

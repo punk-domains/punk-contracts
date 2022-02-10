@@ -14,7 +14,7 @@ contract Web3PandaTLDFactory is Ownable {
   string[] public tlds; // existing TLDs
   mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
 
-  address public forbiddenTlds; // address of the contract that stores the list of fobridden TLDs
+  address public forbiddenTlds; // address of the contract that stores the list of forbidden TLDs
   
   uint256 public price; // price for creating a new TLD
   uint256 public royalty = 0; // royalty for Web3PandaDAO when new domain is minted 
