@@ -16,6 +16,8 @@ async function main() {
 
   const tldPrice = ethers.utils.parseUnits("0.1", "ether");
   const instanceFactory = await contractFactory.deploy(tldPrice, instanceForb.address);
+
+  await instanceForb.addFactoryAddress(instanceFactory.address);
   
   console.log("Factory contract address:", instanceFactory.address);
 
