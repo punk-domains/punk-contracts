@@ -2,6 +2,7 @@ const { expect } = require("chai");
 
 describe("Web3PandaTLDFactory (onlyOwner)", function () {
   let contract;
+  let forbTldsContract;
   let owner;
   let nonOwner;
 
@@ -10,8 +11,13 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
   beforeEach(async function () {
     [owner, nonOwner] = await ethers.getSigners();
 
+    const Web3PandaForbiddenTlds = await ethers.getContractFactory("Web3PandaForbiddenTlds");
+    forbTldsContract = await Web3PandaForbiddenTlds.deploy();
+
     const Web3PandaTLDFactory = await ethers.getContractFactory("Web3PandaTLDFactory");
-    contract = await Web3PandaTLDFactory.deploy(tldPrice);
+    contract = await Web3PandaTLDFactory.deploy(tldPrice, forbTldsContract.address);
+
+    await forbTldsContract.addFactoryAddress(contract.address);
   });
 
   it("should create a new valid TLD through ownerCreateTld()", async function () {
@@ -101,7 +107,7 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
       owner.address, // TLD owner
       ethers.utils.parseUnits("0.2", "ether"), // domain price
       false // buying enabled
-    )).to.be.revertedWith('TLD already exists');
+    )).to.be.revertedWith('TLD already exists or forbidden');
   });
 
   it("should fail to create a new valid TLD if TLD name is too long", async function () {
@@ -136,31 +142,31 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
   it("should add a new forbidden domain", async function () {
     const tld = ".co";
 
-    const forbiddenTldBefore = await contract.forbidden(tld);
+    const forbiddenTldBefore = await forbTldsContract.forbidden(tld);
     expect(forbiddenTldBefore).to.be.false;
 
-    await contract.addForbiddenTld(tld);
+    await forbTldsContract.ownerAddForbiddenTld(tld);
 
-    const forbiddenTldAfter = await contract.forbidden(tld);
+    const forbiddenTldAfter = await forbTldsContract.forbidden(tld);
     expect(forbiddenTldAfter).to.be.true;
 
     // fail if sender is not owner
-    await expect(contract.connect(nonOwner).addForbiddenTld(".io")).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(forbTldsContract.connect(nonOwner).ownerAddForbiddenTld(".io")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should remove a forbidden domain", async function () {
     const tld = ".eth";
 
-    const forbiddenTldBefore = await contract.forbidden(tld);
+    const forbiddenTldBefore = await forbTldsContract.forbidden(tld);
     expect(forbiddenTldBefore).to.be.true;
 
-    await contract.removeForbiddenTld(tld);
+    await forbTldsContract.removeForbiddenTld(tld);
 
-    const forbiddenTldAfter = await contract.forbidden(tld);
+    const forbiddenTldAfter = await forbTldsContract.forbidden(tld);
     expect(forbiddenTldAfter).to.be.false;
 
     // fail if sender is not owner
-    await expect(contract.connect(nonOwner).removeForbiddenTld(".net")).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(forbTldsContract.connect(nonOwner).removeForbiddenTld(".net")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change max length for a TLD name", async function () {

@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Web3PandaTLD.sol";
+import "./interfaces/IWeb3PandaForbiddenTlds.sol";
 
 contract Web3PandaTLDFactory is Ownable {
   using strings for string;
@@ -12,7 +13,8 @@ contract Web3PandaTLDFactory is Ownable {
 
   string[] public tlds; // existing TLDs
   mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
-  mapping (string => bool) public forbidden; // forbidden TLDs
+
+  address public forbiddenTlds; // address of the contract that stores the list of fobridden TLDs
   
   uint256 public price; // price for creating a new TLD
   uint256 public royalty = 0; // royalty for Web3PandaDAO when new domain is minted 
@@ -21,12 +23,9 @@ contract Web3PandaTLDFactory is Ownable {
 
   event TldCreated(address indexed user, address indexed owner, string indexed tldName, address tldAddress);
 
-  constructor(uint256 _price) {
-    forbidden[".eth"] = true;
-    forbidden[".com"] = true;
-    forbidden[".org"] = true;
-    forbidden[".net"] = true;
+  constructor(uint256 _price, address _forbiddenTlds) {
     price = _price;
+    forbiddenTlds = _forbiddenTlds;
   }
 
   // READ
@@ -40,8 +39,9 @@ contract Web3PandaTLDFactory is Ownable {
     require(bytes(_name).length < nameMaxLength, "TLD too long");
     require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1, "Name must have 1 dot");
     require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true, "Name must start with dot");
-    require(forbidden[_name] == false, "Forbidden TLD");
-    require(tldNamesAddresses[_name] == address(0), "TLD already exists");
+
+    IWeb3PandaForbiddenTlds forbidden = IWeb3PandaForbiddenTlds(forbiddenTlds);
+    require(forbidden.isTldForbidden(_name) == false, "TLD already exists or forbidden");
   }
 
   // WRITE
@@ -89,6 +89,9 @@ contract Web3PandaTLDFactory is Ownable {
       address(this)
     );
 
+    IWeb3PandaForbiddenTlds forbidden = IWeb3PandaForbiddenTlds(forbiddenTlds);
+    forbidden.addForbiddenTld(_name);
+
     tldNamesAddresses[_name] = address(tld); // store TLD name and address into mapping
     tlds.push(_name); // store TLD name into array
 
@@ -98,9 +101,8 @@ contract Web3PandaTLDFactory is Ownable {
   }
 
   // OWNER
-  function addForbiddenTld(string memory _name) public onlyOwner {
-    _validTldName(_name);
-    forbidden[_name] = true;
+  function changeForbiddenTldsAddress(address _forbiddenTlds) public onlyOwner {
+    forbiddenTlds = _forbiddenTlds;
   }
 
   function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
@@ -136,10 +138,6 @@ contract Web3PandaTLDFactory is Ownable {
       _buyingEnabled
     );
 
-  }
-
-  function removeForbiddenTld(string memory _name) public onlyOwner {
-    forbidden[_name] = false;
   }
 
   function toggleBuyingTlds() public onlyOwner {

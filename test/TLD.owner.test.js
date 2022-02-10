@@ -14,8 +14,13 @@ describe("Web3PandaTLD (onlyOwner)", function () {
   beforeEach(async function () {
     [signer, anotherUser] = await ethers.getSigners();
 
+    const Web3PandaForbiddenTlds = await ethers.getContractFactory("Web3PandaForbiddenTlds");
+    const forbTldsContract = await Web3PandaForbiddenTlds.deploy();
+
     const Web3PandaTLDFactory = await ethers.getContractFactory("Web3PandaTLDFactory");
-    factoryContract = await Web3PandaTLDFactory.deploy(domainPrice);
+    factoryContract = await Web3PandaTLDFactory.deploy(domainPrice, forbTldsContract.address);
+
+    await forbTldsContract.addFactoryAddress(factoryContract.address);
 
     const Web3PandaTLD = await ethers.getContractFactory("Web3PandaTLD");
     contract = await Web3PandaTLD.deploy(

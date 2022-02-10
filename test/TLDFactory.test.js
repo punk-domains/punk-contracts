@@ -2,6 +2,7 @@ const { expect } = require("chai");
 
 describe("Web3PandaTLDFactory", function () {
   let contract;
+  let forbTldsContract;
   let signer;
 
   const tldPrice = ethers.utils.parseUnits("1", "ether");
@@ -9,15 +10,20 @@ describe("Web3PandaTLDFactory", function () {
   beforeEach(async function () {
     [signer] = await ethers.getSigners();
 
+    const Web3PandaForbiddenTlds = await ethers.getContractFactory("Web3PandaForbiddenTlds");
+    forbTldsContract = await Web3PandaForbiddenTlds.deploy();
+
     const Web3PandaTLDFactory = await ethers.getContractFactory("Web3PandaTLDFactory");
-    contract = await Web3PandaTLDFactory.deploy(tldPrice);
+    contract = await Web3PandaTLDFactory.deploy(tldPrice, forbTldsContract.address);
+
+    await forbTldsContract.addFactoryAddress(contract.address);
   });
 
   it("should confirm forbidden TLD names defined in the constructor", async function () {
-    const forbiddenCom = await contract.forbidden(".com");
+    const forbiddenCom = await forbTldsContract.forbidden(".com");
     expect(forbiddenCom).to.be.true;
 
-    const forbiddenEth = await contract.forbidden(".eth");
+    const forbiddenEth = await forbTldsContract.forbidden(".eth");
     expect(forbiddenEth).to.be.true;
   });
 
@@ -199,7 +205,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('TLD already exists');
+    )).to.be.revertedWith('TLD already exists or forbidden');
   });
 
   it("should fail to create a new valid TLD if TLD name is too long", async function () {
@@ -238,7 +244,7 @@ describe("Web3PandaTLDFactory", function () {
       {
         value: tldPrice // pay 1 ETH for the TLD
       }
-    )).to.be.revertedWith('Forbidden TLD');
+    )).to.be.revertedWith('TLD already exists or forbidden');
 
   });
 
