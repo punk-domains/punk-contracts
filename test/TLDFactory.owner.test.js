@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 
-describe("Web3PandaTLDFactory (onlyOwner)", function () {
+describe("PunkTLDFactory (onlyOwner)", function () {
   let contract;
   let forbTldsContract;
   let owner;
@@ -11,11 +11,11 @@ describe("Web3PandaTLDFactory (onlyOwner)", function () {
   beforeEach(async function () {
     [owner, nonOwner] = await ethers.getSigners();
 
-    const Web3PandaForbiddenTlds = await ethers.getContractFactory("Web3PandaForbiddenTlds");
-    forbTldsContract = await Web3PandaForbiddenTlds.deploy();
+    const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
+    forbTldsContract = await PunkForbiddenTlds.deploy();
 
-    const Web3PandaTLDFactory = await ethers.getContractFactory("Web3PandaTLDFactory");
-    contract = await Web3PandaTLDFactory.deploy(tldPrice, forbTldsContract.address);
+    const PunkTLDFactory = await ethers.getContractFactory("PunkTLDFactory");
+    contract = await PunkTLDFactory.deploy(tldPrice, forbTldsContract.address);
 
     await forbTldsContract.addFactoryAddress(contract.address);
   });

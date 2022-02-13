@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "./interfaces/IWeb3PandaTLDFactory.sol";
+import "./interfaces/IPunkTLDFactory.sol";
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "base64-sol/base64.sol";
 
-contract Web3PandaTLD is ERC721, Ownable {
+contract PunkTLD is ERC721, Ownable {
   using strings for string;
 
   uint256 public price; // domain price
   bool public buyingEnabled; // buying domains enabled
-  address public factoryAddress; // Web3PandaTLDFactory address
-  uint256 public royalty; // share of each domain purchase (in bips) that goes to Web3Panda DAO
+  address public factoryAddress; // PunkTLDFactory address
+  uint256 public royalty; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public totalSupply;
   uint256 public nameMaxLength = 140; // max length of a domain name
 
@@ -98,14 +98,14 @@ contract Web3PandaTLD is ERC721, Ownable {
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
         '{"name":"', fullDomainName, '", ',
-        '"description": "Web3Panda digital identity.", ',
+        '"description": "Punk Domains digital identity.", ',
         '"image": "', _getImage(fullDomainName), '"}'))))
     );
   }
 
   function _getImage(string memory _fullDomainName) internal view returns (string memory) {
     string memory baseURL = "data:image/svg+xml;base64,";
-    IWeb3PandaTLDFactory factory = IWeb3PandaTLDFactory(factoryAddress);
+    IPunkTLDFactory factory = IPunkTLDFactory(factoryAddress);
 
     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500"><rect x="0" y="0" width="500" height="500" fill="black"/><text x="50%" y="50%" dominant-baseline="middle" fill="white" text-anchor="middle" font-size="x-large">',
@@ -293,7 +293,7 @@ contract Web3PandaTLD is ERC721, Ownable {
     nameMaxLength = _maxLength;
   }
   
-  // FACTORY OWNER (current owner address of Web3PandaTLDFactory)
+  // FACTORY OWNER (current owner address of PunkTLDFactory)
   function changeRoyalty(uint256 _royalty) public {
     require(getFactoryOwner() == msg.sender, "Sender not factory owner");
     royalty = _royalty; // royalty is in bips; see line 230 for max royalty

@@ -1,5 +1,5 @@
-const contractNameForb = "Web3PandaForbiddenTlds";
-const contractNameFactory = "Web3PandaTLDFactory";
+const contractNameForb = "PunkForbiddenTlds";
+const contractNameFactory = "PunkTLDFactory";
 
 async function main() {
   const [deployer] = await ethers.getSigners();

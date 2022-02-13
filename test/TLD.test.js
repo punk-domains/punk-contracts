@@ -16,7 +16,7 @@ function calculateGasCosts(testName, receipt) {
   console.log(testName + " gas cost (Polygon): $" + String(Number(gasCostMatic)*matic));
 }
 
-describe("Web3PandaTLD", function () {
+describe("PunkTLD", function () {
   let contract;
   let factoryContract;
   let signer;
@@ -30,16 +30,16 @@ describe("Web3PandaTLD", function () {
   beforeEach(async function () {
     [signer, anotherUser] = await ethers.getSigners();
 
-    const Web3PandaForbiddenTlds = await ethers.getContractFactory("Web3PandaForbiddenTlds");
-    const forbTldsContract = await Web3PandaForbiddenTlds.deploy();
+    const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
+    const forbTldsContract = await PunkForbiddenTlds.deploy();
 
-    const Web3PandaTLDFactory = await ethers.getContractFactory("Web3PandaTLDFactory");
-    factoryContract = await Web3PandaTLDFactory.deploy(domainPrice, forbTldsContract.address);
+    const PunkTLDFactory = await ethers.getContractFactory("PunkTLDFactory");
+    factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address);
 
     await forbTldsContract.addFactoryAddress(factoryContract.address);
 
-    const Web3PandaTLD = await ethers.getContractFactory("Web3PandaTLD");
-    contract = await Web3PandaTLD.deploy(
+    const PunkTLD = await ethers.getContractFactory("PunkTLD");
+    contract = await PunkTLD.deploy(
       domainName,
       domainSymbol,
       signer.address, // TLD owner

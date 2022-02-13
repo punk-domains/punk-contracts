@@ -3,13 +3,13 @@ pragma solidity ^0.8.4;
 
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Web3PandaTLD.sol";
-import "./interfaces/IWeb3PandaForbiddenTlds.sol";
+import "./PunkTLD.sol";
+import "./interfaces/IPunkForbiddenTlds.sol";
 
-contract Web3PandaTLDFactory is Ownable {
+contract PunkTLDFactory is Ownable {
   using strings for string;
 
-  string public projectName = "web3panda.org";
+  string public projectName = "punk.domains";
 
   string[] public tlds; // existing TLDs
   mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
@@ -17,7 +17,7 @@ contract Web3PandaTLDFactory is Ownable {
   address public forbiddenTlds; // address of the contract that stores the list of forbidden TLDs
   
   uint256 public price; // price for creating a new TLD
-  uint256 public royalty = 0; // royalty for Web3PandaDAO when new domain is minted 
+  uint256 public royalty = 0; // royalty for Punk Domains when new domain is minted 
   bool public buyingEnabled = false; // buying TLDs enabled (true/false)
   uint256 public nameMaxLength = 40; // the maximum length of a TLD name
 
@@ -40,7 +40,7 @@ contract Web3PandaTLDFactory is Ownable {
     require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1, "Name must have 1 dot");
     require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true, "Name must start with dot");
 
-    IWeb3PandaForbiddenTlds forbidden = IWeb3PandaForbiddenTlds(forbiddenTlds);
+    IPunkForbiddenTlds forbidden = IPunkForbiddenTlds(forbiddenTlds);
     require(forbidden.isTldForbidden(_name) == false, "TLD already exists or forbidden");
   }
 
@@ -79,7 +79,7 @@ contract Web3PandaTLDFactory is Ownable {
   ) internal returns(address) {
     _validTldName(_name);
 
-    Web3PandaTLD tld = new Web3PandaTLD(
+    PunkTLD tld = new PunkTLD(
       _name, 
       _symbol, 
       _tldOwner, 
@@ -89,7 +89,7 @@ contract Web3PandaTLDFactory is Ownable {
       address(this)
     );
 
-    IWeb3PandaForbiddenTlds forbidden = IWeb3PandaForbiddenTlds(forbiddenTlds);
+    IPunkForbiddenTlds forbidden = IPunkForbiddenTlds(forbiddenTlds);
     forbidden.addForbiddenTld(_name);
 
     tldNamesAddresses[_name] = address(tld); // store TLD name and address into mapping
