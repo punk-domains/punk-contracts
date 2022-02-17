@@ -29,13 +29,28 @@ module.exports = {
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
+    },
+    arbitrumRinkeby: {
+      url: 'https://rinkeby.arbitrum.io/rpc',
+      chainId: 421611,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
+    },
+    optimisticKovan: {
+      url: 'https://kovan.optimism.io',
+      chainId: 69,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
     }
   },
 
   etherscan: {
     apiKey: {
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
-      ropsten: process.env.ETHERSCAN_API_KEY
+      ropsten: process.env.ETHERSCAN_API_KEY,
+      optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY
     }
   },
 
