@@ -30,7 +30,7 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
     },
-    arbitrumRinkeby: {
+    arbitrumTestnet: {
       url: 'https://rinkeby.arbitrum.io/rpc',
       chainId: 421611,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
@@ -50,7 +50,8 @@ module.exports = {
     apiKey: {
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
       ropsten: process.env.ETHERSCAN_API_KEY,
-      optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY
+      optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
+      arbitrumTestnet: process.env.ARBISCAN_API_KEY
     }
   },
 
