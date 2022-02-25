@@ -4,7 +4,7 @@ This script is needed to verify contracts that are generated through contract fa
 How to use:
 - First deploy the Factory contract
 - Then in deployTld.js replace the owner and factory addresses with the ones you want
-- Then deploy the PunkTLD contract: npx hardhat run scripts/deployTld.js --network polygonMumbai
+- Then deploy the PunkTLD contract: npx hardhat run scripts/temp/deployTld.js --network polygonMumbai
 - Go to arguments.js file and enter correct addresses (and other data if changed in deployTld.js)
 - Verify it (see command line for the Verify command). Something like: npx hardhat verify --network polygonMumbai --constructor-args scripts/arguments.js <deployed-contract-address>
 - After successful verification, every TLD contract created through the factory will show contract code. 
@@ -24,13 +24,13 @@ async function main() {
   // deploy contract1
   const contract1 = await ethers.getContractFactory(contractName1);
   
-  const tldName = ".web3";
-  const tldSymbol = "WEB3";
-  const tldOwner = "<enter-your-owner-address>";
+  const tldName = ".test";
+  const tldSymbol = "TEST";
+  const tldOwner = "<enter-owner-address>";
   const tldPrice = ethers.utils.parseUnits("0.1", "ether");
   const buyingEnabled = false;
   const royalty = 0;
-  const factoryAddress = "<enter-your-factory-address>";
+  const factoryAddress = "<enter-factory-address>";
 
   const instance1 = await contract1.deploy(
     tldName, tldSymbol, tldOwner, tldPrice, buyingEnabled, royalty, factoryAddress
@@ -40,7 +40,7 @@ async function main() {
 
   console.log("Wait a minute and then run this command:");
   console.log(
-    "npx hardhat verify --network " + network.name + " --constructor-args scripts/arguments.js " + instance1.address
+    "npx hardhat verify --network " + network.name + " --constructor-args scripts/temp/arguments.js " + instance1.address
   );
 }
 
