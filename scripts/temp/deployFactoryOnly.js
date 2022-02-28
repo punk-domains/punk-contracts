@@ -19,9 +19,7 @@ async function main() {
   
   console.log("Factory contract address:", instanceFactory.address);
 
-  console.log("Wait a minute and then run these two commands to verify contracts on Etherscan:");
-  
-  console.log("Command 2 (verify Factory contract):");
+  console.log("Wait a minute and then run this command to verify contracts on Etherscan:");
   console.log("npx hardhat verify --network " + network.name + " " + instanceFactory.address + ' "' + tldPrice + '" ' + forbAddress);
 }
 

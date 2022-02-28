@@ -70,17 +70,15 @@ module.exports = {
       chainId: 77,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 30000000000, // 20 gwei
+      gasPrice: 20000000000, // 20 gwei
     },
     xdai: { // Gnosis Chain mainnet
       url: 'https://rpc.gnosischain.com',
       chainId: 100,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 1000000000, // 1 gwei
+      gasPrice: 20000000000, // 20 gwei
     }
-    
-    // xdai: {} // gnosis chain
   },
 
   etherscan: {
@@ -92,7 +90,8 @@ module.exports = {
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       arbitrumTestnet: process.env.ARBISCAN_API_KEY,
       arbitrumOne: process.env.ARBISCAN_API_KEY,
-      sokol: "randomstring"
+      sokol: "randomstring",
+      xdai: "randomstring"
     }
   },
 
