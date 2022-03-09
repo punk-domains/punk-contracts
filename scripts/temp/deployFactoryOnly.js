@@ -1,4 +1,5 @@
 // Use if the Forbidden contract was deployed, but factory was not
+// npx hardhat run scripts/temp/deployFactoryOnly.js --network localhost
 
 const contractNameFactory = "PunkTLDFactory";
 const forbAddress = "<enter-forbidden-address>";
