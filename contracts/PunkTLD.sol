@@ -5,15 +5,17 @@ import "./interfaces/IPunkTLDFactory.sol";
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "base64-sol/base64.sol";
 
-contract PunkTLD is ERC721, Ownable {
+contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   using strings for string;
 
   uint256 public price; // domain price
   bool public buyingEnabled; // buying domains enabled
   address public factoryAddress; // PunkTLDFactory address
   uint256 public royalty; // share of each domain purchase (in bips) that goes to Punk Domains
+  uint256 public referral = 1000; // share of each domain purchase (in bips) that goes to the referrer
   uint256 public totalSupply;
   uint256 public nameMaxLength = 140; // max length of a domain name
 
@@ -22,7 +24,7 @@ contract PunkTLD is ERC721, Ownable {
     uint256 tokenId;
     address holder;
     string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."]}
-    string url; // optional: domain holder can specify a URL that his domain redirects to
+    
     // optional: domain holder can set up a profile picture (an NFT that they hold)
     address pfpAddress;
     uint256 pfpTokenId;
@@ -35,7 +37,6 @@ contract PunkTLD is ERC721, Ownable {
   event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
   event DataChanged(address indexed user);
-  event UrlChanged(address indexed user, string url);
   event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
   event PfpValidated(address indexed user, address indexed owner, bool valid);
 
@@ -83,10 +84,6 @@ contract PunkTLD is ERC721, Ownable {
     return domains[_domainName].data; // should be a JSON object
   }
 
-  function getDomainUrl(string memory _domainName) public view returns(string memory) {
-    return domains[_domainName].url;
-  }
-
   function getFactoryOwner() public view returns(address) {
     Ownable factory = Ownable(factoryAddress);
     return factory.owner();
@@ -104,7 +101,6 @@ contract PunkTLD is ERC721, Ownable {
   }
 
   function _getImage(string memory _fullDomainName) internal view returns (string memory) {
-    string memory baseURL = "data:image/svg+xml;base64,";
     IPunkTLDFactory factory = IPunkTLDFactory(factoryAddress);
 
     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
@@ -114,7 +110,7 @@ contract PunkTLD is ERC721, Ownable {
       '</svg>'
     ))));
 
-    return string(abi.encodePacked(baseURL,svgBase64Encoded));
+    return string(abi.encodePacked("data:image/svg+xml;base64,",svgBase64Encoded));
   }
 
   // WRITE
@@ -142,47 +138,41 @@ contract PunkTLD is ERC721, Ownable {
     emit PfpChanged(msg.sender, _pfpAddress, _pfpTokenId);
   }
 
-  function editUrl(string memory _domainName, string memory _url) external {
-    require(domains[_domainName].holder == msg.sender, "Not domain holder");
-    domains[_domainName].url = _url;
-    emit UrlChanged(msg.sender, _url);
-  }
-
   // mint with mandatory params only
   function mint(
     string memory _domainName, 
-    address _domainHolder
-  ) public payable returns(uint256) {
+    address _domainHolder,
+    address _referrer
+  ) public payable nonReentrant returns(uint256) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
-    _sendPayment(msg.value);
+    _sendPayment(msg.value, _referrer);
 
-    return _mintDomain(_domainName, _domainHolder, "", "", address(0), 0);
+    return _mintDomain(_domainName, _domainHolder, "", address(0), 0);
   }
 
   // mint with both mandatory and optional params
   function mint(
     string memory _domainName,
     address _domainHolder,
+    address _referrer,
     string memory _data,
-    string memory _url,
     address _pfpAddress,
     uint256 _pfpTokenId
-  ) public payable returns(uint256) {
+  ) public payable nonReentrant returns(uint256) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
-    _sendPayment(msg.value);
+    _sendPayment(msg.value, _referrer);
 
-    return _mintDomain(_domainName, _domainHolder, _data, _url, _pfpAddress, _pfpTokenId);
+    return _mintDomain(_domainName, _domainHolder, _data, _pfpAddress, _pfpTokenId);
   }
 
   function _mintDomain(
     string memory _domainName, 
     address _domainHolder,
     string memory _data,
-    string memory _url,
     address _pfpAddress,
     uint256 _pfpTokenId
   ) internal returns(uint256) {
@@ -210,7 +200,6 @@ contract PunkTLD is ERC721, Ownable {
     newDomain.tokenId = totalSupply;
     newDomain.holder = _domainHolder;
     newDomain.data = _data;
-    newDomain.url = _url;
 
     // add to both mappings
     domains[_domainName] = newDomain;
@@ -226,9 +215,13 @@ contract PunkTLD is ERC721, Ownable {
     return totalSupply-1;
   }
 
-  function _sendPayment(uint256 _paymentAmount) internal {
+  function _sendPayment(uint256 _paymentAmount, address _referrer) internal {
     if (royalty > 0 && royalty < 5000) { // royalty must be less than 50% (5000 bips)
       payable(getFactoryOwner()).transfer((_paymentAmount * royalty) / 10000); // royalty for factory owner
+    }
+
+    if (_referrer != address(0) && referral > 0 && referral < 5000) {
+      payable(_referrer).transfer((_paymentAmount * referral) / 10000); // referral fee for the referrer
     }
     
     payable(owner()).transfer(address(this).balance); // send the rest to TLD owner
@@ -247,7 +240,6 @@ contract PunkTLD is ERC721, Ownable {
         emit PfpValidated(msg.sender, domains[domainIdsNames[_tokenId]].holder, true); // PFP image is valid
       }
     }
-    
   }
 
   //@dev Hook that is called before any token transfer. This includes minting and burning.
@@ -265,7 +257,7 @@ contract PunkTLD is ERC721, Ownable {
         defaultNames[from] = ""; // if previous owner had this domain name as default, unset it as default
       }
 
-      // validate if new owner holds the NFT speicifed in Domain data
+      // validate if new owner holds the NFT specified in Domain data
       if (domains[domainIdsNames[tokenId]].pfpAddress != address(0)) {
         ERC721 pfpContract = ERC721(domains[domainIdsNames[tokenId]].pfpAddress);
 
@@ -278,19 +270,24 @@ contract PunkTLD is ERC721, Ownable {
 
   // OWNER
   function ownerMintDomain(string memory _domainName, address _domainHolder) public onlyOwner returns(uint256) {
-    return _mintDomain(_domainName, _domainHolder, "", "", address(0), 0);
+    return _mintDomain(_domainName, _domainHolder, "", address(0), 0);
+  }
+
+  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
+    nameMaxLength = _maxLength;
   }
 
   function changePrice(uint256 _price) public onlyOwner {
     price = _price;
   }
 
+  function changeReferralPayment(uint256 _referral) public onlyOwner {
+    require(_referral < 10001, "Referral fee cannot be higher than 100%");
+    referral = _referral; // referral must be in bips
+  }
+
   function toggleBuyingDomains() public onlyOwner {
     buyingEnabled = !buyingEnabled;
-  }
-  
-  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
-    nameMaxLength = _maxLength;
   }
   
   // FACTORY OWNER (current owner address of PunkTLDFactory)

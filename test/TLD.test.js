@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { ethers, waffle} = require("hardhat");
 
 function calculateGasCosts(testName, receipt) {
   console.log(testName + " gasUsed: " + receipt.gasUsed);
@@ -21,6 +22,9 @@ describe("PunkTLD", function () {
   let factoryContract;
   let signer;
   let anotherUser;
+  let referrer;
+
+  const provider = waffle.provider;
 
   const domainName = ".web3";
   const domainSymbol = "WEB3";
@@ -28,7 +32,7 @@ describe("PunkTLD", function () {
   const domainRoyalty = 10; // royalty in bips (10 bips is 0.1%)
 
   beforeEach(async function () {
-    [signer, anotherUser] = await ethers.getSigners();
+    [signer, anotherUser, referrer] = await ethers.getSigners();
 
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
@@ -63,6 +67,9 @@ describe("PunkTLD", function () {
 
     const newDomainName = "techie";
 
+    // get referrer's balance BEFORE
+    const balanceReferrerBefore = await provider.getBalance(referrer.address);
+
     // mint a new valid domain
     // note that mint() needs to be called this way ("mint(string,address)") due to function overloading
 
@@ -76,9 +83,10 @@ describe("PunkTLD", function () {
     )).to.emit(contract, "DomainCreated");
     */
 
-    const tx = await contract["mint(string,address)"]( // this approach is better for getting gasUsed value from receipt
+    const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
       {
         value: domainPrice // pay  for the domain
       }
@@ -95,6 +103,10 @@ describe("PunkTLD", function () {
 
     expect(events).to.include("DomainCreated");
 
+    // get referrer's balance AFTER
+    const balanceReferrerAfter = await provider.getBalance(referrer.address);
+    expect(ethers.BigNumber.from(balanceReferrerAfter).sub(balanceReferrerBefore)).to.equal(ethers.BigNumber.from("100000000000000000"));
+
     // get domain name by token ID
     const firstDomainName = await contract.domainIdsNames(0);
     expect(firstDomainName).to.equal(newDomainName);
@@ -104,6 +116,63 @@ describe("PunkTLD", function () {
     expect(firstDomainData.name).to.equal(newDomainName);
     expect(firstDomainData.holder).to.equal(signer.address);
   });
+
+  /*
+  it("should FAIL to create a new valid domain if referral fee too high", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    const newDomainName = "techie";
+
+    // get referrer's balance BEFORE
+    const balanceReferrerBefore = await provider.getBalance(referrer.address);
+    const balanceOwnerBefore = await provider.getBalance(signer.address);
+    console.log("balanceReferrerBefore: " + Number(balanceReferrerBefore));
+    console.log("balanceOwnerBefore: " + Number(balanceOwnerBefore));
+
+    // set referral fee to 99%
+    await contract.changeReferralPayment(9900);
+
+    // mint domain (should fail)
+    const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("Mint", receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("DomainCreated");
+
+    // get referrer's balance AFTER
+    const balanceReferrerAfter = await provider.getBalance(referrer.address);
+    const balanceOwnerAfter = await provider.getBalance(signer.address);
+    console.log("balanceReferrerAfter: " + Number(balanceReferrerAfter));
+    console.log("balanceOwnerAfter: " + Number(balanceOwnerAfter));
+    expect(ethers.BigNumber.from(balanceReferrerAfter).sub(balanceReferrerBefore)).to.equal(ethers.BigNumber.from("100000000000000000"));
+
+    // get domain name by token ID
+    const firstDomainName = await contract.domainIdsNames(0);
+    expect(firstDomainName).to.equal(newDomainName);
+
+    // get domain data by domain name
+    const firstDomainData = await contract.domains(newDomainName);
+    expect(firstDomainData.name).to.equal(newDomainName);
+    expect(firstDomainData.holder).to.equal(signer.address);
+  });
+  */
 
   it("should create a new valid domain (all params)", async function () {
     await contract.toggleBuyingDomains(); // enable buying domains
@@ -119,6 +188,9 @@ describe("PunkTLD", function () {
     expect(pandaNftOwner).to.equal(signer.address);
 
     const newDomainName = "techie";
+
+    // get referrer's balance BEFORE
+    const balanceReferrerBefore = await provider.getBalance(referrer.address);
 
     // mint a new valid domain
     // note that mint() needs to be called this way ("mint(string,address)") due to function overloading
@@ -137,11 +209,11 @@ describe("PunkTLD", function () {
     const defaultNameBefore = await contract.defaultNames(signer.address);
     expect(defaultNameBefore).to.be.empty;
 
-    const tx = await contract["mint(string,address,string,string,address,uint256)"]( // this approach is better for getting gasUsed value from receipt
+    const tx = await contract["mint(string,address,address,string,address,uint256)"]( // this approach is better for getting gasUsed value from receipt
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      ethers.constants.AddressZero, // no referrer included!!!
       "{'description': 'my domain description'}",
-      "http://etherscan.com",
       pandaContract.address, // PFP address
       0, // PFP token ID
       {
@@ -159,6 +231,10 @@ describe("PunkTLD", function () {
     }
 
     expect(events).to.include("DomainCreated");
+
+    // get referrer's balance AFTER
+    const balanceReferrerAfter = await provider.getBalance(referrer.address);
+    expect(balanceReferrerBefore).to.equal(balanceReferrerAfter); // because referrer was NOT included in mint data
 
     // get default name (after)
     const defaultNameAfter = await contract.defaultNames(signer.address);
@@ -180,9 +256,10 @@ describe("PunkTLD", function () {
     const newDomainName = "techie";
     const tokenId = 0;
 
-    await expect(contract["mint(string,address)"](
+    await expect(contract["mint(string,address,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
@@ -265,9 +342,10 @@ describe("PunkTLD", function () {
     const newDomainName = "techie";
 
     // mint domain
-    await expect(contract["mint(string,address)"](
+    await expect(contract["mint(string,address,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
@@ -326,11 +404,11 @@ describe("PunkTLD", function () {
     expect(defaultNameBefore).to.be.empty;
 
     // mint domain with all params (including PFP)
-    await expect(contract["mint(string,address,string,string,address,uint256)"](
+    await expect(contract["mint(string,address,address,string,address,uint256)"](
       newDomainName, // domain name (without TLD)
       anotherUser.address, // domain owner (another user!!!)
+      ethers.constants.AddressZero,
       "{'description': 'my domain description'}",
-      "http://haveibeenpwned.com",
       pandaContract.address, // PFP address
       0, // PFP token ID (note that this tokenId is owned by signer, not by anotherUser)
       {
@@ -353,9 +431,10 @@ describe("PunkTLD", function () {
     const newDomainName = "techie";
 
     // mint domain
-    await expect(contract["mint(string,address)"](
+    await expect(contract["mint(string,address,address)"](
       newDomainName, // domain name (without TLD)
       anotherUser.address, // domain owner (another user!!!)
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
@@ -396,9 +475,10 @@ describe("PunkTLD", function () {
     const newDomainName = "techie";
 
     // mint domain
-    await expect(contract["mint(string,address)"](
+    await expect(contract["mint(string,address,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
@@ -411,9 +491,10 @@ describe("PunkTLD", function () {
     const anotherDomainName = "tempe";
 
     // mint domain
-    await expect(contract["mint(string,address)"](
+    await expect(contract["mint(string,address,address)"](
       anotherDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
@@ -446,9 +527,10 @@ describe("PunkTLD", function () {
     const newDomainName = "techie";
 
     // mint domain
-    await expect(contract["mint(string,address)"](
+    await expect(contract["mint(string,address,address)"](
       newDomainName, // domain name (without TLD)
       signer.address, // domain owner
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
@@ -478,44 +560,4 @@ describe("PunkTLD", function () {
 
   });
 
-  it("should change domain URL", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
-
-    const price = await contract.price();
-    expect(price).to.equal(domainPrice);
-
-    const newDomainName = "techie";
-
-    // mint domain
-    await expect(contract["mint(string,address)"](
-      newDomainName, // domain name (without TLD)
-      signer.address, // domain owner
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.emit(contract, "DomainCreated");
-
-    // get domain data by domain name (before)
-    const firstDomainDataBefore = await contract.domains(newDomainName);
-    expect(firstDomainDataBefore.url).to.equal("");
-
-    const newUrl = "https://ethereum.org";
-
-    // set new URL
-    await expect(contract.editUrl(
-      newDomainName, // domain name (without TLD)
-      newUrl
-    )).to.emit(contract, "UrlChanged");
-
-    // get domain data by domain name (after)
-    const firstDomainDataAfter = await contract.domains(newDomainName);
-    expect(firstDomainDataAfter.url).to.equal(newUrl);
-
-    // fail at changing url if msg.sender is not domain holder
-    await expect(contract.connect(anotherUser).editUrl(
-      newDomainName, // domain name (without TLD)
-      "https://facebook.com"
-    )).to.be.revertedWith('Not domain holder');
-
-  });
 });

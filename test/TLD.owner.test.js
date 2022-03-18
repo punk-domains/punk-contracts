@@ -78,6 +78,24 @@ describe("PunkTLD (onlyOwner)", function () {
     await expect(contract.connect(anotherUser).changePrice(domainPrice)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
+  it("should change the referral fee", async function () {
+    const referralBefore = await contract.referral();
+    expect(referralBefore).to.equal(1000); // 10% by default
+
+    const newReferral = 500; // 500 bips or 5%
+    
+    await contract.changeReferralPayment(newReferral);
+
+    const referralAfter = await contract.referral();
+    expect(referralAfter).to.equal(newReferral); 
+
+    // if referral fee is set to higher than 100%, the tx should fail
+    await expect(contract.changeReferralPayment(10001)).to.be.revertedWith('Referral fee cannot be higher than 100%');
+    
+    // if user is not owner, the tx should revert
+    await expect(contract.connect(anotherUser).changeReferralPayment(200)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
   it("should toggle buying domains", async function () {
     const buyingEnabledBefore = await contract.buyingEnabled();
     expect(buyingEnabledBefore).to.be.false; 
