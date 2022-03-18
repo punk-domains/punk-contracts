@@ -30,11 +30,18 @@ async function main() {
     let domainHolder = await tldContractOld.getDomainHolder(domainName);
     console.log(domainName + " --> " + domainHolder + " (OLD)");
 
-    let newDomainId = await tldContractNew.ownerMintDomain(domainName, domainHolder);
-    console.log("New domain minted: " + newDomainId);
+    // check if domain name already exists on new TLD...
+    let prevOwner = await tldContractNew.getDomainHolder(domainName);
+    console.log("Has the domain been already minted? " + prevOwner);
 
-    let domainHolderNew = await tldContractNew.getDomainHolder(domainName);
-    console.log(domainName + " --> " + domainHolderNew + " (NEW)");
+    // ... if not, mint it
+    if (prevOwner == ethers.constants.AddressZero) {
+      let newDomainId = await tldContractNew.ownerMintDomain(domainName, domainHolder);
+      console.log("New domain minted: " + newDomainId);
+  
+      let domainHolderNew = await tldContractNew.getDomainHolder(domainName);
+      console.log(domainName + " --> " + domainHolderNew + " (NEW)");
+    }
   }
 
   const totalSupplyNewAfter = await tldContractNew.totalSupply();
