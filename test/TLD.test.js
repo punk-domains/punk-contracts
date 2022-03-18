@@ -70,18 +70,8 @@ describe("PunkTLD", function () {
     // get referrer's balance BEFORE
     const balanceReferrerBefore = await provider.getBalance(referrer.address);
 
-    // mint a new valid domain
-    // note that mint() needs to be called this way ("mint(string,address)") due to function overloading
-
-    /*
-    const tx = await expect(contract["mint(string,address)"](
-      newDomainName, // domain name (without TLD)
-      signer.address, // domain owner
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.emit(contract, "DomainCreated");
-    */
+    const totalSupplyBefore = await contract.totalSupply();
+    expect(totalSupplyBefore).to.equal(0);
 
     const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
       newDomainName, // domain name (without TLD)
@@ -103,6 +93,9 @@ describe("PunkTLD", function () {
 
     expect(events).to.include("DomainCreated");
 
+    const totalSupplyAfter = await contract.totalSupply();
+    expect(totalSupplyAfter).to.equal(1);
+
     // get referrer's balance AFTER
     const balanceReferrerAfter = await provider.getBalance(referrer.address);
     expect(ethers.BigNumber.from(balanceReferrerAfter).sub(balanceReferrerBefore)).to.equal(ethers.BigNumber.from("100000000000000000"));
@@ -115,139 +108,26 @@ describe("PunkTLD", function () {
     const firstDomainData = await contract.domains(newDomainName);
     expect(firstDomainData.name).to.equal(newDomainName);
     expect(firstDomainData.holder).to.equal(signer.address);
-  });
+    expect(firstDomainData.tokenId).to.equal(0);
 
-  /*
-  it("should FAIL to create a new valid domain if referral fee too high", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
-
-    const price = await contract.price();
-    expect(price).to.equal(domainPrice);
-
-    const newDomainName = "techie";
-
-    // get referrer's balance BEFORE
-    const balanceReferrerBefore = await provider.getBalance(referrer.address);
-    const balanceOwnerBefore = await provider.getBalance(signer.address);
-    console.log("balanceReferrerBefore: " + Number(balanceReferrerBefore));
-    console.log("balanceOwnerBefore: " + Number(balanceOwnerBefore));
-
-    // set referral fee to 99%
-    await contract.changeReferralPayment(9900);
-
-    // mint domain (should fail)
-    const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
-      newDomainName, // domain name (without TLD)
-      signer.address, // domain owner
-      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+    // mint another domain
+    await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
+      "second", // domain name (without TLD)
+      referrer.address, // domain owner
+      ethers.constants.AddressZero,
       {
         value: domainPrice // pay  for the domain
       }
     );
 
-    const receipt = await tx.wait();
-
-    calculateGasCosts("Mint", receipt);
-
-    const events = [];
-    for (let item of receipt.events) {
-      events.push(item.event);
-    }
-
-    expect(events).to.include("DomainCreated");
-
-    // get referrer's balance AFTER
-    const balanceReferrerAfter = await provider.getBalance(referrer.address);
-    const balanceOwnerAfter = await provider.getBalance(signer.address);
-    console.log("balanceReferrerAfter: " + Number(balanceReferrerAfter));
-    console.log("balanceOwnerAfter: " + Number(balanceOwnerAfter));
-    expect(ethers.BigNumber.from(balanceReferrerAfter).sub(balanceReferrerBefore)).to.equal(ethers.BigNumber.from("100000000000000000"));
-
-    // get domain name by token ID
-    const firstDomainName = await contract.domainIdsNames(0);
-    expect(firstDomainName).to.equal(newDomainName);
+    const totalSupplyAfterSecond = await contract.totalSupply();
+    expect(totalSupplyAfterSecond).to.equal(2);
 
     // get domain data by domain name
-    const firstDomainData = await contract.domains(newDomainName);
-    expect(firstDomainData.name).to.equal(newDomainName);
-    expect(firstDomainData.holder).to.equal(signer.address);
-  });
-  */
-
-  it("should create a new valid domain (all params)", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
-
-    const price = await contract.price();
-    expect(price).to.equal(domainPrice);
-
-    // create Picky Panda NFT (constructor alread mints the first PickyPanda NFT and gives it to the signer)
-    const PickyPandas = await ethers.getContractFactory("PickyPandas");
-    const pandaContract = await PickyPandas.deploy("Picky Pandas", "PP");
-
-    const pandaNftOwner = await pandaContract.ownerOf(0);
-    expect(pandaNftOwner).to.equal(signer.address);
-
-    const newDomainName = "techie";
-
-    // get referrer's balance BEFORE
-    const balanceReferrerBefore = await provider.getBalance(referrer.address);
-
-    // mint a new valid domain
-    // note that mint() needs to be called this way ("mint(string,address)") due to function overloading
-
-    /*
-    const tx = await expect(contract["mint(string,address)"](
-      newDomainName, // domain name (without TLD)
-      signer.address, // domain owner
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.emit(contract, "DomainCreated");
-    */
-
-    // get default name (before)
-    const defaultNameBefore = await contract.defaultNames(signer.address);
-    expect(defaultNameBefore).to.be.empty;
-
-    const tx = await contract["mint(string,address,address,string,address,uint256)"]( // this approach is better for getting gasUsed value from receipt
-      newDomainName, // domain name (without TLD)
-      signer.address, // domain owner
-      ethers.constants.AddressZero, // no referrer included!!!
-      "{'description': 'my domain description'}",
-      pandaContract.address, // PFP address
-      0, // PFP token ID
-      {
-        value: domainPrice // pay  for the domain
-      }
-    );
-
-    const receipt = await tx.wait();
-
-    calculateGasCosts("Mint (all params)", receipt);
-
-    const events = [];
-    for (let item of receipt.events) {
-      events.push(item.event);
-    }
-
-    expect(events).to.include("DomainCreated");
-
-    // get referrer's balance AFTER
-    const balanceReferrerAfter = await provider.getBalance(referrer.address);
-    expect(balanceReferrerBefore).to.equal(balanceReferrerAfter); // because referrer was NOT included in mint data
-
-    // get default name (after)
-    const defaultNameAfter = await contract.defaultNames(signer.address);
-    expect(defaultNameAfter).to.equal(newDomainName);
-
-    // get domain name by token ID
-    const firstDomainName = await contract.domainIdsNames(0);
-    expect(firstDomainName).to.equal(newDomainName);
-
-    // get domain data by domain name
-    const firstDomainData = await contract.domains(newDomainName);
-    expect(firstDomainData.name).to.equal(newDomainName);
-    expect(firstDomainData.holder).to.equal(signer.address);
+    const secondDomainData = await contract.domains("second");
+    expect(secondDomainData.name).to.equal("second");
+    expect(secondDomainData.holder).to.equal(referrer.address);
+    expect(secondDomainData.tokenId).to.equal(1);
   });
 
   it("should transfer domain to another user", async function () {
@@ -269,25 +149,10 @@ describe("PunkTLD", function () {
     const domainOwnerBefore = await contract.ownerOf(tokenId);
     expect(domainOwnerBefore).to.equal(signer.address);
 
-    // create Picky Panda NFT (constructor alread mints the first PickyPanda NFT and gives it to the signer)
-    const PickyPandas = await ethers.getContractFactory("PickyPandas");
-    const pandaContract = await PickyPandas.deploy("Picky Pandas", "PP");
-
-    const pandaNftOwner = await pandaContract.ownerOf(0);
-    expect(pandaNftOwner).to.equal(signer.address);
-
-    // set Picky Panda as signer's PFP
-    await expect(contract.editPfp(
-      newDomainName, // domain name (without TLD)
-      pandaContract.address, // PFP address
-      0 // PFP token ID
-    )).to.emit(contract, "PfpChanged");
-
     // get domain data by domain name
     const firstDomainDataBefore = await contract.domains(newDomainName);
     expect(firstDomainDataBefore.name).to.equal(newDomainName);
     expect(firstDomainDataBefore.holder).to.equal(signer.address);
-    expect(firstDomainDataBefore.pfpAddress).to.equal(pandaContract.address);
 
     // transfer domain from signer to another user
     /*
@@ -330,140 +195,6 @@ describe("PunkTLD", function () {
     const firstDomainDataAfter = await contract.domains(newDomainName);
     expect(firstDomainDataAfter.name).to.equal(newDomainName);
     expect(firstDomainDataAfter.holder).to.equal(anotherUser.address);
-    expect(firstDomainDataAfter.pfpAddress).to.equal(ethers.constants.AddressZero); // pfpAddress should now be 0x0
-  });
-
-  it("should validate if user owns the PFP", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
-
-    const price = await contract.price();
-    expect(price).to.equal(domainPrice);
-
-    const newDomainName = "techie";
-
-    // mint domain
-    await expect(contract["mint(string,address,address)"](
-      newDomainName, // domain name (without TLD)
-      signer.address, // domain owner
-      ethers.constants.AddressZero,
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.emit(contract, "DomainCreated");
-
-    // create Picky Panda NFT (constructor alread mints the first PickyPanda NFT and gives it to the signer)
-    const PickyPandas = await ethers.getContractFactory("PickyPandas");
-    const pandaContract = await PickyPandas.deploy("Picky Pandas", "PP");
-
-    const pandaNftOwner = await pandaContract.ownerOf(0);
-    expect(pandaNftOwner).to.equal(signer.address);
-
-    // get domain data by domain name (before)
-    const firstDomainDataBefore = await contract.domains(newDomainName);
-    expect(firstDomainDataBefore.pfpAddress).to.equal(ethers.constants.AddressZero);
-    expect(firstDomainDataBefore.pfpTokenId).to.equal(0);
-
-    // set Picky Panda as signer's PFP
-    await expect(contract.editPfp(
-      newDomainName, // domain name (without TLD)
-      pandaContract.address, // PFP address
-      0 // PFP token ID
-    )).to.emit(contract, "PfpChanged");
-
-    // get domain data by domain name (after)
-    const firstDomainDataAfter = await contract.domains(newDomainName);
-    expect(firstDomainDataAfter.pfpAddress).to.equal(pandaContract.address);
-    expect(firstDomainDataAfter.pfpTokenId).to.equal(0);
-
-    // set Picky Panda as signer's PFP
-    await expect(contract.validatePfp(0)).to.emit(contract, "PfpValidated").withArgs(
-      signer.address, // msg sender
-      signer.address, // domain holder
-      true // validation result
-    );
-
-  });
-
-  it("should fail if user wants to add PFP that they don't own when minting a domain", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
-
-    const price = await contract.price();
-    expect(price).to.equal(domainPrice);
-
-    // create Picky Panda NFT (constructor alread mints the first PickyPanda NFT and gives it to the signer)
-    const PickyPandas = await ethers.getContractFactory("PickyPandas");
-    const pandaContract = await PickyPandas.deploy("Picky Pandas", "PP");
-
-    const pandaNftOwner = await pandaContract.ownerOf(0);
-    expect(pandaNftOwner).to.equal(signer.address);
-
-    const newDomainName = "techie";
-
-    // get default name (before)
-    const defaultNameBefore = await contract.defaultNames(anotherUser.address);
-    expect(defaultNameBefore).to.be.empty;
-
-    // mint domain with all params (including PFP)
-    await expect(contract["mint(string,address,address,string,address,uint256)"](
-      newDomainName, // domain name (without TLD)
-      anotherUser.address, // domain owner (another user!!!)
-      ethers.constants.AddressZero,
-      "{'description': 'my domain description'}",
-      pandaContract.address, // PFP address
-      0, // PFP token ID (note that this tokenId is owned by signer, not by anotherUser)
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.be.revertedWith('Domain holder not owner of the PFP');
-
-    // get default name (after)
-    const defaultNameAfter = await contract.defaultNames(anotherUser.address);
-    expect(defaultNameAfter).to.be.empty;
-
-  });
-
-  it("should fail if user wants to add PFP that they don't own", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
-
-    const price = await contract.price();
-    expect(price).to.equal(domainPrice);
-
-    const newDomainName = "techie";
-
-    // mint domain
-    await expect(contract["mint(string,address,address)"](
-      newDomainName, // domain name (without TLD)
-      anotherUser.address, // domain owner (another user!!!)
-      ethers.constants.AddressZero,
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.emit(contract, "DomainCreated");
-
-    // create Picky Panda NFT (constructor alread mints the first PickyPanda NFT and gives it to the signer)
-    const PickyPandas = await ethers.getContractFactory("PickyPandas");
-    const pandaContract = await PickyPandas.deploy("Picky Pandas", "PP");
-
-    const pandaNftOwner = await pandaContract.ownerOf(0);
-    expect(pandaNftOwner).to.equal(signer.address);
-
-    // get domain data by domain name (before)
-    const firstDomainDataBefore = await contract.domains(newDomainName);
-    expect(firstDomainDataBefore.pfpAddress).to.equal(ethers.constants.AddressZero);
-    expect(firstDomainDataBefore.pfpTokenId).to.equal(0);
-
-    // try to set signer's Picky Panda as anotherUser's PFP (should fail)
-    await expect(contract.connect(anotherUser).editPfp(
-      newDomainName, // domain name (without TLD)
-      pandaContract.address, // PFP address
-      0 // PFP token ID (note that this tokenId is owned by signer, not by anotherUser)
-    )).to.be.revertedWith('Sender not PFP owner');
-
-    // get domain data by domain name (after)
-    const firstDomainDataAfter = await contract.domains(newDomainName);
-    expect(firstDomainDataAfter.pfpAddress).to.equal(ethers.constants.AddressZero);
-    expect(firstDomainDataAfter.pfpTokenId).to.equal(0);
-
   });
 
   it("should change default domain", async function () {
@@ -543,10 +274,21 @@ describe("PunkTLD", function () {
     const newData = "{'description': 'This is my NEW domain description'}";
 
     // set new data
-    await expect(contract.editData(
+    const tx = await contract.editData(
       newDomainName, // domain name (without TLD)
       newData
-    )).to.emit(contract, "DataChanged");
+    );
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("DataChanged", receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("DataChanged");
 
     // get domain data by domain name (after)
     const firstDomainDataAfter = await contract.domains(newDomainName);

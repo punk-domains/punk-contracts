@@ -3,10 +3,11 @@ pragma solidity ^0.8.4;
 
 import "./lib/strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./PunkTLD.sol";
 import "./interfaces/IPunkForbiddenTlds.sol";
 
-contract PunkTLDFactory is Ownable {
+contract PunkTLDFactory is Ownable, ReentrancyGuard {
   using strings for string;
 
   string public projectName = "punk.domains";
@@ -53,11 +54,12 @@ contract PunkTLDFactory is Ownable {
     address _tldOwner,
     uint256 _domainPrice,
     bool _buyingEnabled
-  ) public payable returns(address) {
+  ) public payable nonReentrant returns(address) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
-    payable(owner()).transfer(address(this).balance);
+    (bool sent, ) = payable(owner()).call{value: address(this).balance}("");
+    require(sent, "Failed to send TLD payment to factory owner");
 
     return _createTld(
       _name, 
@@ -113,7 +115,7 @@ contract PunkTLDFactory is Ownable {
     price = _price;
   }
 
-  function changeProjectName(string memory _newProjectName) public onlyOwner {
+  function changeProjectName(string calldata _newProjectName) public onlyOwner {
     projectName = _newProjectName;
   }
   

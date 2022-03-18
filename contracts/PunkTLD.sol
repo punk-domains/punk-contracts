@@ -15,7 +15,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   bool public buyingEnabled; // buying domains enabled
   address public factoryAddress; // PunkTLDFactory address
   uint256 public royalty; // share of each domain purchase (in bips) that goes to Punk Domains
-  uint256 public referral = 1000; // share of each domain purchase (in bips) that goes to the referrer
+  uint256 public referral = 1000; // share of each domain purchase (in bips) that goes to the referrer (referral fee)
   uint256 public totalSupply;
   uint256 public nameMaxLength = 140; // max length of a domain name
 
@@ -23,11 +23,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     string name; // domain name that goes before the TLD name; example: "tempetechie" in "tempetechie.web3"
     uint256 tokenId;
     address holder;
-    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."]}
-    
-    // optional: domain holder can set up a profile picture (an NFT that they hold)
-    address pfpAddress;
-    uint256 pfpTokenId;
+    string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."], "url": "https://punk.domains"}
   }
   
   mapping (string => Domain) public domains; // mapping (domain name => Domain struct)
@@ -37,8 +33,6 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
   event DataChanged(address indexed user);
-  event PfpChanged(address indexed user, address indexed pfpAddress, uint256 pfpTokenId);
-  event PfpValidated(address indexed user, address indexed owner, bool valid);
 
   constructor(
     string memory _name,
@@ -60,27 +54,11 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   // READ
 
   // Domain getters - you can also get all Domain data by calling the auto-generated domains(domainName) method
-  function getDomainHolder(string memory _domainName) public view returns(address) {
+  function getDomainHolder(string calldata _domainName) public view returns(address) {
     return domains[_domainName].holder;
   }
 
-  function getDomainPfpAddress(string memory _domainName) public view returns(address) {
-    ERC721 pfpContract = ERC721(domains[_domainName].pfpAddress); // get PFP contract
-
-    // if domain holder really owns that NFT, return the NFT address
-    if (pfpContract.ownerOf(domains[_domainName].pfpTokenId) == domains[_domainName].holder) {
-      return domains[_domainName].pfpAddress;
-    } else {
-      // otherwise return 0x0 address
-      return address(0);
-    }
-  }
-
-  function getDomainPfpTokenId(string memory _domainName) public view returns(uint256) {
-    return domains[_domainName].pfpTokenId;
-  }
-
-  function getDomainData(string memory _domainName) public view returns(string memory) {
+  function getDomainData(string calldata _domainName) public view returns(string memory) {
     return domains[_domainName].data; // should be a JSON object
   }
 
@@ -104,7 +82,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     IPunkTLDFactory factory = IPunkTLDFactory(factoryAddress);
 
     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500"><rect x="0" y="0" width="500" height="500" fill="black"/><text x="50%" y="50%" dominant-baseline="middle" fill="white" text-anchor="middle" font-size="x-large">',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(58,17,116);stop-opacity:1" /><stop offset="100%" style="stop-color:rgb(116,25,17);stop-opacity:1" /></linearGradient></defs><rect x="0" y="0" width="500" height="500" fill="url(#grad)"/><text x="50%" y="50%" dominant-baseline="middle" fill="white" text-anchor="middle" font-size="x-large">',
         _fullDomainName,'</text><text x="50%" y="70%" dominant-baseline="middle" fill="white" text-anchor="middle">',
         factory.projectName(),'</text>',
       '</svg>'
@@ -114,28 +92,16 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   // WRITE
-  function editDefaultDomain(string memory _domainName) public {
+  function editDefaultDomain(string calldata _domainName) public {
     require(domains[_domainName].holder == msg.sender, "You do not own the selected domain");
     defaultNames[msg.sender] = _domainName;
     emit DefaultDomainChanged(msg.sender, _domainName);
   }
 
-  function editData(string memory _domainName, string memory _data) external {
+  function editData(string calldata _domainName, string calldata _data) external {
     require(domains[_domainName].holder == msg.sender, "Only domain holder can edit their data");
     domains[_domainName].data = _data;
     emit DataChanged(msg.sender);
-  }
-
-  function editPfp(string memory _domainName, address _pfpAddress, uint256 _pfpTokenId) public {
-    require(domains[_domainName].holder == msg.sender, "Only domain holder can edit their PFP");
-
-    ERC721 pfpContract = ERC721(_pfpAddress); // get PFP contract
-
-    require(pfpContract.ownerOf(_pfpTokenId) == msg.sender, "Sender not PFP owner");
-
-    domains[_domainName].pfpAddress = _pfpAddress;
-    domains[_domainName].pfpTokenId = _pfpTokenId;
-    emit PfpChanged(msg.sender, _pfpAddress, _pfpTokenId);
   }
 
   // mint with mandatory params only
@@ -149,32 +115,13 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
 
     _sendPayment(msg.value, _referrer);
 
-    return _mintDomain(_domainName, _domainHolder, "", address(0), 0);
-  }
-
-  // mint with both mandatory and optional params
-  function mint(
-    string memory _domainName,
-    address _domainHolder,
-    address _referrer,
-    string memory _data,
-    address _pfpAddress,
-    uint256 _pfpTokenId
-  ) public payable nonReentrant returns(uint256) {
-    require(buyingEnabled == true, "Buying TLDs disabled");
-    require(msg.value >= price, "Value below price");
-
-    _sendPayment(msg.value, _referrer);
-
-    return _mintDomain(_domainName, _domainHolder, _data, _pfpAddress, _pfpTokenId);
+    return _mintDomain(_domainName, _domainHolder, "");
   }
 
   function _mintDomain(
     string memory _domainName, 
     address _domainHolder,
-    string memory _data,
-    address _pfpAddress,
-    uint256 _pfpTokenId
+    string memory _data
   ) internal returns(uint256) {
     require(strings.len(strings.toSlice(_domainName)) > 1, "Domain must be longer than 1 char");
     require(bytes(_domainName).length < nameMaxLength, "Domain name is too long");
@@ -184,16 +131,6 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     _safeMint(_domainHolder, totalSupply);
 
     Domain memory newDomain;
-
-    // validate if domain holder really owns the specified PFP
-    if (_pfpAddress != address(0)) {
-      ERC721 pfpContract = ERC721(_pfpAddress);
-      require(pfpContract.ownerOf(_pfpTokenId) == _domainHolder, "Domain holder not owner of the PFP");
-
-      // store PFP data in Domain struct
-      newDomain.pfpAddress = _pfpAddress;
-      newDomain.pfpTokenId = _pfpTokenId;
-    }
     
     // store data in Domain struct
     newDomain.name = _domainName;
@@ -211,43 +148,35 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     
     emit DomainCreated(msg.sender, _domainHolder, string(abi.encodePacked(_domainName, name())));
 
-    totalSupply++;
+    ++totalSupply;
+
     return totalSupply-1;
   }
 
   function _sendPayment(uint256 _paymentAmount, address _referrer) internal {
-    if (royalty > 0 && royalty < 5000) { // royalty must be less than 50% (5000 bips)
-      payable(getFactoryOwner()).transfer((_paymentAmount * royalty) / 10000); // royalty for factory owner
+    if (royalty > 0 && royalty < 5000) { 
+      // send royalty - must be less than 50% (5000 bips)
+      (bool sentRoyalty, ) = payable(getFactoryOwner()).call{value: ((_paymentAmount * royalty) / 10000)}("");
+      require(sentRoyalty, "Failed to send royalty to factory owner");
     }
 
     if (_referrer != address(0) && referral > 0 && referral < 5000) {
-      payable(_referrer).transfer((_paymentAmount * referral) / 10000); // referral fee for the referrer
+      // send referral fee - must be less than 50% (5000 bips)
+      (bool sentReferralFee, ) = payable(_referrer).call{value: ((_paymentAmount * referral) / 10000)}("");
+      require(sentReferralFee, "Failed to send referral fee");
     }
-    
-    payable(owner()).transfer(address(this).balance); // send the rest to TLD owner
-  }
 
-  // check if holder of a domain (based on domain token ID) still owns their chosen pfp (anyone can do this validation for any user)
-  function validatePfp(uint256 _tokenId) public {
-    if (domains[domainIdsNames[_tokenId]].pfpAddress != address(0)) {
-      ERC721 pfpContract = ERC721(domains[domainIdsNames[_tokenId]].pfpAddress);
-
-      if (pfpContract.ownerOf(domains[domainIdsNames[_tokenId]].pfpTokenId) != domains[domainIdsNames[_tokenId]].holder) {
-        // if user does not own that PFP, delete the PFP address from user's Domain struct
-        domains[domainIdsNames[_tokenId]].pfpAddress = address(0);
-        emit PfpValidated(msg.sender, domains[domainIdsNames[_tokenId]].holder, false);
-      } else {
-        emit PfpValidated(msg.sender, domains[domainIdsNames[_tokenId]].holder, true); // PFP image is valid
-      }
-    }
+    // send the rest to TLD owner
+    (bool sent, ) = payable(owner()).call{value: address(this).balance}("");
+    require(sent, "Failed to send domain payment to TLD owner");
   }
 
   //@dev Hook that is called before any token transfer. This includes minting and burning.
   function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
 
     if (from != address(0)) { // run on every transfer but not on mint
-      domains[domainIdsNames[tokenId]].holder = to; // change holder address in struct data
-      domains[domainIdsNames[tokenId]].data = ""; // reset data
+      domains[domainIdsNames[tokenId]].holder = to; // change holder address in Domain struct
+      domains[domainIdsNames[tokenId]].data = ""; // reset custom data
       
       if (bytes(defaultNames[to]).length == 0) {
         defaultNames[to] = domains[domainIdsNames[tokenId]].name; // if default domain name is not set for that holder, set it now
@@ -256,21 +185,12 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
       if (strings.equals(strings.toSlice(domains[domainIdsNames[tokenId]].name), strings.toSlice(defaultNames[from]))) {
         defaultNames[from] = ""; // if previous owner had this domain name as default, unset it as default
       }
-
-      // validate if new owner holds the NFT specified in Domain data
-      if (domains[domainIdsNames[tokenId]].pfpAddress != address(0)) {
-        ERC721 pfpContract = ERC721(domains[domainIdsNames[tokenId]].pfpAddress);
-
-        if (pfpContract.ownerOf(domains[domainIdsNames[tokenId]].pfpTokenId) != to) {
-          domains[domainIdsNames[tokenId]].pfpAddress = address(0); // if user does not own that PFP, delete the PFP address from user's Domain struct
-        }
-      }
     }
   }
 
   // OWNER
   function ownerMintDomain(string memory _domainName, address _domainHolder) public onlyOwner returns(uint256) {
-    return _mintDomain(_domainName, _domainHolder, "", address(0), 0);
+    return _mintDomain(_domainName, _domainHolder, "");
   }
 
   function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
@@ -282,7 +202,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   function changeReferralPayment(uint256 _referral) public onlyOwner {
-    require(_referral < 10001, "Referral fee cannot be higher than 100%");
+    require(_referral < 5000, "Referral fee cannot be 50% or higher");
     referral = _referral; // referral must be in bips
   }
 
