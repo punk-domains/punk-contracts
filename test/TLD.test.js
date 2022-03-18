@@ -111,15 +111,16 @@ describe("PunkTLD", function () {
     expect(firstDomainData.tokenId).to.equal(0);
 
     // mint another domain
-    await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
+    await contract["mint(string,address,address)"](
       "second", // domain name (without TLD)
       referrer.address, // domain owner
-      ethers.constants.AddressZero,
+      ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay  for the domain
       }
     );
 
+    // check total supply of tokens
     const totalSupplyAfterSecond = await contract.totalSupply();
     expect(totalSupplyAfterSecond).to.equal(2);
 

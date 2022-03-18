@@ -129,6 +129,7 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
   }
   
   function changeRoyalty(uint256 _royalty) public onlyOwner {
+    require(_royalty < 5000, "Royalty cannot be 50% or higher");
     royalty = _royalty;
   }
 

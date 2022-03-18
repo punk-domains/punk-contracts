@@ -1,14 +1,18 @@
 const { expect } = require("chai");
+const { ethers, waffle} = require("hardhat");
 
 describe("PunkTLDFactory", function () {
   let contract;
   let forbTldsContract;
   let signer;
+  let anotherUser;
+
+  const provider = waffle.provider;
 
   const tldPrice = ethers.utils.parseUnits("1", "ether");
 
   beforeEach(async function () {
-    [signer] = await ethers.getSigners();
+    [signer, anotherUser] = await ethers.getSigners();
 
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     forbTldsContract = await PunkForbiddenTlds.deploy();
@@ -33,7 +37,11 @@ describe("PunkTLDFactory", function () {
     const price = await contract.price();
     expect(price).to.equal(tldPrice);
 
-    await expect(contract.createTld(
+    // get user&signer balances BEFORE
+    const balanceSignerBefore = await provider.getBalance(signer.address); // signer is the factory owner
+    const balanceUserBefore = await provider.getBalance(anotherUser.address);
+
+    await expect(contract.connect(anotherUser).createTld(
       ".web3", // TLD
       "WEB3", // symbol
       signer.address, // TLD owner
@@ -43,6 +51,18 @@ describe("PunkTLDFactory", function () {
         value: tldPrice // pay 1 ETH for the TLD
       }
     )).to.emit(contract, "TldCreated");
+
+    // get another user's balance AFTER (should be smaller by 1 ETH + gas)
+    const balanceUserAfter = await provider.getBalance(anotherUser.address);
+    const balUsrBef = Number(ethers.utils.formatEther(balanceUserBefore))
+    const balUsrAft = Number(ethers.utils.formatEther(balanceUserAfter))
+    expect(balUsrBef-balUsrAft).to.be.greaterThan(1); // diff: 1 ETH + gas
+
+    // get signer's balance after (should be bigger by exactly 1 ETH)
+    const balanceSignerAfter = await provider.getBalance(signer.address);
+    const balSigBef = Number(ethers.utils.formatEther(balanceSignerBefore))
+    const balSigAft = Number(ethers.utils.formatEther(balanceSignerAfter))
+    expect(balSigAft-balSigBef).to.equal(1); // diff: 1 ETH exactly
 
     // get TLD from array by index
     const firstTld = await contract.tlds(0);

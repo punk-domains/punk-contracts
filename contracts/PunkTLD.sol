@@ -214,6 +214,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   // FACTORY OWNER (current owner address of PunkTLDFactory)
   function changeRoyalty(uint256 _royalty) public {
     require(getFactoryOwner() == msg.sender, "Sender not factory owner");
-    royalty = _royalty; // royalty is in bips; see line 230 for max royalty
+    require(_royalty < 5000, "Royalty cannot be 50% or higher");
+    royalty = _royalty; // royalty is in bips
   }
 }
