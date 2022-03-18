@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "base64-sol/base64.sol";
 
+// Punk TLD v2
+
 contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   using strings for string;
 
@@ -68,23 +70,22 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+    IPunkTLDFactory factory = IPunkTLDFactory(factoryAddress);
     string memory fullDomainName = string(abi.encodePacked(domains[domainIdsNames[_tokenId]].name, name()));
 
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
-        '{"name":"', fullDomainName, '", ',
-        '"description": "Punk Domains digital identity.", ',
-        '"image": "', _getImage(fullDomainName), '"}'))))
+        '{"name": "', fullDomainName, '", ',
+        '"description": "', factory.projectDescription(), '", ',
+        '"image": "', _getImage(fullDomainName, factory.projectName()), '"}'))))
     );
   }
 
-  function _getImage(string memory _fullDomainName) internal view returns (string memory) {
-    IPunkTLDFactory factory = IPunkTLDFactory(factoryAddress);
-
+  function _getImage(string memory _fullDomainName, string memory _projectName) internal pure returns (string memory) {
     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(58,17,116);stop-opacity:1" /><stop offset="100%" style="stop-color:rgb(116,25,17);stop-opacity:1" /></linearGradient></defs><rect x="0" y="0" width="500" height="500" fill="url(#grad)"/><text x="50%" y="50%" dominant-baseline="middle" fill="white" text-anchor="middle" font-size="x-large">',
         _fullDomainName,'</text><text x="50%" y="70%" dominant-baseline="middle" fill="white" text-anchor="middle">',
-        factory.projectName(),'</text>',
+        _projectName,'</text>',
       '</svg>'
     ))));
 

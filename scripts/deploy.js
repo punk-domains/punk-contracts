@@ -14,7 +14,7 @@ async function main() {
   const instanceForb = await contractForb.deploy();
   console.log("ForbiddenTlds contract address:", instanceForb.address);
 
-  const tldPrice = ethers.utils.parseUnits("0.1", "ether");
+  const tldPrice = ethers.utils.parseUnits("0.01", "ether");
   const instanceFactory = await contractFactory.deploy(tldPrice, instanceForb.address);
 
   await instanceForb.addFactoryAddress(instanceFactory.address);
