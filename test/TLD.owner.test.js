@@ -84,13 +84,13 @@ describe("PunkTLD (onlyOwner)", function () {
 
     const newReferral = 500; // 500 bips or 5%
     
-    await contract.changeReferralPayment(newReferral);
+    await contract.changeReferralFee(newReferral);
 
     const referralAfter = await contract.referral();
     expect(referralAfter).to.equal(newReferral); 
 
     // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changeReferralPayment(200)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(contract.connect(anotherUser).changeReferralFee(200)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should prevent setting referral fee to 50% or higher", async function () {
@@ -98,10 +98,10 @@ describe("PunkTLD (onlyOwner)", function () {
     expect(referralBefore).to.equal(1000); // 10% by default
 
     // if referral fee is set to 50%, the tx should fail
-    await expect(contract.changeReferralPayment(5000)).to.be.revertedWith('Referral fee cannot be 50% or higher');
+    await expect(contract.changeReferralFee(5000)).to.be.revertedWith('Referral fee cannot be 50% or higher');
     
     // if referral fee is set to higher than 50%, the tx should fail
-    await expect(contract.changeReferralPayment(8000)).to.be.revertedWith('Referral fee cannot be 50% or higher');
+    await expect(contract.changeReferralFee(8000)).to.be.revertedWith('Referral fee cannot be 50% or higher');
     
     const referralAfter = await contract.referral();
     expect(referralAfter).to.equal(1000); // should remain the same as before

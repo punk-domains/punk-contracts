@@ -202,7 +202,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     price = _price;
   }
 
-  function changeReferralPayment(uint256 _referral) public onlyOwner {
+  function changeReferralFee(uint256 _referral) public onlyOwner {
     require(_referral < 5000, "Referral fee cannot be 50% or higher");
     referral = _referral; // referral must be in bips
   }
