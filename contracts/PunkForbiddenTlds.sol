@@ -34,28 +34,28 @@ contract PunkForbiddenTlds is Ownable {
   }
 
   // FACTORY
-  function addForbiddenTld(string memory _name) public onlyFactory {
+  function addForbiddenTld(string memory _name) external onlyFactory {
     forbidden[_name] = true;
     emit ForbiddenTldAdded(msg.sender, _name);
   }
 
   // OWNER
-  function ownerAddForbiddenTld(string memory _name) public onlyOwner {
+  function ownerAddForbiddenTld(string memory _name) external onlyOwner {
     forbidden[_name] = true;
     emit ForbiddenTldAdded(msg.sender, _name);
   }
 
-  function removeForbiddenTld(string memory _name) public onlyOwner {
+  function removeForbiddenTld(string memory _name) external onlyOwner {
     forbidden[_name] = false;
     emit ForbiddenTldRemoved(msg.sender, _name);
   }
 
-  function addFactoryAddress(address _fAddr) public onlyOwner {
+  function addFactoryAddress(address _fAddr) external onlyOwner {
     factoryAddresses[_fAddr] = true;
     emit FactoryAddressAdded(msg.sender, _fAddr);
   }
 
-  function removeFactoryAddress(address _fAddr) public onlyOwner {
+  function removeFactoryAddress(address _fAddr) external onlyOwner {
     factoryAddresses[_fAddr] = false;
     emit FactoryAddressRemoved(msg.sender, _fAddr);
   }

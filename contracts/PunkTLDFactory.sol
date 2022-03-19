@@ -57,7 +57,7 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
     address _tldOwner,
     uint256 _domainPrice,
     bool _buyingEnabled
-  ) public payable nonReentrant returns(address) {
+  ) external payable nonReentrant returns(address) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
@@ -106,29 +106,29 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
   }
 
   // OWNER
-  function changeForbiddenTldsAddress(address _forbiddenTlds) public onlyOwner {
+  function changeForbiddenTldsAddress(address _forbiddenTlds) external onlyOwner {
     forbiddenTlds = _forbiddenTlds;
   }
 
-  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
+  function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;
   }
 
-  function changePrice(uint256 _price) public onlyOwner {
+  function changePrice(uint256 _price) external onlyOwner {
     price = _price;
   }
 
-  function changeProjectName(string calldata _newProjectName) public onlyOwner {
+  function changeProjectName(string calldata _newProjectName) external onlyOwner {
     // visible in each domain NFT image (SVG)
     projectName = _newProjectName;
   }
 
-  function changeProjectDescription(string calldata _newProjectDescription) public onlyOwner {
+  function changeProjectDescription(string calldata _newProjectDescription) external onlyOwner {
     // visible in each domain NFT metadata description
     projectDescription = _newProjectDescription;
   }
   
-  function changeRoyalty(uint256 _royalty) public onlyOwner {
+  function changeRoyalty(uint256 _royalty) external onlyOwner {
     require(_royalty < 5000, "Royalty cannot be 50% or higher");
     royalty = _royalty;
   }
@@ -140,7 +140,7 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
     address _tldOwner,
     uint256 _domainPrice,
     bool _buyingEnabled
-  ) public onlyOwner returns(address) {
+  ) external onlyOwner returns(address) {
 
     return _createTld(
       _name, 
@@ -152,7 +152,7 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
 
   }
 
-  function toggleBuyingTlds() public onlyOwner {
+  function toggleBuyingTlds() external onlyOwner {
     buyingEnabled = !buyingEnabled;
   }
 

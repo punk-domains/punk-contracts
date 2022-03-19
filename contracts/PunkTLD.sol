@@ -93,7 +93,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   // WRITE
-  function editDefaultDomain(string calldata _domainName) public {
+  function editDefaultDomain(string calldata _domainName) external {
     require(domains[_domainName].holder == msg.sender, "You do not own the selected domain");
     defaultNames[msg.sender] = _domainName;
     emit DefaultDomainChanged(msg.sender, _domainName);
@@ -110,7 +110,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     string memory _domainName, 
     address _domainHolder,
     address _referrer
-  ) public payable nonReentrant returns(uint256) {
+  ) external payable nonReentrant returns(uint256) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
@@ -190,29 +190,29 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   // OWNER
-  function ownerMintDomain(string memory _domainName, address _domainHolder) public onlyOwner returns(uint256) {
+  function ownerMintDomain(string memory _domainName, address _domainHolder) external onlyOwner returns(uint256) {
     return _mintDomain(_domainName, _domainHolder, "");
   }
 
-  function changeNameMaxLength(uint256 _maxLength) public onlyOwner {
+  function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;
   }
 
-  function changePrice(uint256 _price) public onlyOwner {
+  function changePrice(uint256 _price) external onlyOwner {
     price = _price;
   }
 
-  function changeReferralFee(uint256 _referral) public onlyOwner {
+  function changeReferralFee(uint256 _referral) external onlyOwner {
     require(_referral < 5000, "Referral fee cannot be 50% or higher");
     referral = _referral; // referral must be in bips
   }
 
-  function toggleBuyingDomains() public onlyOwner {
+  function toggleBuyingDomains() external onlyOwner {
     buyingEnabled = !buyingEnabled;
   }
   
   // FACTORY OWNER (current owner address of PunkTLDFactory)
-  function changeRoyalty(uint256 _royalty) public {
+  function changeRoyalty(uint256 _royalty) external {
     require(getFactoryOwner() == msg.sender, "Sender not factory owner");
     require(_royalty < 5000, "Royalty cannot be 50% or higher");
     royalty = _royalty; // royalty is in bips
