@@ -20,6 +20,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   uint256 public referral = 1000; // share of each domain purchase (in bips) that goes to the referrer (referral fee)
   uint256 public totalSupply;
   uint256 public nameMaxLength = 140; // max length of a domain name
+  string public description = "Punk Domains digital identity. Visit https://punk.domains/";
 
   struct Domain {
     string name; // domain name that goes before the TLD name; example: "tempetechie" in "tempetechie.web3"
@@ -76,7 +77,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
         '{"name": "', fullDomainName, '", ',
-        '"description": "', factory.projectDescription(), '", ',
+        '"description": "', description, '", ',
         '"image": "', _getImage(fullDomainName, factory.projectName()), '"}'))))
     );
   }
@@ -190,6 +191,10 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   // OWNER
+  function changeDescription(string calldata _description) external onlyOwner {
+    description = _description;
+  }
+
   function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;
   }

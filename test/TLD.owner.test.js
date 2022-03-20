@@ -151,6 +151,22 @@ describe("PunkTLD (onlyOwner)", function () {
     await expect(contract.connect(anotherUser).changeNameMaxLength(70)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
+
+  it("should change the MFT metadata description", async function () {
+    const descBefore = await contract.description();
+    expect(descBefore).to.equal("Punk Domains digital identity. Visit https://punk.domains/");
+
+    const newDesc = "New description";
+    
+    await contract.changeDescription(newDesc);
+
+    const descAfter = await contract.description();
+    expect(descAfter).to.equal(newDesc);
+
+    // if user is not owner, the tx should revert
+    await expect(contract.connect(anotherUser).changeDescription(20)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
   it("should change the royalty amount", async function () {
     const royaltyBefore = await contract.royalty();
     expect(royaltyBefore).to.equal(0);

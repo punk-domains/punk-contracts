@@ -4,6 +4,5 @@ pragma solidity ^0.8.4;
 interface IPunkTLDFactory {
 
   function projectName() external view returns (string memory);
-  function projectDescription() external view returns (string memory);
 
 }

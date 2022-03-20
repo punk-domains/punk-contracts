@@ -13,7 +13,6 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
   using strings for string;
 
   string public projectName = "punk.domains";
-  string public projectDescription = "Punk Domains digital identity. Visit https://punk.domains/";
 
   string[] public tlds; // existing TLDs
   mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
@@ -121,11 +120,6 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
   function changeProjectName(string calldata _newProjectName) external onlyOwner {
     // visible in each domain NFT image (SVG)
     projectName = _newProjectName;
-  }
-
-  function changeProjectDescription(string calldata _newProjectDescription) external onlyOwner {
-    // visible in each domain NFT metadata description
-    projectDescription = _newProjectDescription;
   }
   
   function changeRoyalty(uint256 _royalty) external onlyOwner {
