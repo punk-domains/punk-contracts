@@ -43,6 +43,7 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
     require(strings.len(strings.toSlice(_name)) > 1, "TLD too short");
     require(bytes(_name).length < nameMaxLength, "TLD too long");
     require(strings.count(strings.toSlice(_name), strings.toSlice(".")) == 1, "Name must have 1 dot");
+    require(strings.count(strings.toSlice(_name), strings.toSlice(" ")) == 0, "Name must have no spaces");
     require(strings.startsWith(strings.toSlice(_name), strings.toSlice(".")) == true, "Name must start with dot");
 
     IPunkForbiddenTlds forbidden = IPunkForbiddenTlds(forbiddenTlds);

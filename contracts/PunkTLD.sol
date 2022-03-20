@@ -114,7 +114,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     emit DataChanged(msg.sender);
   }
 
-  /// @notice Mint a new domain name as NFT.
+  /// @notice Mint a new domain name as NFT (no dots and spaces allowed).
   /// @param _domainName Enter domain name without TLD and make sure letters are in lowercase form.
   /// @return token ID
   function mint(
@@ -141,6 +141,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     require(strings.len(strings.toSlice(_domainName)) > 1, "Domain must be longer than 1 char");
     require(bytes(_domainName).length < nameMaxLength, "Domain name is too long");
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0, "There should be no dots in the name");
+    require(strings.count(strings.toSlice(_domainName), strings.toSlice(" ")) == 0, "There should be no spaces in the name");
     require(domains[_domainName].holder == address(0), "Domain with this name already exists");
 
     _safeMint(_domainHolder, totalSupply);
