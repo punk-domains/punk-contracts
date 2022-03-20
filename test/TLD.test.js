@@ -303,4 +303,40 @@ describe("PunkTLD", function () {
 
   });
 
+  it("should create a new valid domain, but with uppercase letters input", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    const newDomainName = "teCh1e";
+
+    const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("Mint " + newDomainName, receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("DomainCreated");
+
+    const totalSupplyAfter = await contract.totalSupply();
+    expect(totalSupplyAfter).to.equal(1);
+
+    const getDomainName = await contract.domainIdsNames(0);
+    console.log(getDomainName);
+    expect(getDomainName).to.equal(newDomainName.toLowerCase()); // should be lowercase
+  });
+
 });

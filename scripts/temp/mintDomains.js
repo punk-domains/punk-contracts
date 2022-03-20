@@ -36,7 +36,7 @@ async function main() {
 
     // ... if not, mint it
     if (prevOwner == ethers.constants.AddressZero) {
-      let newDomainId = await tldContractNew.ownerMintDomain(domainName, domainHolder);
+      let newDomainId = await tldContractNew.ownerMintDomain(domainName.toLowerCase(), domainHolder);
       console.log("New domain minted: " + newDomainId);
   
       let domainHolderNew = await tldContractNew.getDomainHolder(domainName);

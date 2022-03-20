@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./PunkTLD.sol";
 import "./interfaces/IPunkForbiddenTlds.sol";
 
-// Punk Domains v2
-
+/// @title Punk Domains TLD Factory contract (v2)
+/// @author Tempe Techie
+/// @notice Factory contract dynamically generates new TLD contracts.
 contract PunkTLDFactory is Ownable, ReentrancyGuard {
   using strings for string;
 
@@ -24,7 +25,8 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
   bool public buyingEnabled = false; // buying TLDs enabled (true/false)
   uint256 public nameMaxLength = 40; // the maximum length of a TLD name
 
-  event TldCreated(address indexed user, address indexed owner, string indexed tldName, address tldAddress);
+  event TldCreated(address indexed user, address indexed owner, string tldName, address tldAddress);
+  event ChangeTldPrice(address indexed user, uint256 tldPrice);
 
   constructor(uint256 _price, address _forbiddenTlds) {
     price = _price;
@@ -49,7 +51,9 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
 
   // WRITE
 
-  // create a new TLD (public payable)
+  /// @notice Create a new top-level domain contract (ERC-721).
+  /// @param _name Enter TLD name starting with a dot and make sure letters are in lowercase form.
+  /// @return TLD contract address
   function createTld(
     string memory _name,
     string memory _symbol,
@@ -75,12 +79,14 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
 
   // create a new TLD (internal non-payable)
   function _createTld(
-    string memory _name,
+    string memory _nameRaw,
     string memory _symbol,
     address _tldOwner,
     uint256 _domainPrice,
     bool _buyingEnabled
   ) internal returns(address) {
+    string memory _name = strings.lower(_nameRaw);
+
     _validTldName(_name);
 
     PunkTLD tld = new PunkTLD(
@@ -105,29 +111,38 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
+  /// @notice Only Factory contract owner can call this function.
   function changeForbiddenTldsAddress(address _forbiddenTlds) external onlyOwner {
     forbiddenTlds = _forbiddenTlds;
   }
 
+  /// @notice Only Factory contract owner can call this function.
   function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;
   }
 
+  /// @notice Only Factory contract owner can call this function.
   function changePrice(uint256 _price) external onlyOwner {
     price = _price;
+    emit ChangeTldPrice(msg.sender, _price);
   }
 
+  /// @notice Only Factory contract owner can call this function.
   function changeProjectName(string calldata _newProjectName) external onlyOwner {
     // visible in each domain NFT image (SVG)
     projectName = _newProjectName;
   }
   
+  /// @notice Only Factory contract owner can call this function.
   function changeRoyalty(uint256 _royalty) external onlyOwner {
     require(_royalty < 5000, "Royalty cannot be 50% or higher");
     royalty = _royalty;
   }
 
-  // create a new TLD for a specified address for free (only owner)
+  /// @notice Factory owner can create a new TLD for a specified address for free
+  /// @param _name Enter TLD name starting with a dot and make sure letters are in lowercase form.
+  /// @return TLD contract address
   function ownerCreateTld(
     string memory _name,
     string memory _symbol,
@@ -146,6 +161,7 @@ contract PunkTLDFactory is Ownable, ReentrancyGuard {
 
   }
 
+  /// @notice Only Factory contract owner can call this function.
   function toggleBuyingTlds() external onlyOwner {
     buyingEnabled = !buyingEnabled;
   }

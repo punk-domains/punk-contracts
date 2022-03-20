@@ -8,8 +8,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "base64-sol/base64.sol";
 
-// Punk TLD v2
-
+/// @title Punk Domains TLD contract (v2)
+/// @author Tempe Techie
+/// @notice Dynamically generated NFT contract which represents a top-level domain
 contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   using strings for string;
 
@@ -33,9 +34,13 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (address => string) public defaultNames; // user's default domain
 
-  event DomainCreated(address indexed user, address indexed owner, string indexed fullDomainName);
+  event DomainCreated(address indexed user, address indexed owner, string fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
   event DataChanged(address indexed user);
+  event TldPriceChanged(address indexed user, uint256 tldPrice);
+  event ReferralFeeChanged(address indexed user, uint256 referralFee);
+  event TldRoyaltyChanged(address indexed user, uint256 tldRoyalty);
+  event DomainBuyingToggle(address indexed user, bool domainBuyingToggle);
 
   constructor(
     string memory _name,
@@ -58,11 +63,11 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   // Domain getters - you can also get all Domain data by calling the auto-generated domains(domainName) method
   function getDomainHolder(string calldata _domainName) public view returns(address) {
-    return domains[_domainName].holder;
+    return domains[strings.lower(_domainName)].holder;
   }
 
   function getDomainData(string calldata _domainName) public view returns(string memory) {
-    return domains[_domainName].data; // should be a JSON object
+    return domains[strings.lower(_domainName)].data; // should be a JSON object
   }
 
   function getFactoryOwner() public view returns(address) {
@@ -100,15 +105,20 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     emit DefaultDomainChanged(msg.sender, _domainName);
   }
 
+  /// @notice Edit domain custom data. Make sure to not accidentally delete previous data. Fetch previous data first.
+  /// @param _domainName Only domain name, no TLD/extension.
+  /// @param _data Custom data needs to be in a JSON object format.
   function editData(string calldata _domainName, string calldata _data) external {
     require(domains[_domainName].holder == msg.sender, "Only domain holder can edit their data");
     domains[_domainName].data = _data;
     emit DataChanged(msg.sender);
   }
 
-  // mint with mandatory params only
+  /// @notice Mint a new domain name as NFT.
+  /// @param _domainName Enter domain name without TLD and make sure letters are in lowercase form.
+  /// @return token ID
   function mint(
-    string memory _domainName, 
+    string memory _domainName,
     address _domainHolder,
     address _referrer
   ) external payable nonReentrant returns(uint256) {
@@ -121,10 +131,13 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   function _mintDomain(
-    string memory _domainName, 
+    string memory _domainNameRaw, 
     address _domainHolder,
     string memory _data
   ) internal returns(uint256) {
+    // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
+    string memory _domainName = strings.lower(_domainNameRaw);
+
     require(strings.len(strings.toSlice(_domainName)) > 1, "Domain must be longer than 1 char");
     require(bytes(_domainName).length < nameMaxLength, "Domain name is too long");
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0, "There should be no dots in the name");
@@ -173,7 +186,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     require(sent, "Failed to send domain payment to TLD owner");
   }
 
-  //@dev Hook that is called before any token transfer. This includes minting and burning.
+  ///@dev Hook that is called before any token transfer. This includes minting and burning.
   function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
 
     if (from != address(0)) { // run on every transfer but not on mint
@@ -191,31 +204,43 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
+  /// @notice Only TLD contract owner can call this function.
   function changeDescription(string calldata _description) external onlyOwner {
     description = _description;
   }
 
+  /// @notice Only TLD contract owner can call this function.
   function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;
   }
 
+  /// @notice Only TLD contract owner can call this function.
   function changePrice(uint256 _price) external onlyOwner {
     price = _price;
+    emit TldPriceChanged(msg.sender, _price);
   }
 
+  /// @notice Only TLD contract owner can call this function.
   function changeReferralFee(uint256 _referral) external onlyOwner {
     require(_referral < 5000, "Referral fee cannot be 50% or higher");
     referral = _referral; // referral must be in bips
+    emit ReferralFeeChanged(msg.sender, _referral);
   }
 
+  /// @notice Only TLD contract owner can call this function.
   function toggleBuyingDomains() external onlyOwner {
     buyingEnabled = !buyingEnabled;
+    emit DomainBuyingToggle(msg.sender, buyingEnabled);
   }
   
   // FACTORY OWNER (current owner address of PunkTLDFactory)
+
+  /// @notice Only Factory contract owner can call this function.
   function changeRoyalty(uint256 _royalty) external {
     require(getFactoryOwner() == msg.sender, "Sender not factory owner");
     require(_royalty < 5000, "Royalty cannot be 50% or higher");
     royalty = _royalty; // royalty is in bips
+    emit TldRoyaltyChanged(msg.sender, _royalty);
   }
 }
