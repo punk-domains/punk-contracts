@@ -111,7 +111,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     address _domainHolder,
     address _referrer
   ) external payable nonReentrant returns(uint256) {
-    require(buyingEnabled == true, "Buying TLDs disabled");
+    require(buyingEnabled == true || msg.sender == owner(), "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
     _sendPayment(msg.value, _referrer);
@@ -190,10 +190,6 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   // OWNER
-  function ownerMintDomain(string memory _domainName, address _domainHolder) external onlyOwner returns(uint256) {
-    return _mintDomain(_domainName, _domainHolder, "");
-  }
-
   function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;
   }

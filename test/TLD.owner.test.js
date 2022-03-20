@@ -35,12 +35,20 @@ describe("PunkTLD (onlyOwner)", function () {
   });
 
   it("should create a new valid domain without paying for it", async function () {
+    // buying domains should be disabled
+    const buyingEnabled = await contract.buyingEnabled();
+    expect(buyingEnabled).to.be.false;
+
     const newDomainName = "techie";
 
     // mint a new valid domain as TLD owner
-    await expect(contract.ownerMintDomain(
+    await expect(contract.mint(
       newDomainName, // domain name (without TLD)
-      signer.address // domain holder
+      signer.address, // domain holder
+      ethers.constants.AddressZero, // referrer
+      {
+        value: domainPrice // pay  for the domain
+      }
     )).to.emit(contract, "DomainCreated");
 
     // get domain name by token ID
@@ -53,14 +61,22 @@ describe("PunkTLD (onlyOwner)", function () {
     expect(firstDomainData.holder).to.equal(signer.address);
   });
 
-  it("should fail to create a new valid domain if user is now TLD owner", async function () {
+  it("should fail to create a new valid domain if user is not TLD owner and buying is disabled", async function () {
+    // buying domains should be disabled
+    const buyingEnabled = await contract.buyingEnabled();
+    expect(buyingEnabled).to.be.false;
+
     const newDomainName = "techie";
 
     // mint a new valid domain as TLD owner
-    await expect(contract.connect(anotherUser).ownerMintDomain(
+    await expect(contract.connect(anotherUser).mint(
       newDomainName, // domain name (without TLD)
-      anotherUser.address // domain holder
-    )).to.be.revertedWith('Ownable: caller is not the owner');
+      anotherUser.address, // domain holder
+      ethers.constants.AddressZero, // referrer
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.be.revertedWith('Buying TLDs disabled');
   });
 
   it("should change the price of a domain", async function () {
