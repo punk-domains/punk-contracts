@@ -122,7 +122,7 @@ contract PunkTLD is ERC721, Ownable, ReentrancyGuard {
     address _domainHolder,
     address _referrer
   ) external payable nonReentrant returns(uint256) {
-    require(buyingEnabled == true || msg.sender == owner(), "Buying TLDs disabled");
+    require(buyingEnabled || msg.sender == owner(), "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
     _sendPayment(msg.value, _referrer);
