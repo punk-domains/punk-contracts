@@ -3,8 +3,6 @@
 
 const oldTldAddress = "<old-tld-address>"; // <old-tld-address>
 const newTldAddress = "<new-tld-address>"; // <new-tld-address>
-const oldTldAddress = "0x408135E7500Ac2413C33E9D32C413481969fd94e"; // <old-tld-address>
-const newTldAddress = "0xC6a628b1FF1aD4e304bEeACAff915559786deA2e"; // <new-tld-address>
 
 async function main() {
   const [deployer] = await ethers.getSigners();
