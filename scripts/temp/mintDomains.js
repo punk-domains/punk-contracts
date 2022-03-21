@@ -1,4 +1,5 @@
 // V2 migration: a script which mints domains for existing holders
+// npx hardhat run scripts/temp/mintDomains.js --network localhost
 
 const oldTldAddress = "<old-tld-address>"; // <old-tld-address>
 const newTldAddress = "<new-tld-address>"; // <new-tld-address>
@@ -11,9 +12,10 @@ async function main() {
 
   const tldInterface = new ethers.utils.Interface([
     "function totalSupply() public view returns (uint256)",
+    "function price() public view returns (uint256)",
     "function domainIdsNames(uint256) public view returns (string)",
     "function getDomainHolder(string memory _domainName) public view returns(address)",
-    "function ownerMintDomain(string memory _domainName, address _domainHolder) public onlyOwner returns(uint256)"
+    "function mint(string memory _domainName, address _domainHolder,address _referrer) external payable returns(uint256)"
   ]);
 
   const tldContractOld = new ethers.Contract(oldTldAddress, tldInterface, deployer);
@@ -24,6 +26,9 @@ async function main() {
 
   const totalSupplyNewBefore = await tldContractNew.totalSupply();
   console.log("totalSupplyNewBefore: " + totalSupplyNewBefore.toNumber());
+
+  const price = await tldContractNew.price();
+  console.log("Domain price in wei: " + price);
 
   for (let i = 0; i < totalSupplyOld; i++) {
     let domainName = await tldContractOld.domainIdsNames(i);
@@ -36,10 +41,16 @@ async function main() {
 
     // ... if not, mint it
     if (prevOwner == ethers.constants.AddressZero) {
-      let newDomainId = await tldContractNew.ownerMintDomain(domainName.toLowerCase(), domainHolder);
-      console.log("New domain minted: " + newDomainId);
+      let newDomainId = await tldContractNew.mint(
+        domainName.toLowerCase(), domainHolder, ethers.constants.AddressZero,
+        {
+          value: price // pay  for the domain
+        }
+      );
+      console.log("New domain minted: ");
+      console.log(newDomainId);
   
-      let domainHolderNew = await tldContractNew.getDomainHolder(domainName);
+      let domainHolderNew = await tldContractNew.getDomainHolder(domainName.toLowerCase());
       console.log(domainName + " --> " + domainHolderNew + " (NEW)");
     }
   }
