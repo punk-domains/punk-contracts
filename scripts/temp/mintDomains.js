@@ -3,6 +3,7 @@
 
 const oldTldAddress = "<old-tld-address>"; // <old-tld-address>
 const newTldAddress = "<new-tld-address>"; // <new-tld-address>
+const maxFee = 0; // 2500000000 - set the correct fee for eip-1559 style transactions (otherwise make txs legacy type)
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -30,7 +31,7 @@ async function main() {
   const price = await tldContractNew.price();
   console.log("Domain price in wei: " + price);
 
-  for (let i = 0; i < totalSupplyOld; i++) {
+  for (let i = totalSupplyNewBefore.toNumber(); i < totalSupplyOld; i++) {
     let domainName = await tldContractOld.domainIdsNames(i);
     let domainHolder = await tldContractOld.getDomainHolder(domainName);
     console.log(domainName + " --> " + domainHolder + " (OLD)");
@@ -41,9 +42,12 @@ async function main() {
 
     // ... if not, mint it
     if (prevOwner == ethers.constants.AddressZero) {
-      let newDomainId = await tldContractNew.mint(
+      await tldContractNew.mint(
         domainName.toLowerCase(), domainHolder, ethers.constants.AddressZero,
         {
+          type: 2, // eip-1559
+          maxFeePerGas: maxFee,
+          maxPriorityFeePerGas: maxFee,
           value: price // pay  for the domain
         }
       );
