@@ -44,6 +44,14 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     return supportedNfts.length;
   }
 
+  function isNftIdAlreadyUsed(address _nftAddress, uint256 _nftTokenId, uint8 _tld) public view returns(bool used) {
+    if (_tld == 1) {
+      return mintedL2[_nftAddress][_nftTokenId];
+    } else if (_tld == 2) {
+      return mintedLayer2[_nftAddress][_nftTokenId];
+    } 
+  }
+
   // WRITE
   function mint(
     string memory _domainName,
