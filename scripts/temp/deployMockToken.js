@@ -4,7 +4,7 @@ Mock tokens for testnet purposes.
 npx hardhat run scripts/temp/deployMockToken.js --network optimisticKovan
 */
 
-const contractName = "MockToken";
+const contractName = "MockErc20Token";
 
 async function main() {
   const [deployer] = await ethers.getSigners();

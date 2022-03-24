@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 // Mock NFT contract for testing purposes only
-contract PickyPandas is ERC721 {
+contract MockErc721Token is ERC721 {
   uint256 public counter;
 
   constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) {
@@ -13,8 +13,8 @@ contract PickyPandas is ERC721 {
     counter++;
   }
 
-  function mint(address user) public {
-    _safeMint(user, counter);
+  function mint(address receiver) public {
+    _safeMint(receiver, counter);
     counter++;
   }
 }
