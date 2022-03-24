@@ -52,7 +52,8 @@ module.exports = {
       gasPrice: 1000000000, // 1 gwei
     },
     arbitrumOne: {
-      url: 'https://arb-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ARBITRUM,
+      //url: 'https://arb-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ARBITRUM,
+      url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
