@@ -15,8 +15,18 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
   let user2;
   let user3;
 
+  const domainPrice = ethers.utils.parseUnits("1", "ether");
+
   beforeEach(async function () {
     [signer, user1, user2, user3] = await ethers.getSigners();
+
+    const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
+    const forbTldsContract = await PunkForbiddenTlds.deploy();
+
+    const PunkTLDFactory = await ethers.getContractFactory("PunkTLDFactory");
+    const factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address);
+
+    await forbTldsContract.addFactoryAddress(factoryContract.address);
 
     // TLD contracts
     const PunkTLD = await ethers.getContractFactory("PunkTLD");
@@ -26,10 +36,10 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       ".l2", // name
       ".L2", // symbol
       signer.address, // temp TLD owner
-      ethers.utils.parseUnits("1", "ether"), // domain price
+      domainPrice, // domain price
       false, // buying enabled
       4999, // royalty (49.99%)
-      ethers.constants.AddressZero
+      factoryContract.address
     );
 
     // .LAYER2 TLD
@@ -37,10 +47,10 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       ".layer2", // name
       ".LAYER2", // symbol
       signer.address, // temp TLD owner
-      ethers.utils.parseUnits("1", "ether"), // domain price
+      domainPrice, // domain price
       false, // buying enabled
       4999, // royalty (49.99%)
-      ethers.constants.AddressZero
+      factoryContract.address
     );
 
     // NFTs
@@ -107,6 +117,45 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     await expect(mintContract.connect(user1).transferTldsOwnership(
       user1.address
     )).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  it("should mint a new domain", async function () {
+    await mintContract.togglePaused();
+
+    const nftBalanceBefore = await nftLevel1Contract.balanceOf(user1.address);
+    expect(nftBalanceBefore).to.equal(0);
+
+    // mint a Layer2DAO NFT
+    await nftLevel1Contract.mint(user1.address);
+
+    const nftBalanceAfter = await nftLevel1Contract.balanceOf(user1.address);
+    expect(nftBalanceAfter).to.equal(1);
+
+    const nftTokenByIndex = await nftLevel1Contract.tokenOfOwnerByIndex(user1.address, 0);
+    expect(nftTokenByIndex).to.equal(1);
+
+    const nftOwner = await nftLevel1Contract.ownerOf(1); // owner of token 1
+    expect(nftOwner).to.equal(user1.address);
+
+    const balanceDomainBefore = await tldContractL2.balanceOf(user1.address);
+    expect(balanceDomainBefore).to.equal(0);
+
+    await mintContract.connect(user1).mint(
+      "user1", // domain name (without TLD)
+      1, // choose TLD - 1: .L2, 2: .LAYER2
+      nftLevel1Contract.address, // NFT address
+      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
+      ethers.constants.AddressZero, // no referrer in this case
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const balanceDomainAfter = await tldContractL2.balanceOf(user1.address);
+    expect(balanceDomainAfter).to.equal(1);
+
+    const domainHolder = await tldContractL2.getDomainHolder("user1");
+    expect(domainHolder).to.equal(user1.address);
   });
 
   // it("should ", async function () {});

@@ -5,6 +5,7 @@ import "../../interfaces/IPunkTLD.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   address[] public supportedNfts; // whitelisted Layer2DAO NFT contracts
@@ -115,6 +116,12 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.pop();
   }
 
+  // Withdraw ETH in contract
+  function withdraw() external onlyOwner {
+    (bool success, ) = owner().call{value: address(this).balance}("");
+    require(success, "Failed to send ETH from withdraw() function");
+  }
+
   // transfer TLDs ownership
   function transferTldsOwnership(address _newTldOwner) external onlyOwner {
     tldL2Contract.transferOwnership(_newTldOwner);
@@ -124,4 +131,17 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   function togglePaused() external onlyOwner {
     paused = !paused;
   }
+
+  // recover tokens
+  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
+    IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
+  }
+
+  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
+    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+  }
+
+  // receive & fallback
+  receive() external payable {}
+  fallback() external payable {}
 }
