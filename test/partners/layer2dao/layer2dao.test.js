@@ -119,7 +119,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it("should mint a new domain", async function () {
+  it("should mint two new domains", async function () {
     await mintContract.togglePaused();
 
     const nftBalanceBefore = await nftLevel1Contract.balanceOf(user1.address);
@@ -140,6 +140,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     const balanceDomainBefore = await tldContractL2.balanceOf(user1.address);
     expect(balanceDomainBefore).to.equal(0);
 
+    // Mint a .L2 domain
     await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       1, // choose TLD - 1: .L2, 2: .LAYER2
@@ -156,6 +157,39 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     const domainHolder = await tldContractL2.getDomainHolder("user1");
     expect(domainHolder).to.equal(user1.address);
+
+    // should fail at minting another .L2 domain with the same NFT
+    await expect(mintContract.connect(user1).mint(
+      "user1second", // domain name (without TLD)
+      1, // choose TLD - 1: .L2, 2: .LAYER2
+      nftLevel1Contract.address, // NFT address
+      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
+      ethers.constants.AddressZero, // no referrer in this case
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.be.revertedWith('This NFT was already used for minting a domain of the chosen TLD');
+
+    // mint a new .LAYER2 domain with the same NFT
+    const balanceDomainBeforeLayer2 = await tldContractLayer2.balanceOf(user1.address);
+    expect(balanceDomainBeforeLayer2).to.equal(0);
+
+    await mintContract.connect(user1).mint(
+      "user1", // domain name (without TLD)
+      2, // choose TLD - 1: .L2, 2: .LAYER2
+      nftLevel1Contract.address, // NFT address
+      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
+      ethers.constants.AddressZero, // no referrer in this case
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const balanceDomainAfterLayer2 = await tldContractLayer2.balanceOf(user1.address);
+    expect(balanceDomainAfterLayer2).to.equal(1);
+
+    const domainHolderLayer2 = await tldContractLayer2.getDomainHolder("user1");
+    expect(domainHolderLayer2).to.equal(user1.address);
   });
 
   it("should change domain price", async function () {

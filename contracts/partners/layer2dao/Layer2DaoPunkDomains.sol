@@ -68,7 +68,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     address _referrer
   ) external payable nonReentrant returns(uint256) {
     require(!paused || msg.sender == owner(), "Minting disabled");
-    require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId, _tld));
+    require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId, _tld), "This NFT was already used for minting a domain of the chosen TLD");
 
     // check if provided NFT address is whitelisted
     bool isWhitelisted = false;
