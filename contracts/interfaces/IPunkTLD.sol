@@ -10,6 +10,7 @@ interface IPunkTLD is IERC721 {
   function getDomainHolder(string calldata _domainName) external view returns(address);
 
   function price() external view returns (uint256);
+  function referral() external view returns (uint256);
 
   function changeDescription(string calldata _description) external;
 

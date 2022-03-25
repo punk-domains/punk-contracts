@@ -84,7 +84,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     expect(layer2Symbol).to.equal(".LAYER2");
   });
 
-  it("should add/remove an NFT to the supported NFTs array", async function () {
+  it("should add/remove an NFT to the supported NFTs array (only owner)", async function () {
     const arrLengthStart = await mintContract.getSupportedNftsArrayLength();
     expect(arrLengthStart).to.equal(1);
 
@@ -99,9 +99,12 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     const arrLengthAfterRemove = await mintContract.getSupportedNftsArrayLength();
     expect(arrLengthAfterRemove).to.equal(1);
+
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).removeWhitelistedNftContract(0)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it("should transfer TLD ownership to another address", async function () {
+  it("should transfer TLD ownership to another address (only owner)", async function () {
     const ownerL2Before = await tldContractL2.owner();
     expect(ownerL2Before).to.equal(mintContract.address);
     const ownerLayer2Before = await tldContractLayer2.owner();
@@ -192,7 +195,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     expect(domainHolderLayer2).to.equal(user1.address);
   });
 
-  it("should change domain price", async function () {
+  it("should change domain price (only owner)", async function () {
     const priceBefore = await tldContractL2.price();
     expect(priceBefore).to.equal(domainPrice);
 
@@ -208,6 +211,24 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     // if user is not owner, the tx should revert
     await expect(mintContract.connect(user1).changeTldPrice(domainPrice, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  it("should change referral fee (only owner)", async function () {
+    const refBefore = await tldContractL2.referral();
+    expect(refBefore).to.equal(1000);
+
+    const newRef = 2500;
+
+    await mintContract.changeReferralFee(
+      newRef,
+      1 // .L2 or .l2
+    );
+
+    const refAfter = await tldContractL2.referral();
+    expect(refAfter).to.equal(newRef);
+
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).changeReferralFee(666, 1)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   // it("should ", async function () {});
