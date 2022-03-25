@@ -10,7 +10,7 @@ function calculateGasCosts(testName, receipt) {
   
   const gasCostMatic = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("35", "gwei")) * Number(receipt.gasUsed)), "ether");
   const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("100", "gwei")) * Number(receipt.gasUsed)), "ether");
-  const gasCostArbitrum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("1.47", "gwei")) * Number(receipt.gasUsed)), "ether");
+  const gasCostArbitrum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("1.25", "gwei")) * Number(receipt.gasUsed)), "ether");
 
   console.log(testName + " gas cost (Ethereum): $" + String(Number(gasCostEthereum)*eth));
   console.log(testName + " gas cost (Arbitrum): $" + String(Number(gasCostArbitrum)*eth));

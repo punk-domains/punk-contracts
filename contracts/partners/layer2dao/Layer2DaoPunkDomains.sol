@@ -119,6 +119,30 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.push(_nftAddress);
   }
 
+  function changeTldDescription(string calldata _description, uint8 _tld) external onlyOwner {
+    IPunkTLD selectedContract;
+
+    if (_tld == 1) {
+      selectedContract = tldL2Contract;
+    } else if (_tld == 2) {
+      selectedContract = tldLayer2Contract;
+    }
+
+    selectedContract.changeDescription(_description);
+  }
+
+  function changeMaxDomainNameLength(uint256 _maxLength, uint8 _tld) external onlyOwner {
+    IPunkTLD selectedContract;
+
+    if (_tld == 1) {
+      selectedContract = tldL2Contract;
+    } else if (_tld == 2) {
+      selectedContract = tldLayer2Contract;
+    }
+
+    selectedContract.changeNameMaxLength(_maxLength);
+  }
+
   function changeTldPrice(uint256 _price, uint8 _tld) external onlyOwner {
     IPunkTLD selectedContract;
 
@@ -132,7 +156,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   }
 
   /// @notice Referral fee cannot be 5000 bps or higher
-  function changeReferralFee(uint256 _referral, uint8 _tld) external onlyOwner {
+  function changeTldReferralFee(uint256 _referral, uint8 _tld) external onlyOwner {
     IPunkTLD selectedContract;
 
     if (_tld == 1) {

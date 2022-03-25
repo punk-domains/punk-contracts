@@ -3,6 +3,19 @@
 
 const { expect } = require("chai");
 
+function calculateGasCosts(testName, receipt) {
+  console.log(testName + " gasUsed: " + receipt.gasUsed);
+
+  // coin prices in USD
+  const eth = 3000;
+  
+  const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("100", "gwei")) * Number(receipt.gasUsed)), "ether");
+  const gasCostArbitrum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("1.25", "gwei")) * Number(receipt.gasUsed)), "ether");
+
+  console.log(testName + " gas cost (Ethereum): $" + String(Number(gasCostEthereum)*eth));
+  console.log(testName + " gas cost (Arbitrum): $" + String(Number(gasCostArbitrum)*eth));
+}
+
 describe("Layer2DaoPunkDomains (partner contract)", function () {
   let tldContractL2;
   let tldContractLayer2;
@@ -144,7 +157,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     expect(balanceDomainBefore).to.equal(0);
 
     // Mint a .L2 domain
-    await mintContract.connect(user1).mint(
+    const tx = await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel1Contract.address, // NFT address
@@ -154,6 +167,10 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
         value: domainPrice // pay for the domain
       }
     );
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("L2DAO Mint", receipt);
 
     const balanceDomainAfter = await tldContractL2.balanceOf(user1.address);
     expect(balanceDomainAfter).to.equal(1);
@@ -249,7 +266,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     const newRef = 2500;
 
-    await mintContract.changeReferralFee(
+    await mintContract.changeTldReferralFee(
       newRef,
       1 // .L2 or .l2
     );
@@ -258,7 +275,41 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     expect(refAfter).to.equal(newRef);
 
     // if user is not owner, the tx should revert
-    await expect(mintContract.connect(user1).changeReferralFee(666, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(mintContract.connect(user1).changeTldReferralFee(666, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  it("should change max domain name length (only owner)", async function () {
+    const before = await tldContractL2.nameMaxLength();
+    expect(before).to.equal(140);
+
+    await mintContract.changeMaxDomainNameLength(
+      69, // new max name length
+      1 // .L2 or .l2
+    );
+
+    const after = await tldContractL2.nameMaxLength();
+    expect(after).to.equal(69);
+
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).changeMaxDomainNameLength(420, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  it("should change TLD metadata description (only owner)", async function () {
+    const desBefore = await tldContractL2.description();
+    expect(desBefore).to.equal("Punk Domains digital identity. Visit https://punk.domains/");
+
+    const newDes = "Get yourself a .L2 domain by L2DAO and Punk Domains!";
+
+    await mintContract.changeTldDescription(
+      newDes,
+      1 // .L2 or .l2
+    );
+
+    const desAfter = await tldContractL2.description();
+    expect(desAfter).to.equal(newDes);
+
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).changeTldDescription("pwned", 1)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   // it("should ", async function () {});
