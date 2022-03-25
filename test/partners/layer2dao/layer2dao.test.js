@@ -151,7 +151,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
-        value: domainPrice // pay  for the domain
+        value: domainPrice // pay for the domain
       }
     );
 
@@ -169,7 +169,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
-        value: domainPrice // pay  for the domain
+        value: domainPrice // pay for the domain
       }
     )).to.be.revertedWith('This NFT was already used for minting a domain of the chosen TLD');
 
@@ -184,7 +184,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
-        value: domainPrice // pay  for the domain
+        value: domainPrice // pay for the domain
       }
     );
 
@@ -193,6 +193,36 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     const domainHolderLayer2 = await tldContractLayer2.getDomainHolder("user1");
     expect(domainHolderLayer2).to.equal(user1.address);
+  });
+
+  it("owner mint domain without Layer2 NFT needed (only owner)", async function () {
+    const balanceDomainBefore = await tldContractL2.balanceOf(user1.address);
+    expect(balanceDomainBefore).to.equal(0);
+
+    await mintContract.ownerMintDomain(
+      "user1",
+      1, // .L2 or .l2
+      user1.address, // domain holder
+      {
+        value: domainPrice // pay for the domain
+      }
+    );
+
+    const balanceDomainAfter = await tldContractL2.balanceOf(user1.address);
+    expect(balanceDomainAfter).to.equal(1);
+
+    const domainHolder = await tldContractL2.getDomainHolder("user1");
+    expect(domainHolder).to.equal(user1.address);
+
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).ownerMintDomain(
+      "user1more", 
+      1, // .L2 or .l2
+      user1.address, // domain holder
+      {
+        value: domainPrice // pay for the domain
+      }
+    )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change domain price (only owner)", async function () {

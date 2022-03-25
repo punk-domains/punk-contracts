@@ -144,6 +144,25 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     selectedContract.changeReferralFee(_referral);
   }
 
+  /// @notice Owner can mint a domain without holding/using an NFT
+  function ownerMintDomain(
+    string memory _domainName,
+    uint8 _tld, // 1: .L2 // 2: .LAYER2
+    address _domainHolder
+  ) external payable nonReentrant onlyOwner returns(uint256) {
+    // get the selected TLD contract (either .L2 or .LAYER2)
+    IPunkTLD selectedContract;
+
+    if (_tld == 1) {
+      selectedContract = tldL2Contract;
+    } else if (_tld == 2) {
+      selectedContract = tldLayer2Contract;
+    }
+
+    // mint domain 
+    return selectedContract.mint{value: msg.value}(_domainName, _domainHolder, address(0));
+  }
+
   function removeWhitelistedNftContract(uint _nftIndex) external onlyOwner {
     supportedNfts[_nftIndex] = supportedNfts[supportedNfts.length - 1];
     supportedNfts.pop();
