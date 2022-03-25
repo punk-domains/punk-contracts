@@ -11,6 +11,14 @@ interface IPunkTLD is IERC721 {
 
   function price() external view returns (uint256);
 
+  function changeDescription(string calldata _description) external;
+
+  function changeNameMaxLength(uint256 _maxLength) external;
+
+  function changePrice(uint256 _price) external;
+
+  function changeReferralFee(uint256 _referral) external;
+
   function mint(
     string memory _domainName,
     address _domainHolder,

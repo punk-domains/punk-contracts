@@ -41,8 +41,13 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   }
 
   // READ
+
   function getSupportedNftsArrayLength() public view returns(uint) {
     return supportedNfts.length;
+  }
+
+  function getSupportedNftsArray() public view returns(address[] memory) {
+    return supportedNfts;
   }
 
   function isNftIdAlreadyUsed(address _nftAddress, uint256 _nftTokenId, uint8 _tld) public view returns(bool used) {
@@ -54,6 +59,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   }
 
   // WRITE
+
   function mint(
     string memory _domainName,
     uint8 _tld, // 1: .L2 // 2: .LAYER2
@@ -62,6 +68,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     address _referrer
   ) external payable nonReentrant returns(uint256) {
     require(!paused || msg.sender == owner(), "Minting disabled");
+    require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId, _tld));
 
     // check if provided NFT address is whitelisted
     bool isWhitelisted = false;
@@ -107,8 +114,34 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
   function addWhitelistedNftContract(address _nftAddress) external onlyOwner {
     supportedNfts.push(_nftAddress);
+  }
+
+  function changeTldPrice(uint256 _price, uint8 _tld) external onlyOwner {
+    IPunkTLD selectedContract;
+
+    if (_tld == 1) {
+      selectedContract = tldL2Contract;
+    } else if (_tld == 2) {
+      selectedContract = tldLayer2Contract;
+    }
+
+    selectedContract.changePrice(_price);
+  }
+
+  /// @notice Referral fee cannot be 5000 bps or higher
+  function changeReferralFee(uint256 _referral, uint8 _tld) external onlyOwner {
+    IPunkTLD selectedContract;
+
+    if (_tld == 1) {
+      selectedContract = tldL2Contract;
+    } else if (_tld == 2) {
+      selectedContract = tldLayer2Contract;
+    }
+
+    selectedContract.changeReferralFee(_referral);
   }
 
   function removeWhitelistedNftContract(uint _nftIndex) external onlyOwner {
@@ -116,10 +149,13 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.pop();
   }
 
-  // Withdraw ETH in contract
-  function withdraw() external onlyOwner {
-    (bool success, ) = owner().call{value: address(this).balance}("");
-    require(success, "Failed to send ETH from withdraw() function");
+  // recover tokens
+  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
+    IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
+  }
+
+  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
+    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
 
   // transfer TLDs ownership
@@ -132,13 +168,10 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     paused = !paused;
   }
 
-  // recover tokens
-  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
-    IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
-  }
-
-  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
-    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+  // withdraw ETH from contract
+  function withdraw() external onlyOwner {
+    (bool success, ) = owner().call{value: address(this).balance}("");
+    require(success, "Failed to send ETH from withdraw() function");
   }
 
   // receive & fallback

@@ -158,6 +158,24 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     expect(domainHolder).to.equal(user1.address);
   });
 
+  it("should change domain price", async function () {
+    const priceBefore = await tldContractL2.price();
+    expect(priceBefore).to.equal(domainPrice);
+
+    const newPrice = ethers.utils.parseUnits("2", "ether");
+
+    await mintContract.changeTldPrice(
+      newPrice,
+      1 // .L2 or .l2
+    );
+
+    const priceAfter = await tldContractL2.price();
+    expect(priceAfter).to.equal(newPrice);
+
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).changeTldPrice(domainPrice, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
   // it("should ", async function () {});
 
 });
