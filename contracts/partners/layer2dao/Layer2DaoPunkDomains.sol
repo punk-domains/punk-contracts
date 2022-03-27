@@ -67,7 +67,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     uint256 _nftTokenId,
     address _referrer
   ) external payable nonReentrant returns(uint256) {
-    require(!paused || msg.sender == owner(), "Minting disabled");
+    require(!paused || msg.sender == owner(), "Minting paused");
     require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId, _tld), "This NFT was already used for minting a domain of the chosen TLD");
 
     // check if provided NFT address is whitelisted
@@ -214,7 +214,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   // withdraw ETH from contract
   function withdraw() external onlyOwner {
     (bool success, ) = owner().call{value: address(this).balance}("");
-    require(success, "Failed to send ETH from withdraw() function");
+    require(success, "Failed to withdraw ETH from contract");
   }
 
   // receive & fallback

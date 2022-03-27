@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-const { ethers, waffle} = require("hardhat");
 
 function calculateGasCosts(testName, receipt) {
   console.log(testName + " gasUsed: " + receipt.gasUsed);
