@@ -119,18 +119,6 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.push(_nftAddress);
   }
 
-  function changeTldDescription(string calldata _description, uint8 _tld) external onlyOwner {
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
-    selectedContract.changeDescription(_description);
-  }
-
   function changeMaxDomainNameLength(uint256 _maxLength, uint8 _tld) external onlyOwner {
     IPunkTLD selectedContract;
 
@@ -141,6 +129,18 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     }
 
     selectedContract.changeNameMaxLength(_maxLength);
+  }
+
+  function changeTldDescription(string calldata _description, uint8 _tld) external onlyOwner {
+    IPunkTLD selectedContract;
+
+    if (_tld == 1) {
+      selectedContract = tldL2Contract;
+    } else if (_tld == 2) {
+      selectedContract = tldLayer2Contract;
+    }
+
+    selectedContract.changeDescription(_description);
   }
 
   function changeTldPrice(uint256 _price, uint8 _tld) external onlyOwner {
@@ -187,11 +187,6 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     return selectedContract.mint{value: msg.value}(_domainName, _domainHolder, address(0));
   }
 
-  function removeWhitelistedNftContract(uint _nftIndex) external onlyOwner {
-    supportedNfts[_nftIndex] = supportedNfts[supportedNfts.length - 1];
-    supportedNfts.pop();
-  }
-
   // recover tokens
   function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
     IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
@@ -199,6 +194,11 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
 
   function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
     IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+  }
+
+  function removeWhitelistedNftContract(uint _nftIndex) external onlyOwner {
+    supportedNfts[_nftIndex] = supportedNfts[supportedNfts.length - 1];
+    supportedNfts.pop();
   }
 
   // transfer TLDs ownership

@@ -1,5 +1,5 @@
 // check if ERC721 contract has the function tokenOfOwnerByIndex
-// npx hardhat run scripts/partners/checkEnumerable.js --network optimisticEthereum
+// npx hardhat run scripts/partners/l2dao/checkEnumerable.js --network optimisticEthereum
 
 async function main() {
   const [signer] = await ethers.getSigners();
