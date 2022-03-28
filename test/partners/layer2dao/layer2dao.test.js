@@ -18,7 +18,6 @@ function calculateGasCosts(testName, receipt) {
 
 describe("Layer2DaoPunkDomains (partner contract)", function () {
   let tldContractL2;
-  let tldContractLayer2;
   let mintContract;
   let nftLevel1Contract;
   let nftLevel2Contract;
@@ -53,17 +52,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       factoryContract.address
     );
 
-    // .LAYER2 TLD
-    tldContractLayer2 = await PunkTLD.deploy(
-      ".layer2", // name
-      ".LAYER2", // symbol
-      signer.address, // temp TLD owner
-      domainPrice, // domain price
-      false, // buying enabled
-      4999, // royalty (49.99%)
-      factoryContract.address
-    );
-
     // NFTs
     const Erc721Contract = await ethers.getContractFactory("MockErc721Token");
     nftLevel1Contract = await Erc721Contract.deploy("Layer2DAO Level 1", "L2DL1");
@@ -73,25 +61,32 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     const Layer2DaoPunkDomains = await ethers.getContractFactory("Layer2DaoPunkDomains");
     mintContract = await Layer2DaoPunkDomains.deploy(
       nftLevel1Contract.address,
-      tldContractL2.address,
-      tldContractLayer2.address
+      tldContractL2.address
     );
 
     // transfer TLD ownership to the Mint contract
     await tldContractL2.transferOwnership(mintContract.address);
-    await tldContractLayer2.transferOwnership(mintContract.address);
   });
 
-  it("should confirm TLDs names & symbols", async function () {
+  it("should confirm TLD name & symbol", async function () {
     const l2Name = await tldContractL2.name();
     expect(l2Name).to.equal(".l2");
     const l2Symbol = await tldContractL2.symbol();
     expect(l2Symbol).to.equal(".L2");
+  });
 
-    const layer2Name = await tldContractLayer2.name();
-    expect(layer2Name).to.equal(".layer2");
-    const layer2Symbol = await tldContractLayer2.symbol();
-    expect(layer2Symbol).to.equal(".LAYER2");
+  it("should check if user can mint", async function () {
+    const balanceSigner = await nftLevel1Contract.balanceOf(signer.address);
+    expect(balanceSigner).to.equal(1);
+
+    const canMintSigner = await mintContract.canUserMint(signer.address);
+    expect(canMintSigner).to.be.true;
+
+    const balanceUser1 = await nftLevel1Contract.balanceOf(user1.address);
+    expect(balanceUser1).to.equal(0);
+
+    const canMintUser1 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser1).to.be.false;
   });
 
   it("should add/remove an NFT to the supported NFTs array (only owner)", async function () {
@@ -117,32 +112,34 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
   it("should transfer TLD ownership to another address (only owner)", async function () {
     const ownerL2Before = await tldContractL2.owner();
     expect(ownerL2Before).to.equal(mintContract.address);
-    const ownerLayer2Before = await tldContractLayer2.owner();
-    expect(ownerLayer2Before).to.equal(mintContract.address);
 
-    await mintContract.transferTldsOwnership(user2.address);
+    await mintContract.transferTldOwnership(user2.address);
 
     const ownerL2After = await tldContractL2.owner();
     expect(ownerL2After).to.equal(user2.address);
-    const ownerLayer2After = await tldContractLayer2.owner();
-    expect(ownerLayer2After).to.equal(user2.address);
 
-    await expect(mintContract.connect(user1).transferTldsOwnership(
+    await expect(mintContract.connect(user1).transferTldOwnership(
       user1.address
     )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it("should mint two new domains", async function () {
+  it("should mint a new domain", async function () {
     await mintContract.togglePaused();
 
     const nftBalanceBefore = await nftLevel1Contract.balanceOf(user1.address);
     expect(nftBalanceBefore).to.equal(0);
+
+    const canMintUser1Before1 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser1Before1).to.be.false;
 
     // mint a Layer2DAO NFT
     await nftLevel1Contract.mint(user1.address);
 
     const nftBalanceAfter = await nftLevel1Contract.balanceOf(user1.address);
     expect(nftBalanceAfter).to.equal(1);
+
+    const canMintUser1Before2 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser1Before2).to.be.true;
 
     const nftTokenByIndex = await nftLevel1Contract.tokenOfOwnerByIndex(user1.address, 0);
     expect(nftTokenByIndex).to.equal(1);
@@ -160,7 +157,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // Mint a .L2 domain
     const tx = await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
-      1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel1Contract.address, // NFT address
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
@@ -179,13 +175,15 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     const domainHolder = await tldContractL2.getDomainHolder("user1");
     expect(domainHolder).to.equal(user1.address);
 
+    const canMintUser1After1 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser1After1).to.be.false;
+
     const contractBalanceAfter = await waffle.provider.getBalance(mintContract.address);
-    console.log("Contract balance after first mint: " + ethers.utils.formatEther(contractBalanceAfter) + " ETH");
+    console.log("Contract balance after successful mint: " + ethers.utils.formatEther(contractBalanceAfter) + " ETH");
 
     // should fail at minting another .L2 domain with the same NFT
     await expect(mintContract.connect(user1).mint(
       "user1second", // domain name (without TLD)
-      1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel1Contract.address, // NFT address
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
@@ -194,29 +192,8 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
       }
     )).to.be.revertedWith('This NFT was already used for minting a domain of the chosen TLD');
 
-    // mint a new .LAYER2 domain with the same NFT
-    const balanceDomainBeforeLayer2 = await tldContractLayer2.balanceOf(user1.address);
-    expect(balanceDomainBeforeLayer2).to.equal(0);
-
-    await mintContract.connect(user1).mint(
-      "user1", // domain name (without TLD)
-      2, // choose TLD - 1: .L2, 2: .LAYER2
-      nftLevel1Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
-      ethers.constants.AddressZero, // no referrer in this case
-      {
-        value: domainPrice // pay for the domain
-      }
-    );
-
-    const balanceDomainAfterLayer2 = await tldContractLayer2.balanceOf(user1.address);
-    expect(balanceDomainAfterLayer2).to.equal(1);
-
-    const domainHolderLayer2 = await tldContractLayer2.getDomainHolder("user1");
-    expect(domainHolderLayer2).to.equal(user1.address);
-
     const contractBalanceAfter2 = await waffle.provider.getBalance(mintContract.address);
-    console.log("Contract balance after second mint: " + ethers.utils.formatEther(contractBalanceAfter2) + " ETH");
+    console.log("Contract balance after failed mint: " + ethers.utils.formatEther(contractBalanceAfter2) + " ETH");
 
     // owner withdraw
     await mintContract.withdraw();
@@ -260,7 +237,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // Mint a .L2 domain with level 1 NFT
     await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
-      1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel1Contract.address, // NFT address
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
@@ -272,7 +248,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // Fail at minting the same domain name with level 2 NFT
     await expect(mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
-      1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel2Contract.address, // NFT address
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
@@ -284,7 +259,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // Mint another .L2 domain with level 2 NFT
     await mintContract.connect(user1).mint(
       "user1another", // domain name (without TLD)
-      1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel2Contract.address, // NFT address
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
@@ -309,7 +283,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     await mintContract.ownerMintDomain(
       "user1",
-      1, // .L2 or .l2
       user1.address, // domain holder
       {
         value: domainPrice // pay for the domain
@@ -324,8 +297,7 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     // if user is not owner, the tx should revert
     await expect(mintContract.connect(user1).ownerMintDomain(
-      "user1more", 
-      1, // .L2 or .l2
+      "user1more",
       user1.address, // domain holder
       {
         value: domainPrice // pay for the domain
@@ -340,15 +312,14 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     const newPrice = ethers.utils.parseUnits("2", "ether");
 
     await mintContract.changeTldPrice(
-      newPrice,
-      1 // .L2 or .l2
+      newPrice
     );
 
     const priceAfter = await tldContractL2.price();
     expect(priceAfter).to.equal(newPrice);
 
     // if user is not owner, the tx should revert
-    await expect(mintContract.connect(user1).changeTldPrice(domainPrice, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(mintContract.connect(user1).changeTldPrice(domainPrice)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change referral fee (only owner)", async function () {
@@ -357,32 +328,27 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     const newRef = 2500;
 
-    await mintContract.changeTldReferralFee(
-      newRef,
-      1 // .L2 or .l2
-    );
+    await mintContract.changeTldReferralFee(newRef);
 
     const refAfter = await tldContractL2.referral();
     expect(refAfter).to.equal(newRef);
 
     // if user is not owner, the tx should revert
-    await expect(mintContract.connect(user1).changeTldReferralFee(666, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(mintContract.connect(user1).changeTldReferralFee(666)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change max domain name length (only owner)", async function () {
     const before = await tldContractL2.nameMaxLength();
     expect(before).to.equal(140);
 
-    await mintContract.changeMaxDomainNameLength(
-      69, // new max name length
-      1 // .L2 or .l2
-    );
+    const newLen = 69;
+    await mintContract.changeMaxDomainNameLength(newLen);
 
     const after = await tldContractL2.nameMaxLength();
-    expect(after).to.equal(69);
+    expect(after).to.equal(newLen);
 
     // if user is not owner, the tx should revert
-    await expect(mintContract.connect(user1).changeMaxDomainNameLength(420, 1)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(mintContract.connect(user1).changeMaxDomainNameLength(420)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change TLD metadata description (only owner)", async function () {
@@ -391,16 +357,13 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
 
     const newDes = "Get yourself a .L2 domain by L2DAO and Punk Domains!";
 
-    await mintContract.changeTldDescription(
-      newDes,
-      1 // .L2 or .l2
-    );
+    await mintContract.changeTldDescription(newDes);
 
     const desAfter = await tldContractL2.description();
     expect(desAfter).to.equal(newDes);
 
     // if user is not owner, the tx should revert
-    await expect(mintContract.connect(user1).changeTldDescription("pwned", 1)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(mintContract.connect(user1).changeTldDescription("pwned")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should fail at minting a domain if contract is paused", async function () {
@@ -419,7 +382,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // should fail at minting because contract is paused
     await expect(mintContract.connect(user1).mint(
       "user1fail", // domain name (without TLD)
-      1, // choose TLD - 1: .L2, 2: .LAYER2
       nftLevel1Contract.address, // NFT address
       1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case

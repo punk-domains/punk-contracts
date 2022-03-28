@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "../../interfaces/IPunkTLD.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
@@ -12,35 +12,40 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   bool public paused = true;
 
   // a mapping that shows which NFT IDs have already minted a .L2 domain; (NFT address => (tokenID => true/false))
-  mapping (address => mapping (uint256 => bool)) public mintedL2;
+  mapping (address => mapping (uint256 => bool)) public minted;
 
-  // a mapping that shows which NFT IDs have already minted a .Layer2 domain; (NFT address => (tokenID => true/false))
-  mapping (address => mapping (uint256 => bool)) public mintedLayer2;
+  // TLD address
+  address public tldAddress; // .L2/.l2 TLD
 
-  // TLD addresses
-  address public tldL2; // .L2/.l2 TLD
-  address public tldLayer2; // .LAYER2/.layer2 TLD
-
-  // TLD contracts
-  IPunkTLD tldL2Contract;
-  IPunkTLD tldLayer2Contract;
+  // TLD contract
+  IPunkTLD tldContract;
 
   // CONSTRUCTOR
   constructor(
     address _nftAddress, // the first whitelisted NFT address
-    address _tldL2,
-    address _tldLayer2
+    address _tldAddress
   ) {
     supportedNfts.push(_nftAddress);
 
-    tldL2 = _tldL2;
-    tldL2Contract = IPunkTLD(tldL2);
-
-    tldLayer2 = _tldLayer2;
-    tldLayer2Contract = IPunkTLD(tldLayer2);
+    tldAddress = _tldAddress;
+    tldContract = IPunkTLD(tldAddress);
   }
 
   // READ
+
+  function canUserMint(address _user) public view returns(bool) {
+    bool canMint = false;
+
+    for (uint256 i = 0; i < supportedNfts.length && !canMint; i++) {
+      IERC721Enumerable nftContract = IERC721Enumerable(supportedNfts[i]);
+
+      for (uint256 j = 0; j < nftContract.balanceOf(_user) && !canMint; j++) {
+        canMint = !minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(_user, j)];
+      }
+    }
+
+    return canMint;
+  }
 
   function getSupportedNftsArrayLength() public view returns(uint) {
     return supportedNfts.length;
@@ -50,26 +55,20 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     return supportedNfts;
   }
 
-  function isNftIdAlreadyUsed(address _nftAddress, uint256 _nftTokenId, uint8 _tld) public view returns(bool used) {
-    if (_tld == 1) {
-      return mintedL2[_nftAddress][_nftTokenId];
-    } else if (_tld == 2) {
-      return mintedLayer2[_nftAddress][_nftTokenId];
-    } 
+  function isNftIdAlreadyUsed(address _nftAddress, uint256 _nftTokenId) public view returns(bool used) {
+    return minted[_nftAddress][_nftTokenId]; 
   }
 
   // WRITE
 
   function mint(
     string memory _domainName,
-    uint8 _tld, // 1: .L2 // 2: .LAYER2
     address _nftAddress, // whitelisted Layer2DAO Early Adopter NFT
     uint256 _nftTokenId,
     address _referrer
   ) external payable nonReentrant returns(uint256) {
     require(!paused || msg.sender == owner(), "Minting paused");
-    require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId, _tld), "This NFT was already used for minting a domain of the chosen TLD");
-
+    
     // check if provided NFT address is whitelisted
     bool isWhitelisted = false;
 
@@ -81,36 +80,24 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     }
 
     require(isWhitelisted, "The provided NFT address is not whitelisted");
+    require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId), "This NFT was already used for minting a domain of the chosen TLD");
 
     // check if user has the required Layer2DAO NFT
-    IERC721 nftContract = IERC721(_nftAddress);
+    IERC721Enumerable nftContract = IERC721Enumerable(_nftAddress);
 
     require(
       nftContract.ownerOf(_nftTokenId) == msg.sender,
       "Sender is not the provided NFT owner."
     );
 
-    // get the selected TLD contract (either .L2 or .LAYER2)
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
     // check domain price
-    require(msg.value >= selectedContract.price(), "Value below price");
+    require(msg.value >= tldContract.price(), "Value below price");
 
     // mark that the NFT ID has minted a domain (to prevent multiple mints)
-    if (_tld == 1) {
-      mintedL2[_nftAddress][_nftTokenId] = true;
-    } else if (_tld == 2) {
-      mintedLayer2[_nftAddress][_nftTokenId] = true;
-    }
+    minted[_nftAddress][_nftTokenId] = true;
 
     // mint domain 
-    return selectedContract.mint{value: msg.value}(_domainName, msg.sender, _referrer);
+    return tldContract.mint{value: msg.value}(_domainName, msg.sender, _referrer);
   }
 
   // OWNER
@@ -119,72 +106,29 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.push(_nftAddress);
   }
 
-  function changeMaxDomainNameLength(uint256 _maxLength, uint8 _tld) external onlyOwner {
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
-    selectedContract.changeNameMaxLength(_maxLength);
+  function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
+    tldContract.changeNameMaxLength(_maxLength);
   }
 
-  function changeTldDescription(string calldata _description, uint8 _tld) external onlyOwner {
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
-    selectedContract.changeDescription(_description);
+  function changeTldDescription(string calldata _description) external onlyOwner {
+    tldContract.changeDescription(_description);
   }
 
-  function changeTldPrice(uint256 _price, uint8 _tld) external onlyOwner {
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
-    selectedContract.changePrice(_price);
+  function changeTldPrice(uint256 _price) external onlyOwner {
+    tldContract.changePrice(_price);
   }
 
   /// @notice Referral fee cannot be 5000 bps or higher
-  function changeTldReferralFee(uint256 _referral, uint8 _tld) external onlyOwner {
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
-    selectedContract.changeReferralFee(_referral);
+  function changeTldReferralFee(uint256 _referral) external onlyOwner {
+    tldContract.changeReferralFee(_referral);
   }
 
   /// @notice Owner can mint a domain without holding/using an NFT
   function ownerMintDomain(
     string memory _domainName,
-    uint8 _tld, // 1: .L2 // 2: .LAYER2
     address _domainHolder
   ) external payable nonReentrant onlyOwner returns(uint256) {
-    // get the selected TLD contract (either .L2 or .LAYER2)
-    IPunkTLD selectedContract;
-
-    if (_tld == 1) {
-      selectedContract = tldL2Contract;
-    } else if (_tld == 2) {
-      selectedContract = tldLayer2Contract;
-    }
-
-    // mint domain 
-    return selectedContract.mint{value: msg.value}(_domainName, _domainHolder, address(0));
+    return tldContract.mint{value: msg.value}(_domainName, _domainHolder, address(0));
   }
 
   // recover tokens
@@ -193,7 +137,7 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
   }
 
   function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
-    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+    IERC721Enumerable(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
 
   function removeWhitelistedNftContract(uint _nftIndex) external onlyOwner {
@@ -201,10 +145,8 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.pop();
   }
 
-  // transfer TLDs ownership
-  function transferTldsOwnership(address _newTldOwner) external onlyOwner {
-    tldL2Contract.transferOwnership(_newTldOwner);
-    tldLayer2Contract.transferOwnership(_newTldOwner);
+  function transferTldOwnership(address _newTldOwner) external onlyOwner {
+    tldContract.transferOwnership(_newTldOwner);
   }
 
   function togglePaused() external onlyOwner {
