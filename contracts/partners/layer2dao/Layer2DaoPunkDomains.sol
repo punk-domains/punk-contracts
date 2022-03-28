@@ -33,11 +33,10 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
 
   // READ
 
-  function canUserMint(address _user) public view returns(bool) {
-    bool canMint = false;
-
+  function canUserMint(address _user) public view returns(bool canMint) {
+    IERC721Enumerable nftContract;
     for (uint256 i = 0; i < supportedNfts.length && !canMint; i++) {
-      IERC721Enumerable nftContract = IERC721Enumerable(supportedNfts[i]);
+      nftContract = IERC721Enumerable(supportedNfts[i]);
 
       for (uint256 j = 0; j < nftContract.balanceOf(_user) && !canMint; j++) {
         canMint = !minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(_user, j)];
@@ -63,40 +62,30 @@ contract Layer2DaoPunkDomains is Ownable, ReentrancyGuard {
 
   function mint(
     string memory _domainName,
-    address _nftAddress, // whitelisted Layer2DAO Early Adopter NFT
-    uint256 _nftTokenId,
     address _referrer
   ) external payable nonReentrant returns(uint256) {
     require(!paused || msg.sender == owner(), "Minting paused");
+    require(msg.value >= tldContract.price(), "Value below price");
     
-    // check if provided NFT address is whitelisted
-    bool isWhitelisted = false;
+    bool canMint = false;
 
-    for (uint256 i = 0; i < supportedNfts.length; i++) {
-      if (_nftAddress == supportedNfts[i]) {
-        isWhitelisted = true;
-        break;
+    // loop through NFT contracts and see if user holds any NFT
+    IERC721Enumerable nftContract;
+    for (uint256 i = 0; i < supportedNfts.length && !canMint; i++) {
+      nftContract = IERC721Enumerable(supportedNfts[i]);
+
+      // if user has NFTs, loop through them and see if any has not been used yet
+      for (uint256 j = 0; j < nftContract.balanceOf(msg.sender) && !canMint; j++) {
+        if (!minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(msg.sender, j)]) {
+          // if NFT has not been used yet, mark it as used and allow minting a new domain
+          minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(msg.sender, j)] = true;
+          canMint = true;
+        }
       }
     }
 
-    require(isWhitelisted, "The provided NFT address is not whitelisted");
-    require(!isNftIdAlreadyUsed(_nftAddress, _nftTokenId), "This NFT was already used for minting a domain of the chosen TLD");
+    require(canMint, "User cannot mint a domain");
 
-    // check if user has the required Layer2DAO NFT
-    IERC721Enumerable nftContract = IERC721Enumerable(_nftAddress);
-
-    require(
-      nftContract.ownerOf(_nftTokenId) == msg.sender,
-      "Sender is not the provided NFT owner."
-    );
-
-    // check domain price
-    require(msg.value >= tldContract.price(), "Value below price");
-
-    // mark that the NFT ID has minted a domain (to prevent multiple mints)
-    minted[_nftAddress][_nftTokenId] = true;
-
-    // mint domain 
     return tldContract.mint{value: msg.value}(_domainName, msg.sender, _referrer);
   }
 

@@ -124,27 +124,75 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
   });
 
   it("should mint a new domain", async function () {
+    const Erc721Contract2 = await ethers.getContractFactory("MockErc721Token");
+    const nftLevel3Contract = await Erc721Contract2.deploy("Layer2DAO Level 3", "L2DL3");
+    const nftLevel4Contract = await Erc721Contract2.deploy("Layer2DAO Level 4", "L2DL4");
+    const nftLevel5Contract = await Erc721Contract2.deploy("Layer2DAO Level 5", "L2DL5");
+    const nftLevel6Contract = await Erc721Contract2.deploy("Layer2DAO Level 6", "L2DL6");
+    const nftLevel7Contract = await Erc721Contract2.deploy("Layer2DAO Level 7", "L2DL7");
+    const nftLevel8Contract = await Erc721Contract2.deploy("Layer2DAO Level 8", "L2DL8");
+    const nftLevel9Contract = await Erc721Contract2.deploy("Layer2DAO Level 9", "L2DL9");
+
+    await mintContract.addWhitelistedNftContract(nftLevel2Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel3Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel4Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel5Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel6Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel7Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel8Contract.address);
+    await mintContract.addWhitelistedNftContract(nftLevel9Contract.address);
+
     await mintContract.togglePaused();
 
-    const nftBalanceBefore = await nftLevel1Contract.balanceOf(user1.address);
+    const nftBalanceBefore = await nftLevel9Contract.balanceOf(user1.address);
     expect(nftBalanceBefore).to.equal(0);
 
     const canMintUser1Before1 = await mintContract.canUserMint(user1.address);
     expect(canMintUser1Before1).to.be.false;
 
     // mint a Layer2DAO NFT
-    await nftLevel1Contract.mint(user1.address);
+    await nftLevel9Contract.mint(user1.address);
 
-    const nftBalanceAfter = await nftLevel1Contract.balanceOf(user1.address);
+    const nftBalanceAfter = await nftLevel9Contract.balanceOf(user1.address);
     expect(nftBalanceAfter).to.equal(1);
+
+    // check NFT balances
+    const nftBalance1 = await nftLevel1Contract.balanceOf(user1.address);
+    expect(nftBalance1).to.equal(0);
+
+    const nftBalance2 = await nftLevel2Contract.balanceOf(user1.address);
+    expect(nftBalance2).to.equal(0);
+
+    const nftBalance3 = await nftLevel3Contract.balanceOf(user1.address);
+    expect(nftBalance3).to.equal(0);
+
+    const nftBalance4 = await nftLevel4Contract.balanceOf(user1.address);
+    expect(nftBalance4).to.equal(0);
+
+    const nftBalance5 = await nftLevel5Contract.balanceOf(user1.address);
+    expect(nftBalance5).to.equal(0);
+
+    const nftBalance6 = await nftLevel6Contract.balanceOf(user1.address);
+    expect(nftBalance6).to.equal(0);
+
+    const nftBalance7 = await nftLevel7Contract.balanceOf(user1.address);
+    expect(nftBalance7).to.equal(0);
+
+    const nftBalance8 = await nftLevel8Contract.balanceOf(user1.address);
+    expect(nftBalance8).to.equal(0);
+
+    const nftBalance9 = await nftLevel9Contract.balanceOf(user1.address);
+    expect(nftBalance9).to.equal(1);
+
+    // end NFTs balance check
 
     const canMintUser1Before2 = await mintContract.canUserMint(user1.address);
     expect(canMintUser1Before2).to.be.true;
 
-    const nftTokenByIndex = await nftLevel1Contract.tokenOfOwnerByIndex(user1.address, 0);
+    const nftTokenByIndex = await nftLevel9Contract.tokenOfOwnerByIndex(user1.address, 0);
     expect(nftTokenByIndex).to.equal(1);
 
-    const nftOwner = await nftLevel1Contract.ownerOf(1); // owner of token 1
+    const nftOwner = await nftLevel9Contract.ownerOf(1); // owner of token 1
     expect(nftOwner).to.equal(user1.address);
 
     const balanceDomainBefore = await tldContractL2.balanceOf(user1.address);
@@ -157,8 +205,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // Mint a .L2 domain
     const tx = await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
-      nftLevel1Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay for the domain
@@ -184,13 +230,11 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // should fail at minting another .L2 domain with the same NFT
     await expect(mintContract.connect(user1).mint(
       "user1second", // domain name (without TLD)
-      nftLevel1Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay for the domain
       }
-    )).to.be.revertedWith('This NFT was already used for minting a domain of the chosen TLD');
+    )).to.be.revertedWith('User cannot mint a domain');
 
     const contractBalanceAfter2 = await waffle.provider.getBalance(mintContract.address);
     console.log("Contract balance after failed mint: " + ethers.utils.formatEther(contractBalanceAfter2) + " ETH");
@@ -234,11 +278,12 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     const balanceDomainBefore = await tldContractL2.balanceOf(user1.address);
     expect(balanceDomainBefore).to.equal(0);
 
+    const canMintUser1 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser1).to.be.true;
+
     // Mint a .L2 domain with level 1 NFT
     await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
-      nftLevel1Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay for the domain
@@ -248,24 +293,35 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // Fail at minting the same domain name with level 2 NFT
     await expect(mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
-      nftLevel2Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay for the domain
       }
     )).to.be.revertedWith("Domain with this name already exists");
 
+    const canMintUser2 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser2).to.be.true;
+
     // Mint another .L2 domain with level 2 NFT
     await mintContract.connect(user1).mint(
       "user1another", // domain name (without TLD)
-      nftLevel2Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay for the domain
       }
     );
+
+    const canMintUser3 = await mintContract.canUserMint(user1.address);
+    expect(canMintUser3).to.be.false;
+
+    // Fail at minting yet another domain
+    await expect(mintContract.connect(user1).mint(
+      "user1third", // domain name (without TLD)
+      ethers.constants.AddressZero, // no referrer in this case
+      {
+        value: domainPrice // pay for the domain
+      }
+    )).to.be.revertedWith("User cannot mint a domain");
 
     const balanceDomainAfter = await tldContractL2.balanceOf(user1.address);
     expect(balanceDomainAfter).to.equal(2);
@@ -382,8 +438,6 @@ describe("Layer2DaoPunkDomains (partner contract)", function () {
     // should fail at minting because contract is paused
     await expect(mintContract.connect(user1).mint(
       "user1fail", // domain name (without TLD)
-      nftLevel1Contract.address, // NFT address
-      1, // NFT token ID (the second minted NFT, the first one is minted in the constructor)
       ethers.constants.AddressZero, // no referrer in this case
       {
         value: domainPrice // pay for the domain
