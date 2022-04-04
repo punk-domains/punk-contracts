@@ -20,5 +20,8 @@
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.2",
     "hardhat": "^2.8.0"
+  },
+  "dependencies": {
+    "@rari-capital/solmate": "^6.2.0"
   }
 }
