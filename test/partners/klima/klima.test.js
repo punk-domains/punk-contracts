@@ -21,17 +21,17 @@ describe("KlimaPunkDomains (partner contract)", function () {
   let tldContract;
   let wrapperContract;
   let usdcContract;
+  let knsRetirerContract;
 
   let signer;
   let user1;
   let user2;
-  let gwami;
 
   const usdcDecimals = 6;
   const domainPrice = ethers.utils.parseUnits("100", usdcDecimals); // domain price is in USDC (mwei, 6 decimals)
 
   beforeEach(async function () {
-    [signer, user1, user2, gwami] = await ethers.getSigners();
+    [signer, user1, user2] = await ethers.getSigners();
 
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
@@ -55,14 +55,18 @@ describe("KlimaPunkDomains (partner contract)", function () {
       factoryContract.address
     );
 
-    // USDC contract
+    // Mock USDC contract
     const Erc20ContractDecimals = await ethers.getContractFactory("MockErc20TokenDecimals");
     usdcContract = await Erc20ContractDecimals.deploy("USD Coin", "USDC", usdcDecimals);
+
+    // Mock KNS Retirer contract
+    const KnsRetirer = await ethers.getContractFactory("MockKNSRetirer");
+    knsRetirerContract = await KnsRetirer.deploy(usdcContract.address);
 
     // Whitelisted minting contract
     const KlimaPunkDomains = await ethers.getContractFactory("KlimaPunkDomains");
     wrapperContract = await KlimaPunkDomains.deploy(
-      gwami.address, // fake gwami address
+      knsRetirerContract.address, // KNS Retirer contract address
       tldContract.address, // .klima TLD address
       usdcContract.address, // TODO: USDC address
       domainPrice // domain price in USDC (6 decimals, mwei)
@@ -103,10 +107,6 @@ describe("KlimaPunkDomains (partner contract)", function () {
     expect(wrapperBalanceBefore).to.equal(0);
     console.log("Wrapper contract USDC balance before first mint: " + ethers.utils.formatUnits(wrapperBalanceBefore, usdcDecimals) + " USDC");
 
-    const gwamiBalanceBefore = await usdcContract.balanceOf(gwami.address);
-    expect(gwamiBalanceBefore).to.equal(0);
-    console.log("Gwami USDC balance before first mint: " + ethers.utils.formatUnits(gwamiBalanceBefore, usdcDecimals) + " USDC");
-
     // give user1 100 USDC
     await usdcContract.mint(user1.address, ethers.utils.parseUnits("100", usdcDecimals));
 
@@ -136,10 +136,6 @@ describe("KlimaPunkDomains (partner contract)", function () {
     const wrapperBalanceAfter = await usdcContract.balanceOf(wrapperContract.address);
     expect(wrapperBalanceAfter).to.equal(0); // wrapper contract does not hold USDC from domain mints
     console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter, usdcDecimals) + " USDC");
-
-    const gwamiBalanceAfter = await usdcContract.balanceOf(gwami.address);
-    expect(gwamiBalanceAfter).to.equal(ethers.utils.parseUnits("80", usdcDecimals)); // should equal 80 USDC, because only royalty was deducted (referral fee was not, because there was no referrer)
-    console.log("Gwami USDC balance after successful mint: " + ethers.utils.formatUnits(gwamiBalanceAfter, usdcDecimals) + " USDC");
 
     /*
     // should fail at minting another .L2 domain with the same NFT

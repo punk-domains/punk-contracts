@@ -2,15 +2,17 @@
 pragma solidity ^0.8.4;
 
 import "../../interfaces/IPunkTLD.sol";
+import "./interfaces/IKNS_Retirer.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract KlimaPunkDomains is Ownable, ReentrancyGuard {
+  string public constant tldName = ".klima";
   bool public paused = true;
 
-  address public gwamiContractAddress; // contract that does BCT buying, sKLIMA staking and KLIMA bonding
+  address public knsRetirerAddress;
 
   uint256 public price; // domain price in USDC (6 decimals!!!)
   uint256 public royaltyFee = 2_000; // share of each domain purchase (in bips) that goes to Punk Domains
@@ -27,14 +29,14 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
 
   // CONSTRUCTOR
   constructor(
-    address _gwamiContractAddress,
+    address _knsRetirerAddress,
     address _tldAddress,
     address _usdcAddress,
     uint256 _price
   ) {
-    gwamiContractAddress = _gwamiContractAddress;
     tldContract = IPunkTLD(_tldAddress);
     usdc = IERC20(_usdcAddress);
+    knsRetirerAddress = _knsRetirerAddress;
     price = _price;
   }
 
@@ -55,14 +57,24 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
       uint256 royaltyPayment = (price * royaltyFee) / MAX_BPS;
       uint256 gwamiPayment = price - royaltyPayment;
 
+      // send referral fee
       if (referralFee > 0 && _referrer != address(0)) {
         uint256 referralPayment = (price * referralFee) / MAX_BPS;
-        gwamiPayment = gwamiPayment - referralPayment;
+        gwamiPayment -= referralPayment;
         usdc.transferFrom(msg.sender, _referrer, referralPayment);
       }
       
+      // send royalty
       usdc.transferFrom(msg.sender, tldContract.getFactoryOwner(), royaltyPayment);
-      usdc.transferFrom(msg.sender, gwamiContractAddress, gwamiPayment);
+
+      // give USDC spending approval to the KNS retirer contract and call it
+      usdc.transferFrom(msg.sender, address(this), gwamiPayment); // transfer funds from user to this contract
+      usdc.approve(knsRetirerAddress, gwamiPayment); // this contract gives spending approval to KNS Retirer contract
+      IKNS_Retirer(knsRetirerAddress).retireAndKI( // call the retire function
+        gwamiPayment, 
+        _domainHolder, 
+        string(bytes.concat(bytes(_domainName), bytes(tldName)))
+      );
     }
 
     return tldContract.mint{value: 0}(_domainName, _domainHolder, address(0));
@@ -74,8 +86,8 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
     whitelisted[_addr] = true;
   }
 
-  function changeGwamiContractAddress(address _newGwamiAddr) external onlyOwner {
-    gwamiContractAddress = _newGwamiAddr;
+  function changeKnsRetirerAddress(address _newKnsRetirerAddr) external onlyOwner {
+    knsRetirerAddress = _newKnsRetirerAddr;
   }
 
   function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
