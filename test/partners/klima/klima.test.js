@@ -107,6 +107,10 @@ describe("KlimaPunkDomains (partner contract)", function () {
     expect(wrapperBalanceBefore).to.equal(0);
     console.log("Wrapper contract USDC balance before first mint: " + ethers.utils.formatUnits(wrapperBalanceBefore, usdcDecimals) + " USDC");
 
+    const knsBalanceBefore = await usdcContract.balanceOf(knsRetirerContract.address);
+    expect(knsBalanceBefore).to.equal(0);
+    console.log("KNS contract USDC balance before first mint: " + ethers.utils.formatUnits(knsBalanceBefore, usdcDecimals) + " USDC");
+
     // give user1 100 USDC
     await usdcContract.mint(user1.address, ethers.utils.parseUnits("100", usdcDecimals));
 
@@ -136,6 +140,10 @@ describe("KlimaPunkDomains (partner contract)", function () {
     const wrapperBalanceAfter = await usdcContract.balanceOf(wrapperContract.address);
     expect(wrapperBalanceAfter).to.equal(0); // wrapper contract does not hold USDC from domain mints
     console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter, usdcDecimals) + " USDC");
+
+    const knsBalanceAfter = await usdcContract.balanceOf(knsRetirerContract.address);
+    expect(knsBalanceAfter).to.equal(ethers.utils.parseUnits("80", usdcDecimals));
+    console.log("KNS contract USDC balance after successful mint: " + ethers.utils.formatUnits(knsBalanceAfter, usdcDecimals) + " USDC");
 
     /*
     // should fail at minting another .L2 domain with the same NFT
