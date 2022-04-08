@@ -98,6 +98,14 @@ describe("KlimaPunkDomains (partner contract)", function () {
   });
 
   it("should mint a new domain", async function () {
+    // should fail at minting because minting is paused
+    await expect(wrapperContract.connect(user1).mint(
+      "user1", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero // no referrer in this case
+    )).to.be.revertedWith('Minting paused');
+
+    // enable minting
     await wrapperContract.togglePaused();
 
     const balanceDomainBefore = await tldContract.balanceOf(user1.address);
@@ -105,14 +113,14 @@ describe("KlimaPunkDomains (partner contract)", function () {
 
     const wrapperBalanceBefore = await usdcContract.balanceOf(wrapperContract.address);
     expect(wrapperBalanceBefore).to.equal(0);
-    console.log("Wrapper contract USDC balance before first mint: " + ethers.utils.formatUnits(wrapperBalanceBefore, usdcDecimals) + " USDC");
+    //console.log("Wrapper contract USDC balance before first mint: " + ethers.utils.formatUnits(wrapperBalanceBefore, usdcDecimals) + " USDC");
 
     const knsBalanceBefore = await usdcContract.balanceOf(knsRetirerContract.address);
     expect(knsBalanceBefore).to.equal(0);
-    console.log("KNS contract USDC balance before first mint: " + ethers.utils.formatUnits(knsBalanceBefore, usdcDecimals) + " USDC");
+    //console.log("KNS contract USDC balance before first mint: " + ethers.utils.formatUnits(knsBalanceBefore, usdcDecimals) + " USDC");
 
     // give user1 100 USDC
-    await usdcContract.mint(user1.address, ethers.utils.parseUnits("100", usdcDecimals));
+    await usdcContract.mint(user1.address, ethers.utils.parseUnits("300", usdcDecimals));
 
     // Give USDC allowance
     await usdcContract.connect(user1).approve(
@@ -120,7 +128,7 @@ describe("KlimaPunkDomains (partner contract)", function () {
       domainPrice // amount
     );
 
-    // Mint a .L2 domain
+    // Mint a domain
     const tx = await wrapperContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       user1.address, // domain holder
@@ -139,137 +147,91 @@ describe("KlimaPunkDomains (partner contract)", function () {
 
     const wrapperBalanceAfter = await usdcContract.balanceOf(wrapperContract.address);
     expect(wrapperBalanceAfter).to.equal(0); // wrapper contract does not hold USDC from domain mints
-    console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter, usdcDecimals) + " USDC");
+    //console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter, usdcDecimals) + " USDC");
 
     const knsBalanceAfter = await usdcContract.balanceOf(knsRetirerContract.address);
     expect(knsBalanceAfter).to.equal(ethers.utils.parseUnits("80", usdcDecimals));
-    console.log("KNS contract USDC balance after successful mint: " + ethers.utils.formatUnits(knsBalanceAfter, usdcDecimals) + " USDC");
+    //console.log("KNS contract USDC balance after successful mint: " + ethers.utils.formatUnits(knsBalanceAfter, usdcDecimals) + " USDC");
 
-    /*
-    // should fail at minting another .L2 domain with the same NFT
-    await expect(wrapperContract.connect(user1).mint(
-      "user1second", // domain name (without TLD)
-      ethers.constants.AddressZero // no referrer in this case
-    )).to.be.revertedWith('User cannot mint a domain');
-
-    const contractBalanceAfter2 = await waffle.provider.getBalance(wrapperContract.address);
-    console.log("Contract balance after failed mint: " + ethers.utils.formatEther(contractBalanceAfter2) + " ETH");
-
-    // owner withdraw
-    await wrapperContract.withdraw();
-
-    const contractBalanceAfter3 = await waffle.provider.getBalance(wrapperContract.address);
-    expect(contractBalanceAfter3).to.equal(0);
-    console.log("Contract balance after withdrawal: " + ethers.utils.formatEther(contractBalanceAfter3) + " ETH");
-    */
-  });
-
-  /*
-  it("should allow owner to add a new NFT address and user to mint with any of them", async function () {
-    await wrapperContract.togglePaused();
-
-    // mint a Layer2DAO NFT (level 1)
-    const nftBalanceBefore = await nftLevel1Contract.balanceOf(user1.address);
-    expect(nftBalanceBefore).to.equal(0);
-    
-    await nftLevel1Contract.mint(user1.address);
-
-    const nftBalanceAfter = await nftLevel1Contract.balanceOf(user1.address);
-    expect(nftBalanceAfter).to.equal(1);
-
-    // mint a Layer2DAO NFT (level 2)
-    const nft2BalanceBefore = await nftLevel2Contract.balanceOf(user1.address);
-    expect(nft2BalanceBefore).to.equal(0);
-
-    await nftLevel2Contract.mint(user1.address);
-
-    const nft2BalanceAfter = await nftLevel2Contract.balanceOf(user1.address);
-    expect(nft2BalanceAfter).to.equal(1);
-
-    // add Layer2DAO NFT (level 2) to contract as whitelisted NFT address
-    await wrapperContract.addWhitelistedNftContract(nftLevel2Contract.address);
-
-    const arrLengthAfterAdd = await wrapperContract.getSupportedNftsArrayLength();
-    expect(arrLengthAfterAdd).to.equal(2);
-
-    // check user's domain balance before domain mint
-    const balanceDomainBefore = await tldContract.balanceOf(user1.address);
-    expect(balanceDomainBefore).to.equal(0);
-
-    const canMintUser1 = await wrapperContract.canUserMint(user1.address);
-    expect(canMintUser1).to.be.true;
-
-    // Mint a .L2 domain with level 1 NFT
-    await wrapperContract.connect(user1).mint(
-      "user1", // domain name (without TLD)
-      ethers.constants.AddressZero // no referrer in this case
+    // Give USDC allowance
+    await usdcContract.connect(user1).approve(
+      wrapperContract.address, // spender
+      domainPrice // amount
     );
 
-    // Fail at minting the same domain name with level 2 NFT
+    // should fail at minting existing domain
     await expect(wrapperContract.connect(user1).mint(
       "user1", // domain name (without TLD)
+      user1.address, // domain holder
       ethers.constants.AddressZero // no referrer in this case
-    )).to.be.revertedWith("Domain with this name already exists");
+    )).to.be.revertedWith('Domain with this name already exists');
 
-    const canMintUser2 = await wrapperContract.canUserMint(user1.address);
-    expect(canMintUser2).to.be.true;
+    const wrapperBalanceAfter2 = await usdcContract.balanceOf(wrapperContract.address);
+    expect(wrapperBalanceAfter2).to.equal(0); // wrapper contract does not hold USDC from domain mints
+    //console.log("Wrapper contract USDC balance after unsuccessful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter2, usdcDecimals) + " USDC");
 
-    // Mint another .L2 domain with level 2 NFT
+    const knsBalanceAfter2 = await usdcContract.balanceOf(knsRetirerContract.address);
+    expect(knsBalanceAfter2).to.equal(ethers.utils.parseUnits("80", usdcDecimals));
+    //console.log("KNS contract USDC balance after unsuccessful mint: " + ethers.utils.formatUnits(knsBalanceAfter2, usdcDecimals) + " USDC");
+
+    // Give USDC allowance
+    await usdcContract.connect(user1).approve(
+      wrapperContract.address, // spender
+      domainPrice // amount
+    );
+  
+    // should mint another domain
     await wrapperContract.connect(user1).mint(
       "user1another", // domain name (without TLD)
+      user1.address, // domain holder
       ethers.constants.AddressZero // no referrer in this case
     );
 
-    const canMintUser3 = await wrapperContract.canUserMint(user1.address);
-    expect(canMintUser3).to.be.false;
+    const wrapperBalanceAfter3 = await usdcContract.balanceOf(wrapperContract.address);
+    expect(wrapperBalanceAfter3).to.equal(0); // wrapper contract does not hold USDC from domain mints
+    //console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter3, usdcDecimals) + " USDC");
 
-    // Fail at minting yet another domain
-    await expect(wrapperContract.connect(user1).mint(
-      "user1third", // domain name (without TLD)
-      ethers.constants.AddressZero // no referrer in this case
-
-    )).to.be.revertedWith("User cannot mint a domain");
-
-    const balanceDomainAfter = await tldContract.balanceOf(user1.address);
-    expect(balanceDomainAfter).to.equal(2);
-
-    const domainHolder1 = await tldContract.getDomainHolder("user1");
-    expect(domainHolder1).to.equal(user1.address);
-
-    const domainHolder2 = await tldContract.getDomainHolder("user1another");
-    expect(domainHolder2).to.equal(user1.address);
+    const knsBalanceAfter3 = await usdcContract.balanceOf(knsRetirerContract.address);
+    expect(knsBalanceAfter3).to.equal(ethers.utils.parseUnits("160", usdcDecimals));
+    //console.log("KNS contract USDC balance after successful mint: " + ethers.utils.formatUnits(knsBalanceAfter3, usdcDecimals) + " USDC");
   });
 
   it("should change domain price (only owner)", async function () {
-    const priceBefore = await tldContract.price();
+    const priceBefore = await wrapperContract.price();
     expect(priceBefore).to.equal(domainPrice);
 
-    const newPrice = ethers.utils.parseUnits("2", "ether");
+    const newPrice = ethers.utils.parseUnits("200", usdcDecimals); // domain price is in USDC (mwei, 6 decimals)
 
-    await wrapperContract.changeTldPrice(
+    await wrapperContract.changePrice(
       newPrice
     );
 
-    const priceAfter = await tldContract.price();
+    const priceAfter = await wrapperContract.price();
     expect(priceAfter).to.equal(newPrice);
 
+    // cannot be zero
+    await expect(wrapperContract.changePrice(0)).to.be.revertedWith('Cannot be zero');
+    
     // if user is not owner, the tx should revert
-    await expect(wrapperContract.connect(user1).changeTldPrice(domainPrice)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(wrapperContract.connect(user1).changePrice(domainPrice)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change referral fee (only owner)", async function () {
-    const refBefore = await tldContract.referral();
+    const refBefore = await wrapperContract.referralFee();
     expect(refBefore).to.equal(1000);
 
-    const newRef = 2500;
+    const newRef = 1500;
 
-    await wrapperContract.changeTldReferralFee(newRef);
+    await wrapperContract.changeReferralFee(newRef);
 
-    const refAfter = await tldContract.referral();
+    const refAfter = await wrapperContract.referralFee();
     expect(refAfter).to.equal(newRef);
 
+    // cannot exceed 20%
+    await expect(wrapperContract.changeReferralFee(2100)).to.be.revertedWith('Cannot exceed 20%');
+
     // if user is not owner, the tx should revert
-    await expect(wrapperContract.connect(user1).changeTldReferralFee(666)).to.be.revertedWith('Ownable: caller is not the owner');
+    await expect(wrapperContract.connect(user1).changeReferralFee(666)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it("should change max domain name length (only owner)", async function () {
@@ -282,6 +244,9 @@ describe("KlimaPunkDomains (partner contract)", function () {
     const after = await tldContract.nameMaxLength();
     expect(after).to.equal(newLen);
 
+    // cannot be zero
+    await expect(wrapperContract.changeMaxDomainNameLength(0)).to.be.revertedWith('Cannot be zero');
+
     // if user is not owner, the tx should revert
     await expect(wrapperContract.connect(user1).changeMaxDomainNameLength(420)).to.be.revertedWith('Ownable: caller is not the owner');
   });
@@ -290,7 +255,7 @@ describe("KlimaPunkDomains (partner contract)", function () {
     const desBefore = await tldContract.description();
     expect(desBefore).to.equal("Punk Domains digital identity. Visit https://punk.domains/");
 
-    const newDes = "Get yourself a .L2 domain by L2DAO and Punk Domains!";
+    const newDes = "Get yourself a .klima domain by Gwami Labs and Punk Domains!";
 
     await wrapperContract.changeTldDescription(newDes);
 
@@ -301,35 +266,20 @@ describe("KlimaPunkDomains (partner contract)", function () {
     await expect(wrapperContract.connect(user1).changeTldDescription("pwned")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it("should fail at minting a domain if contract is paused", async function () {
-    const nftBalanceBefore = await nftLevel1Contract.balanceOf(user1.address);
-    expect(nftBalanceBefore).to.equal(0);
+  it("should change royalty fee (only factory owner)", async function () {
+    const rBefore = await wrapperContract.royaltyFee();
+    expect(rBefore).to.equal(2000);
 
-    // mint a Layer2DAO NFT
-    await nftLevel1Contract.mint(user1.address);
+    const newFee = 1500;
 
-    const nftBalanceAfter = await nftLevel1Contract.balanceOf(user1.address);
-    expect(nftBalanceAfter).to.equal(1);
+    await wrapperContract.changeRoyaltyFee(newFee);
 
-    const balanceDomainBefore = await tldContract.balanceOf(user1.address);
-    expect(balanceDomainBefore).to.equal(0);
+    const rAfter = await wrapperContract.royaltyFee();
+    expect(rAfter).to.equal(newFee);
 
-    // should fail at minting because contract is paused
-    await expect(wrapperContract.connect(user1).mint(
-      "user1fail", // domain name (without TLD)
-      ethers.constants.AddressZero, // no referrer in this case
-      {
-        value: domainPrice // pay for the domain
-      }
-    )).to.be.revertedWith('Minting paused');
-
-    const balanceDomainAfter = await tldContract.balanceOf(user1.address);
-    expect(balanceDomainAfter).to.equal(0); // remains zero
-
-    const domainHolder = await tldContract.getDomainHolder("user1fail");
-    expect(domainHolder).to.equal(ethers.constants.AddressZero); // the owner is a zero address because domain was not minted
+    // if user is not owner, the tx should revert
+    await expect(wrapperContract.connect(user1).changeRoyaltyFee(666)).to.be.revertedWith('Klima Wrapper: Caller is not Factory owner');
   });
-  */
 
   it("should recover ERC-20 tokens mistakenly sent to contract address", async function () {
     const ERC20MockToken = await ethers.getContractFactory("MockErc20Token");

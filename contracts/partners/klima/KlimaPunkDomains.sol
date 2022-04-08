@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract KlimaPunkDomains is Ownable, ReentrancyGuard {
-  string public constant tldName = ".klima";
+  string public constant TLD_NAME = ".klima";
   bool public paused = true;
 
   address public knsRetirerAddress;
@@ -54,8 +54,11 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
       whitelisted[msg.sender] = false;
     } else {
       // paid minting (distribute the payment)
+
+      // send royalty fee
       uint256 royaltyPayment = (price * royaltyFee) / MAX_BPS;
       uint256 gwamiPayment = price - royaltyPayment;
+      usdc.transferFrom(msg.sender, tldContract.getFactoryOwner(), royaltyPayment);
 
       // send referral fee
       if (referralFee > 0 && _referrer != address(0)) {
@@ -63,9 +66,6 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
         gwamiPayment -= referralPayment;
         usdc.transferFrom(msg.sender, _referrer, referralPayment);
       }
-      
-      // send royalty
-      usdc.transferFrom(msg.sender, tldContract.getFactoryOwner(), royaltyPayment);
 
       // give USDC spending approval to the KNS retirer contract and call it
       usdc.transferFrom(msg.sender, address(this), gwamiPayment); // transfer funds from user to this contract
@@ -73,7 +73,7 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
       IKNS_Retirer(knsRetirerAddress).retireAndKI( // call the retire function
         gwamiPayment, 
         _domainHolder, 
-        string(bytes.concat(bytes(_domainName), bytes(tldName)))
+        string(bytes.concat(bytes(_domainName), bytes(TLD_NAME))) // join together domain name and TLD name
       );
     }
 
@@ -86,21 +86,28 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
     whitelisted[_addr] = true;
   }
 
+  function removeAddressFromWhitelist(address _addr) external onlyOwner {
+    whitelisted[_addr] = false;
+  }
+
   function changeKnsRetirerAddress(address _newKnsRetirerAddr) external onlyOwner {
     knsRetirerAddress = _newKnsRetirerAddr;
   }
 
   function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
+    require(_maxLength > 0, "Cannot be zero");
     tldContract.changeNameMaxLength(_maxLength);
   }
 
   /// @notice This changes price in the wrapper contract
   function changePrice(uint256 _price) external onlyOwner {
+    require(_price > 0, "Cannot be zero");
     price = _price;
   }
 
   /// @notice This changes referral fee in the wrapper contract
   function changeReferralFee(uint256 _referral) external onlyOwner {
+    require(_referral <= 2000, "Cannot exceed 20%");
     referralFee = _referral;
   }
 
@@ -131,7 +138,15 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   /// @notice Withdraw MATIC from the contract
   function withdraw() external onlyOwner {
     (bool success, ) = owner().call{value: address(this).balance}("");
-    require(success, "Failed to withdraw ETH from contract");
+    require(success, "Klima Wrapper: Failed to withdraw MATIC from contract");
+  }
+
+  // FACTORY OWNER
+
+  /// @notice This changes royalty fee in the wrapper contract
+  function changeRoyaltyFee(uint256 _royalty) external {
+    require(msg.sender == tldContract.getFactoryOwner(), "Klima Wrapper: Caller is not Factory owner");
+    royaltyFee = _royalty;
   }
 
   // RECEIVE & FALLBACK
