@@ -27,6 +27,15 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   // TLD contract
   IPunkTLD public immutable tldContract;
 
+  // EVENTS
+
+  event RetirerAddressChanged(address indexed user, address oldAddress, address newAddress);
+  event PriceChanged(address indexed user, uint256 price_);
+  event ReferralChanged(address indexed user, uint256 referral_);
+  event RoyaltyChanged(address indexed user, uint256 royalty_);
+  event AddedToWhitelist(address indexed user, address addr);
+  event RemovedFromWhitelist(address indexed user, address addr);
+
   // CONSTRUCTOR
   constructor(
     address _knsRetirerAddress,
@@ -88,13 +97,16 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
 
   function addAddressToWhitelist(address _addr) external onlyOwner {
     whitelisted[_addr] = true;
+    emit AddedToWhitelist(msg.sender, _addr);
   }
 
   function removeAddressFromWhitelist(address _addr) external onlyOwner {
     whitelisted[_addr] = false;
+    emit RemovedFromWhitelist(msg.sender, _addr);
   }
 
   function changeKnsRetirerAddress(address _newKnsRetirerAddr) external onlyOwner {
+    emit RetirerAddressChanged(msg.sender, knsRetirerAddress, _newKnsRetirerAddr);
     knsRetirerAddress = _newKnsRetirerAddr;
   }
 
@@ -107,12 +119,14 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   function changePrice(uint256 _price) external onlyOwner {
     require(_price > 0, "Cannot be zero");
     price = _price;
+    emit PriceChanged(msg.sender, _price);
   }
 
   /// @notice This changes referral fee in the wrapper contract
   function changeReferralFee(uint256 _referral) external onlyOwner {
     require(_referral <= 2000, "Cannot exceed 20%");
     referralFee = _referral;
+    emit ReferralChanged(msg.sender, _referral);
   }
 
   /// @notice This changes description in the .klima TLD contract
@@ -151,6 +165,7 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   function changeRoyaltyFee(uint256 _royalty) external {
     require(msg.sender == tldContract.getFactoryOwner(), "Klima Wrapper: Caller is not Factory owner");
     royaltyFee = _royalty;
+    emit RoyaltyChanged(msg.sender, _royalty);
   }
 
   // RECEIVE & FALLBACK
