@@ -44,7 +44,8 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   function mint(
     string memory _domainName,
     address _domainHolder,
-    address _referrer
+    address _referrer,
+    string memory _retireMessage
   ) external nonReentrant returns(uint256) {
     require(!paused || msg.sender == owner(), "Minting paused");
 
@@ -70,10 +71,13 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
       // give USDC spending approval to the KNS retirer contract and call it
       usdc.transferFrom(msg.sender, address(this), gwamiPayment); // transfer funds from user to this contract
       usdc.approve(knsRetirerAddress, gwamiPayment); // this contract gives spending approval to KNS Retirer contract
-      IKNS_Retirer(knsRetirerAddress).retireAndKI( // call the retire function
+      
+      IKNS_Retirer retirer = IKNS_Retirer(knsRetirerAddress);
+      retirer.retireAndKI( // call the retire function
         gwamiPayment, 
         _domainHolder, 
-        string(bytes.concat(bytes(_domainName), bytes(TLD_NAME))) // join together domain name and TLD name
+        string(bytes.concat(bytes(_domainName), bytes(TLD_NAME))), // join together domain name and TLD name
+        _retireMessage
       );
     }
 

@@ -14,12 +14,13 @@ contract MockKNSRetirer {
     usdc = IERC20(_usdcAddress);
   }
 
-  function retireAndKI(uint _USDCAmt, address beneficiary, string memory domainName) public {
+  function retireAndKI(uint _USDCAmt, address _beneficiary, string memory _domainName, string memory _retMessage) public {
     usdc.transferFrom(msg.sender, address(this), _USDCAmt); // transfer USDC to this contract address
 
     console.log("USDC amount in mwei: %s", _USDCAmt);
-    console.log("Beneficiary: %s", beneficiary);
-    console.log("Domain name: %s", domainName);
+    console.log("Beneficiary: %s", _beneficiary);
+    console.log("Domain name: %s", _domainName);
+    console.log("Ret msg: %s", _retMessage);
   }
 
 }

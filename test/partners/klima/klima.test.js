@@ -102,7 +102,8 @@ describe("KlimaPunkDomains (partner contract)", function () {
     await expect(wrapperContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       user1.address, // domain holder
-      ethers.constants.AddressZero // no referrer in this case
+      ethers.constants.AddressZero, // no referrer in this case
+      "retirement message"
     )).to.be.revertedWith('Minting paused');
 
     // enable minting
@@ -132,7 +133,8 @@ describe("KlimaPunkDomains (partner contract)", function () {
     const tx = await wrapperContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       user1.address, // domain holder
-      ethers.constants.AddressZero // no referrer in this case
+      ethers.constants.AddressZero, // no referrer in this case
+      "This is my BCT retirement message" // retirement message
     );
 
     const receipt = await tx.wait();
@@ -163,7 +165,8 @@ describe("KlimaPunkDomains (partner contract)", function () {
     await expect(wrapperContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       user1.address, // domain holder
-      ethers.constants.AddressZero // no referrer in this case
+      ethers.constants.AddressZero, // no referrer in this case
+      "This will fail" // retirement message
     )).to.be.revertedWith('Domain with this name already exists');
 
     const wrapperBalanceAfter2 = await usdcContract.balanceOf(wrapperContract.address);
@@ -184,7 +187,8 @@ describe("KlimaPunkDomains (partner contract)", function () {
     await wrapperContract.connect(user1).mint(
       "user1another", // domain name (without TLD)
       user1.address, // domain holder
-      ethers.constants.AddressZero // no referrer in this case
+      ethers.constants.AddressZero, // no referrer in this case
+      "" // no retirement message added
     );
 
     const wrapperBalanceAfter3 = await usdcContract.balanceOf(wrapperContract.address);
