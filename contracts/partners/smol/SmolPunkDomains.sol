@@ -22,8 +22,8 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
   // $MAGIC contract
   IERC20 public immutable magic;
 
-  // TLD contract
-  IPunkTLD public immutable tldContract; // .smol TLD contract
+  // TLD contract (.smol)
+  IPunkTLD public immutable tldContract;
 
   // EVENTS
   event PriceChanged(address indexed user, uint256 price_);
@@ -78,8 +78,8 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     string memory _domainName,
     address _domainHolder,
     address _referrer
-  ) external payable nonReentrant returns(uint256) {
-    require(!paused || msg.sender == owner(), "Minting paused");
+  ) external nonReentrant returns(uint256) {
+    require(!paused, "Minting paused");
     
     bool canMint = false;
 
@@ -125,11 +125,12 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.push(_nftAddress);
   }
 
+  /// @notice Change max domain name length in the TLD contract
   function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
-    require(_maxLength > 0, "Cannot be zero");
     tldContract.changeNameMaxLength(_maxLength);
   }
 
+  /// @notice Change NFT metadata description in the TLD contract
   function changeTldDescription(string calldata _description) external onlyOwner {
     tldContract.changeDescription(_description);
   }
@@ -151,15 +152,16 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
   function ownerMintDomain(
     string memory _domainName,
     address _domainHolder
-  ) external payable nonReentrant onlyOwner returns(uint256) {
+  ) external nonReentrant onlyOwner returns(uint256) {
     return tldContract.mint{value: 0}(_domainName, _domainHolder, address(0));
   }
 
-  // recover tokens
+  /// @notice Recover any ERC-20 token mistakenly sent to this contract address
   function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
     IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
   }
 
+  /// @notice Recover any ERC-721 token mistakenly sent to this contract address
   function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
     IERC721Enumerable(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
@@ -170,6 +172,7 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.pop();
   }
 
+  /// @notice Transfer .smol TLD ownership to another address
   function transferTldOwnership(address _newTldOwner) external onlyOwner {
     tldContract.transferOwnership(_newTldOwner);
   }
