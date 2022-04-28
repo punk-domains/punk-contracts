@@ -137,6 +137,7 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
 
   /// @notice This changes price in the wrapper contract
   function changePrice(uint256 _price) external onlyOwner {
+    require(_price > 0, "Cannot be zero");
     price = _price;
     emit PriceChanged(msg.sender, _price);
   }
