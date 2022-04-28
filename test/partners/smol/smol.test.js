@@ -140,6 +140,10 @@ describe(partnerContractName + " (partner contract)", function () {
   });
 
   it("should transfer TLD ownership to another address (only owner)", async function () {
+    await expect(wrapperContract.connect(user1).transferTldOwnership(
+      user1.address
+    )).to.be.revertedWith('Ownable: caller is not the owner');
+
     const ownerTldBefore = await tldContract.owner();
     expect(ownerTldBefore).to.equal(wrapperContract.address);
 
@@ -147,10 +151,6 @@ describe(partnerContractName + " (partner contract)", function () {
 
     const ownerTldAfter = await tldContract.owner();
     expect(ownerTldAfter).to.equal(user2.address);
-
-    await expect(wrapperContract.connect(user1).transferTldOwnership(
-      user1.address
-    )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   
