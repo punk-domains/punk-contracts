@@ -214,7 +214,7 @@ describe(partnerContractName + " (partner contract)", function () {
     expect(domainHolder).to.equal(user1.address);
 
     const canMintUser1After1 = await wrapperContract.canUserMint(user1.address);
-    expect(canMintUser1After1).to.be.false;
+    expect(canMintUser1After1).to.be.true; // NFT holder can mint as many domains as they want
 
     // wrapper contract owner's balance after minting
     const ownerBalanceAfter = await paymentTokenContract.balanceOf(signer.address);
@@ -227,12 +227,15 @@ describe(partnerContractName + " (partner contract)", function () {
       wrapperPrice // amount
     );
 
-    // should fail at minting another domain with the same NFT
-    await expect(wrapperContract.connect(user1).mint(
+    // should not fail at minting another domain with the same NFT
+    await wrapperContract.connect(user1).mint(
       "user1second", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
-    )).to.be.revertedWith('User cannot mint a domain');
+    );
+
+    const balanceDomainAfter2 = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter2).to.equal(2);
   });
 
   it("should allow owner to add a new NFT address and user to mint with any of them", async function () {
@@ -310,7 +313,7 @@ describe(partnerContractName + " (partner contract)", function () {
     calculateGasCosts("Mint with NFT2", receipt);
 
     const canMintUser3 = await wrapperContract.canUserMint(user1.address);
-    expect(canMintUser3).to.be.false;
+    expect(canMintUser3).to.be.true; // NFT holder can mint as many domains as they want
 
     // Give payment token allowance
     await paymentTokenContract.connect(user1).approve(
@@ -318,21 +321,24 @@ describe(partnerContractName + " (partner contract)", function () {
       wrapperPrice // amount
     );
 
-    // Fail at minting yet another domain
-    await expect(wrapperContract.connect(user1).mint(
+    // Succeed at minting yet another domain
+    await wrapperContract.connect(user1).mint(
       "user1third", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
-    )).to.be.revertedWith("User cannot mint a domain");
+    );
 
     const balanceDomainAfter = await tldContract.balanceOf(user1.address);
-    expect(balanceDomainAfter).to.equal(2);
+    expect(balanceDomainAfter).to.equal(3);
 
     const domainHolder1 = await tldContract.getDomainHolder("user1");
     expect(domainHolder1).to.equal(user1.address);
 
     const domainHolder2 = await tldContract.getDomainHolder("user1another");
     expect(domainHolder2).to.equal(user1.address);
+
+    const domainHolder3 = await tldContract.getDomainHolder("user1third");
+    expect(domainHolder3).to.equal(user1.address);
   });
 
   it("should allow owner to mint domain without NFT needed (only owner)", async function () {

@@ -1,10 +1,10 @@
-// npx hardhat run scripts/partners/smol/deploySmol.js --network arbitrumTestnet  // arbitrumOne
+// npx hardhat run scripts/partners/smol/deploySmol.js --network arbitrumOne
 
 const contractNameFactory = "SmolPunkDomains";
 
-const nftAddress = "<enter-address>"; // enter address of the first supported NFT (Smol Brains)
-const tldAddress = "<enter-address>"; // .smol TLD address
-const paymentTokenAddress = "<enter-address>"; // $MAGIC
+const nftAddress = "0x6325439389E0797Ab35752B4F43a14C004f22A9c"; // enter address of the first supported NFT (Smol Brain)
+const tldAddress = "0xE0d972817e94c5FF9BDc49a63d8927A0bA833E4f"; // .smol TLD address
+const paymentTokenAddress = "0x539bde0d7dbd336b79148aa742883198bbf60342"; // $MAGIC
 const price = ethers.utils.parseEther("19.99"); // Price in MAGIC tokens
 
 async function main() {

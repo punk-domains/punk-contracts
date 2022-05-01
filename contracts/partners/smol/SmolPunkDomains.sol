@@ -11,9 +11,6 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
   address[] public supportedNfts; // whitelisted Smolverse NFT addresses
   bool public paused = true;
 
-  // a mapping that shows which NFT IDs have already minted a .smol domain; (NFT address => (tokenID => true/false))
-  mapping (address => mapping (uint256 => bool)) public minted;
-
   uint256 public price; // domain price in $MAGIC
   uint256 public royaltyFee = 2_000; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
@@ -51,8 +48,8 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     for (uint256 i = 0; i < supportedNfts.length && !canMint; i++) {
       nftContract = IERC721Enumerable(supportedNfts[i]);
 
-      for (uint256 j = 0; j < nftContract.balanceOf(_user) && !canMint; j++) {
-        canMint = !minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(_user, j)];
+      if (nftContract.balanceOf(_user) > 0) {
+        canMint = true;
       }
     }
 
@@ -67,10 +64,6 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     return supportedNfts;
   }
 
-  function isNftIdAlreadyUsed(address _nftAddress, uint256 _nftTokenId) public view returns(bool used) {
-    return minted[_nftAddress][_nftTokenId]; 
-  }
-
   // WRITE
 
   /// @notice A $MAGIC approval transaction is needed to be made before minting
@@ -80,25 +73,7 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     address _referrer
   ) external nonReentrant returns(uint256) {
     require(!paused, "Minting paused");
-    
-    bool canMint = false;
-
-    // loop through NFT contracts and see if user holds any NFT
-    IERC721Enumerable nftContract;
-    for (uint256 i = 0; i < supportedNfts.length && !canMint; i++) {
-      nftContract = IERC721Enumerable(supportedNfts[i]);
-
-      // if user has NFTs, loop through them and see if any has not been used yet
-      for (uint256 j = 0; j < nftContract.balanceOf(msg.sender) && !canMint; j++) {
-        if (!minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(msg.sender, j)]) {
-          // if NFT has not been used yet, mark it as used and allow minting a new domain
-          minted[supportedNfts[i]][nftContract.tokenOfOwnerByIndex(msg.sender, j)] = true;
-          canMint = true;
-        }
-      }
-    }
-
-    require(canMint, "User cannot mint a domain");
+    require(canUserMint(msg.sender), "User cannot mint a domain");
 
     // send royalty fee
     uint256 royaltyPayment = (price * royaltyFee) / MAX_BPS;
