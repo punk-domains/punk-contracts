@@ -154,7 +154,7 @@ describe("KlimaPunkDomains (partner contract)", function () {
     //console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter, usdcDecimals) + " USDC");
 
     const knsBalanceAfter = await usdcContract.balanceOf(knsRetirerContract.address);
-    expect(knsBalanceAfter).to.equal(ethers.utils.parseUnits("80", usdcDecimals));
+    expect(knsBalanceAfter).to.equal(ethers.utils.parseUnits("81", usdcDecimals));
     //console.log("KNS contract USDC balance after successful mint: " + ethers.utils.formatUnits(knsBalanceAfter, usdcDecimals) + " USDC");
 
     // Give USDC allowance
@@ -176,7 +176,7 @@ describe("KlimaPunkDomains (partner contract)", function () {
     //console.log("Wrapper contract USDC balance after unsuccessful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter2, usdcDecimals) + " USDC");
 
     const knsBalanceAfter2 = await usdcContract.balanceOf(knsRetirerContract.address);
-    expect(knsBalanceAfter2).to.equal(ethers.utils.parseUnits("80", usdcDecimals));
+    expect(knsBalanceAfter2).to.equal(ethers.utils.parseUnits("81", usdcDecimals));
     //console.log("KNS contract USDC balance after unsuccessful mint: " + ethers.utils.formatUnits(knsBalanceAfter2, usdcDecimals) + " USDC");
 
     // Give USDC allowance
@@ -198,7 +198,7 @@ describe("KlimaPunkDomains (partner contract)", function () {
     //console.log("Wrapper contract USDC balance after successful mint: " + ethers.utils.formatUnits(wrapperBalanceAfter3, usdcDecimals) + " USDC");
 
     const knsBalanceAfter3 = await usdcContract.balanceOf(knsRetirerContract.address);
-    expect(knsBalanceAfter3).to.equal(ethers.utils.parseUnits("160", usdcDecimals));
+    expect(knsBalanceAfter3).to.equal(ethers.utils.parseUnits("162", usdcDecimals));
     //console.log("KNS contract USDC balance after successful mint: " + ethers.utils.formatUnits(knsBalanceAfter3, usdcDecimals) + " USDC");
   });
 
@@ -274,7 +274,7 @@ describe("KlimaPunkDomains (partner contract)", function () {
 
   it("should change royalty fee (only Royalty Fee Updater)", async function () {
     const rBefore = await wrapperContract.royaltyFee();
-    expect(rBefore).to.equal(2000);
+    expect(rBefore).to.equal(1900);
 
     const newFee = 1500;
 

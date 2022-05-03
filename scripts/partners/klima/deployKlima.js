@@ -2,9 +2,9 @@
 
 const contractNameFactory = "KlimaPunkDomains";
 
-const knsAddress = "<enter-address>"; 
-const domainAddress = "<enter-address>";
-const usdcAddress = "<enter-address>";
+const knsAddress = "0x618E21237600488c7956549c89Df58aF6bEB6F8e"; // contract that retires BCT and distributes funds
+const domainAddress = "0xe8b97542A433e7eCc7bB791872af04DF02A1a6E4"; // .klima address
+const usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 const price = ethers.utils.parseUnits("100", "mwei"); // Price USDC (mwei because USDC has 6 decimals)
 
 async function main() {

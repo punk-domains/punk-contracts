@@ -16,7 +16,7 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
 
   uint256 public price; // domain price in USDC (6 decimals!!!)
-  uint256 public royaltyFee = 2_000; // share of each domain purchase (in bips) that goes to Punk Domains
+  uint256 public royaltyFee = 1_900; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
   uint256 public constant MAX_BPS = 10_000;
 
@@ -159,7 +159,7 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   /// @notice Withdraw MATIC from the contract
   function withdraw() external onlyOwner {
     (bool success, ) = owner().call{value: address(this).balance}("");
-    require(success, "Klima Wrapper: Failed to withdraw MATIC from contract");
+    require(success, "Wrapper: Failed to withdraw MATIC from contract");
   }
 
   // ROYALTY FEE UPDATER
