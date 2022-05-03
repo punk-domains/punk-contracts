@@ -26,12 +26,13 @@ describe("KlimaPunkDomains (partner contract)", function () {
   let signer;
   let user1;
   let user2;
+  let royaltyFeeUpdater;
 
   const usdcDecimals = 6;
   const domainPrice = ethers.utils.parseUnits("100", usdcDecimals); // domain price is in USDC (mwei, 6 decimals)
 
   beforeEach(async function () {
-    [signer, user1, user2] = await ethers.getSigners();
+    [signer, user1, user2, royaltyFeeUpdater] = await ethers.getSigners();
 
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
@@ -69,7 +70,8 @@ describe("KlimaPunkDomains (partner contract)", function () {
       knsRetirerContract.address, // KNS Retirer contract address
       tldContract.address, // .klima TLD address
       usdcContract.address, // TODO: USDC address
-      domainPrice // domain price in USDC (6 decimals, mwei)
+      domainPrice, // domain price in USDC (6 decimals, mwei)
+      royaltyFeeUpdater.address
     );
 
     // transfer TLD ownership to the Mint contract
@@ -270,19 +272,34 @@ describe("KlimaPunkDomains (partner contract)", function () {
     await expect(wrapperContract.connect(user1).changeTldDescription("pwned")).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it("should change royalty fee (only factory owner)", async function () {
+  it("should change royalty fee (only Royalty Fee Updater)", async function () {
     const rBefore = await wrapperContract.royaltyFee();
     expect(rBefore).to.equal(2000);
 
     const newFee = 1500;
 
-    await wrapperContract.changeRoyaltyFee(newFee);
+    await wrapperContract.connect(royaltyFeeUpdater).changeRoyaltyFee(newFee);
 
     const rAfter = await wrapperContract.royaltyFee();
     expect(rAfter).to.equal(newFee);
 
-    // if user is not owner, the tx should revert
-    await expect(wrapperContract.connect(user1).changeRoyaltyFee(666)).to.be.revertedWith('Klima Wrapper: Caller is not Factory owner');
+    // if user is not Royalty Fee Updater, the tx should revert
+    await expect(wrapperContract.changeRoyaltyFee(666)).to.be.revertedWith('Wrapper: Caller is not royalty fee updater');
+    await expect(wrapperContract.connect(user1).changeRoyaltyFee(666)).to.be.revertedWith('Wrapper: Caller is not royalty fee updater');
+  
+    // change the royalty fee updater address
+    await wrapperContract.connect(royaltyFeeUpdater).changeRoyaltyFeeUpdater(signer.address);
+
+    const newFee2 = 1800;
+
+    await wrapperContract.connect(signer).changeRoyaltyFee(newFee2);
+
+    const rAfter2 = await wrapperContract.royaltyFee();
+    expect(rAfter2).to.equal(newFee2);
+
+    // if user is not Royalty Fee Updater, the tx should revert
+    await expect(wrapperContract.connect(royaltyFeeUpdater).changeRoyaltyFee(666)).to.be.revertedWith('Wrapper: Caller is not royalty fee updater');
+    await expect(wrapperContract.connect(user1).changeRoyaltyFee(666)).to.be.revertedWith('Wrapper: Caller is not royalty fee updater');
   });
 
   it("should recover ERC-20 tokens mistakenly sent to contract address", async function () {

@@ -13,6 +13,7 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
   bool public paused = true;
 
   address public knsRetirerAddress;
+  address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
 
   uint256 public price; // domain price in USDC (6 decimals!!!)
   uint256 public royaltyFee = 2_000; // share of each domain purchase (in bips) that goes to Punk Domains
@@ -41,12 +42,14 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
     address _knsRetirerAddress,
     address _tldAddress,
     address _usdcAddress,
-    uint256 _price
+    uint256 _price,
+    address _royaltyFeeUpdater
   ) {
     tldContract = IPunkTLD(_tldAddress);
     usdc = IERC20(_usdcAddress);
     knsRetirerAddress = _knsRetirerAddress;
     price = _price;
+    royaltyFeeUpdater = _royaltyFeeUpdater;
   }
 
   /// @notice A USDC approval transaction needs to be made before minting
@@ -159,13 +162,19 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
     require(success, "Klima Wrapper: Failed to withdraw MATIC from contract");
   }
 
-  // FACTORY OWNER
+  // ROYALTY FEE UPDATER
 
   /// @notice This changes royalty fee in the wrapper contract
   function changeRoyaltyFee(uint256 _royalty) external {
-    require(msg.sender == tldContract.getFactoryOwner(), "Klima Wrapper: Caller is not Factory owner");
+    require(_royalty <= 2000, "Cannot exceed 20%");
+    require(msg.sender == royaltyFeeUpdater, "Wrapper: Caller is not royalty fee updater");
     royaltyFee = _royalty;
     emit RoyaltyChanged(msg.sender, _royalty);
+  }
+  /// @notice This changes royalty fee updater address
+  function changeRoyaltyFeeUpdater(address _newUpdater) external {
+    require(msg.sender == royaltyFeeUpdater, "Wrapper: Caller is not royalty fee updater");
+    royaltyFeeUpdater = _newUpdater;
   }
 
   // RECEIVE & FALLBACK
