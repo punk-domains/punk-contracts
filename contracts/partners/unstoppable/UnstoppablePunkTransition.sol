@@ -23,6 +23,17 @@ contract UnstoppablePunkTransition is Ownable, ReentrancyGuard {
     tldContract = PunkTLD(_tldAddress);
   }
 
+  // READ
+  
+  /// @notice Returns true or false if address is eligible to claim refund for the .polygon domain
+  function canClaimRefund(address _user) public view returns(bool) {
+    if (tldContract.balanceOf(_user) > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
   // WRITE
 
   /// @notice Call this method to burn your PD domain. In return you will get 14 MATIC and credits on UD.
