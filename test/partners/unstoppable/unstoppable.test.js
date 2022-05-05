@@ -2,7 +2,7 @@
 // npx hardhat test test/partners/unstoppable/unstoppable.test.js 
 
 const { expect } = require("chai");
-const partnerContractName = "UnstoppablePunkTransition";
+const partnerContractName = "UnstoppablePolygonRefund";
 
 function calculateGasCosts(testName, receipt) {
   console.log(testName + " gasUsed: " + receipt.gasUsed);
@@ -119,11 +119,11 @@ describe(partnerContractName + " (partner contract)", function () {
 
     // Fail at transitioning if not the holder (user1)
     await expect(
-      transitionContract.connect(user1).domainTransition(domain1)
+      transitionContract.connect(user1).claimRefund(domain1)
     ).to.be.revertedWith("Transition: Sender is not domain holder.");
 
     // transition (signer)
-    const tx = await transitionContract.domainTransition(domain1);
+    const tx = await transitionContract.claimRefund(domain1);
 
     const receipt = await tx.wait();
 
@@ -139,7 +139,7 @@ describe(partnerContractName + " (partner contract)", function () {
 
     // Fail at transitioning the same domain name
     await expect(
-      transitionContract.domainTransition(domain1)
+      transitionContract.claimRefund(domain1)
     ).to.be.revertedWith("Transition: Sender is not domain holder.");
   });
   
@@ -204,11 +204,11 @@ describe(partnerContractName + " (partner contract)", function () {
 
     // Fail at transitioning if not the holder (user1)
     await expect(
-      transitionContract.connect(user1).domainTransitionBulk([domain1, domain2, domain3])
+      transitionContract.connect(user1).claimRefundBulk([domain1, domain2, domain3])
     ).to.be.revertedWith("Transition: Sender is not domain holder.");
 
     // transition (signer)
-    const tx = await transitionContract.domainTransitionBulk(
+    const tx = await transitionContract.claimRefundBulk(
       [domain1, domain2, domain3] // domain names array
     );
 

@@ -10,11 +10,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// @title Punk Domains -> Unstoppable Domains .polygon transition
 /// @author Tempe Techie
 /// @notice This contract helps with the transition of .polygon domains from Punk Domains to Unstoppable Domains
-contract UnstoppablePunkTransition is Ownable, ReentrancyGuard {
+contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
   bool public paused = true;
+  PunkTLD public immutable tldContract; // TLD contract (.polygon)
 
-  // TLD contract (.polygon)
-  PunkTLD public immutable tldContract;
+  // EVENTS
+  event RefundClaimed(address indexed user, string indexed domainName);
 
   // CONSTRUCTOR
   constructor(
@@ -37,7 +38,7 @@ contract UnstoppablePunkTransition is Ownable, ReentrancyGuard {
   // WRITE
 
   /// @notice Call this method to burn your PD domain. In return you will get 14 MATIC and credits on UD.
-  function domainTransition(
+  function claimRefund(
     string memory domainName
   ) external nonReentrant {
     require(!paused, "Minting paused");
@@ -50,15 +51,15 @@ contract UnstoppablePunkTransition is Ownable, ReentrancyGuard {
     // transfer domain NFT from msg.sender to this contract address
     tldContract.transferFrom(msg.sender, address(this), _tokenId);
 
+    emit RefundClaimed(msg.sender, domainName);
+
     // send 14 MATIC to msg.sender
-    if (address(this).balance >= 14 ether) {
-      (bool success, ) = msg.sender.call{value: 14 ether}("");
-      require(success, "Failed to send 14 MATIC to msg.sender");
-    }
+    (bool success, ) = msg.sender.call{value: 14 ether}("");
+    require(success, "Failed to send 14 MATIC to msg.sender");
   }
 
   /// @notice Call this method to burn your PD domains in bulk. In return you will get MATIC and credits on UD.
-  function domainTransitionBulk(
+  function claimRefundBulk(
     string[] memory domainNames
   ) external nonReentrant {
     require(!paused, "Minting paused");
@@ -76,13 +77,13 @@ contract UnstoppablePunkTransition is Ownable, ReentrancyGuard {
       tldContract.transferFrom(msg.sender, address(this), _tokenId);
 
       refund += 14 ether;
+
+      emit RefundClaimed(msg.sender, domainNames[i]);
     }
 
     // send MATIC to msg.sender
-    if (address(this).balance >= refund) {
-      (bool success, ) = msg.sender.call{value: refund}("");
-      require(success, "Failed to send MATIC to msg.sender");
-    }
+    (bool success, ) = msg.sender.call{value: refund}("");
+    require(success, "Failed to send MATIC to msg.sender");
   }
 
   /// @notice Recover any ERC-20 token mistakenly sent to this contract address (only owner)
