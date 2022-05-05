@@ -14,7 +14,7 @@ interface IPunkTLD is IERC721 {
   event DomainCreated(address indexed user, address indexed owner, string fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
 
-  function domains(string calldata _domainName) external view returns(Domain memory);
+  function domains(string calldata _domainName) external view returns(string memory, uint256, address, string memory);
 
   function getDomainHolder(string calldata _domainName) external view returns(address);
 
