@@ -1,5 +1,5 @@
 // Run tests:
-// npx hardhat test test/partners/unstoppable/unstoppable.test.js 
+// npx hardhat test test/partners/unstoppable/polygonRefund.test.js 
 
 const { expect } = require("chai");
 const partnerContractName = "UnstoppablePolygonRefund";
@@ -61,11 +61,12 @@ describe(partnerContractName + " (partner contract)", function () {
     // transition contract
     const transitionCode = await ethers.getContractFactory(partnerContractName);
     transitionContract = await transitionCode.deploy(
-      tldContract.address // TLD address
+      tldContract.address, // TLD address
+      ethers.utils.parseEther("14") // refund amount per domain
     );
 
     // send 14 MATIC to the transition contract
-    const tx = signer.sendTransaction({
+    await signer.sendTransaction({
       to: transitionContract.address,
       value: ethers.utils.parseEther("14")
     });

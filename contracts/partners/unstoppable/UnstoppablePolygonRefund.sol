@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// @notice This contract helps with the transition of .polygon domains from Punk Domains to Unstoppable Domains
 contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
   bool public paused = true;
+  uint256 public refund;
   PunkTLD public immutable tldContract; // TLD contract (.polygon)
 
   // EVENTS
@@ -19,9 +20,11 @@ contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
 
   // CONSTRUCTOR
   constructor(
-    address _tldAddress
+    address _tldAddress,
+    uint256 _refund
   ) {
     tldContract = PunkTLD(_tldAddress);
+    refund = _refund;
   }
 
   // READ
@@ -37,7 +40,7 @@ contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
 
   // WRITE
 
-  /// @notice Call this method to burn your PD domain. In return you will get 14 MATIC and credits on UD.
+  /// @notice Call this method to burn your PD domain. In return you will get refund and credits on UD.
   function claimRefund(
     string memory domainName
   ) external nonReentrant {
@@ -53,18 +56,18 @@ contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
 
     emit RefundClaimed(msg.sender, domainName);
 
-    // send 14 MATIC to msg.sender
-    (bool success, ) = msg.sender.call{value: 14 ether}("");
-    require(success, "Failed to send 14 MATIC to msg.sender");
+    // send refund to msg.sender
+    (bool success, ) = msg.sender.call{value: refund}("");
+    require(success, "Failed to send refund to msg.sender");
   }
 
-  /// @notice Call this method to burn your PD domains in bulk. In return you will get MATIC and credits on UD.
+  /// @notice Call this method to burn your PD domains in bulk. In return you will get refund and credits on UD.
   function claimRefundBulk(
     string[] memory domainNames
   ) external nonReentrant {
     require(!paused, "Minting paused");
 
-    uint256 refund = 0 ether;
+    uint256 totalRefund = 0;
 
     for (uint256 i = 0; i < domainNames.length; i++) {
       // check if msg.sender owns the domain name
@@ -76,14 +79,14 @@ contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
       // transfer domain NFT from msg.sender to this contract address
       tldContract.transferFrom(msg.sender, address(this), _tokenId);
 
-      refund += 14 ether;
+      totalRefund += refund;
 
       emit RefundClaimed(msg.sender, domainNames[i]);
     }
 
-    // send MATIC to msg.sender
-    (bool success, ) = msg.sender.call{value: refund}("");
-    require(success, "Failed to send MATIC to msg.sender");
+    // send refund to msg.sender
+    (bool success, ) = msg.sender.call{value: totalRefund}("");
+    require(success, "Failed to send total refund to msg.sender");
   }
 
   /// @notice Recover any ERC-20 token mistakenly sent to this contract address (only owner)
