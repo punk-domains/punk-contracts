@@ -17,6 +17,9 @@ import "base64-sol/base64.sol";
 /// @notice Dynamically generated NFT contract which represents a top-level domain
 contract FlexiPunkTLD is ERC721, Ownable, ReentrancyGuard {
   using strings for string;
+
+  uint256 public totalSupply;
+  uint256 public idCounter; // up only
   
   bool public buyingEnabled; // buying domains enabled
 
@@ -26,7 +29,6 @@ contract FlexiPunkTLD is ERC721, Ownable, ReentrancyGuard {
   uint256 public price; // domain price
   uint256 public royalty; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public referral = 1000; // share of each domain purchase (in bips) that goes to the referrer (referral fee)
-  uint256 public totalSupply;
   uint256 public nameMaxLength = 140; // max length of a domain name
 
   struct Domain {
@@ -145,19 +147,19 @@ contract FlexiPunkTLD is ERC721, Ownable, ReentrancyGuard {
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(" ")) == 0, "There should be no spaces in the name");
     require(domains[_domainName].holder == address(0), "Domain with this name already exists");
 
-    _mint(_domainHolder, totalSupply);
+    _mint(_domainHolder, idCounter);
 
     Domain memory newDomain;
     
     // store data in Domain struct
     newDomain.name = _domainName;
-    newDomain.tokenId = totalSupply;
+    newDomain.tokenId = idCounter;
     newDomain.holder = _domainHolder;
     newDomain.data = _data;
 
     // add to both mappings
     domains[_domainName] = newDomain;
-    domainIdsNames[totalSupply] = _domainName;
+    domainIdsNames[idCounter] = _domainName;
 
     if (bytes(defaultNames[_domainHolder]).length == 0) {
       defaultNames[_domainHolder] = _domainName; // if default domain name is not set for that holder, set it now
@@ -165,9 +167,10 @@ contract FlexiPunkTLD is ERC721, Ownable, ReentrancyGuard {
     
     emit DomainCreated(_msgSender(), _domainHolder, string(abi.encodePacked(_domainName, name())));
 
+    ++idCounter;
     ++totalSupply;
 
-    return totalSupply-1;
+    return idCounter-1;
   }
 
   function _sendPayment(uint256 _paymentAmount, address _referrer) internal {
