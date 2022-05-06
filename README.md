@@ -1,6 +1,6 @@
 # Punk Domains core contracts
 
-Punk Domains allow anyone to either create a top-level domain (TLD) such as .web3 or a normal domain such as techie.web3. In addition, users can add some other data to their domain:
+Punk Domains allow anyone to either create a top-level domain (TLD) such as `.wagmi` or a normal domain such as `techie.wagmi`. In addition, users can add some other data to their domain:
 
 - description
 - redirect URL (useful together with the Punk Domains browser extension)
@@ -79,4 +79,4 @@ npx hardhat verify --network mumbai <contract-address> "argument"
 
 ### Verify TLD contracts
 
-Verifying TLD contracts generated through the factory is a bit tricky, but there is a way around the issue. See scripts/deployTld.js for instructions.
+Verifying TLD contracts generated through the factory is a bit tricky, but there is a way around the issue. See `scripts/temp/deployTld.js` for instructions.

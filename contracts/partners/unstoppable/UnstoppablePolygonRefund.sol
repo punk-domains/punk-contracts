@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "../../interfaces/IPunkTLD.sol";
+import "../../interfaces/IBasePunkTLD.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
   bool public paused = true;
   uint256 public refund;
-  IPunkTLD public immutable tldContract; // TLD contract (.polygon)
+  IBasePunkTLD public immutable tldContract; // TLD contract (.polygon)
 
   // EVENTS
   event RefundClaimed(address indexed user, string indexed domainName);
@@ -23,7 +23,7 @@ contract UnstoppablePolygonRefund is Ownable, ReentrancyGuard {
     address _tldAddress,
     uint256 _refund
   ) {
-    tldContract = IPunkTLD(_tldAddress);
+    tldContract = IBasePunkTLD(_tldAddress);
     refund = _refund;
   }
 
