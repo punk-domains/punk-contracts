@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 
-describe("PunkTLD (onlyOwner)", function () {
+describe("FlexiPunkTLD (onlyOwner)", function () {
   let contract;
   let factoryContract;
   let signer;
@@ -17,12 +17,15 @@ describe("PunkTLD (onlyOwner)", function () {
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
 
-    const PunkTLDFactory = await ethers.getContractFactory("PunkTLDFactory");
-    factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address);
+    const FlexiTldMetadata = await ethers.getContractFactory("FlexiTLDMetadata");
+    const metadataContract = await FlexiTldMetadata.deploy();
+
+    const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
+    factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address, metadataContract.address);
 
     await forbTldsContract.addFactoryAddress(factoryContract.address);
 
-    const PunkTLD = await ethers.getContractFactory("PunkTLD");
+    const PunkTLD = await ethers.getContractFactory("FlexiPunkTLD");
     contract = await PunkTLD.deploy(
       domainName,
       domainSymbol,
@@ -30,11 +33,12 @@ describe("PunkTLD (onlyOwner)", function () {
       domainPrice,
       false, // buying enabled
       domainRoyalty,
-      factoryContract.address
+      factoryContract.address,
+      metadataContract.address
     );
   });
 
-  it("should create a new valid domain even if buying is disabled", async function () {
+  it("should create a new valid domain as owner even if buying is disabled", async function () {
     // buying domains should be disabled
     const buyingEnabled = await contract.buyingEnabled();
     expect(buyingEnabled).to.be.false;
@@ -151,22 +155,6 @@ describe("PunkTLD (onlyOwner)", function () {
     await expect(contract.connect(anotherUser).changeNameMaxLength(70)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-
-  it("should change the NFT metadata description", async function () {
-    const descBefore = await contract.description();
-    expect(descBefore).to.equal("Punk Domains digital identity. Visit https://punk.domains/");
-
-    const newDesc = "New description";
-    
-    await contract.changeDescription(newDesc);
-
-    const descAfter = await contract.description();
-    expect(descAfter).to.equal(newDesc);
-
-    // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changeDescription(20)).to.be.revertedWith('Ownable: caller is not the owner');
-  });
-
   it("should change the royalty amount", async function () {
     const royaltyBefore = await contract.royalty();
     expect(royaltyBefore).to.equal(0);
@@ -179,7 +167,7 @@ describe("PunkTLD (onlyOwner)", function () {
     expect(royaltyAfter).to.equal(10);
 
     // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender not factory owner');
+    await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender is not royalty fee updater');
   });
 
 });

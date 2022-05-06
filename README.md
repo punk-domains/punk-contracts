@@ -32,6 +32,18 @@ npx hardhat compile
 npx hardhat test
 ```
 
+Run tests in a specific folder:
+
+```bash
+npx hardhat test test/factories/flexi/*test.js
+```
+
+Run a specific test:
+
+```bash
+npx hardhat test test/factories/flexi/TLD.owner.test.js
+```
+
 ### Run on localhost
 
 Start a localhost node:

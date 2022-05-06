@@ -171,6 +171,7 @@ contract KlimaPunkDomains is Ownable, ReentrancyGuard {
     royaltyFee = _royalty;
     emit RoyaltyChanged(msg.sender, _royalty);
   }
+  
   /// @notice This changes royalty fee updater address
   function changeRoyaltyFeeUpdater(address _newUpdater) external {
     require(msg.sender == royaltyFeeUpdater, "Wrapper: Caller is not royalty fee updater");

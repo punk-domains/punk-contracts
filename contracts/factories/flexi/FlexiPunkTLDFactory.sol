@@ -18,6 +18,7 @@ contract FlexiPunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuard {
   mapping (string => address) public override tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
 
   address public forbiddenTlds; // address of the contract that stores the list of forbidden TLDs
+  address public metadataAddress; // default FlexiTLDMetadata address
   
   uint256 public price; // price for creating a new TLD
   uint256 public royalty = 0; // royalty for Punk Domains when new domain is minted 
@@ -29,10 +30,12 @@ contract FlexiPunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuard {
 
   constructor(
     uint256 _price, 
-    address _forbiddenTlds) 
-  {
+    address _forbiddenTlds,
+    address _metadataAddress
+  ) {
     price = _price;
     forbiddenTlds = _forbiddenTlds;
+    metadataAddress = _metadataAddress;
   }
 
   // READ
@@ -99,7 +102,8 @@ contract FlexiPunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuard {
       _domainPrice, 
       _buyingEnabled,
       royalty,
-      address(this)
+      address(this),
+      metadataAddress
     );
 
     IPunkForbiddenTlds forbidden = IPunkForbiddenTlds(forbiddenTlds);

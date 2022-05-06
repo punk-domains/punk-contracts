@@ -15,20 +15,24 @@ import "base64-sol/base64.sol";
 contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   using strings for string;
 
-  uint256 public totalSupply;
-  uint256 public idCounter; // up only
-  
+  // Domain struct is defined in IBasePunkTLD
+
+  address public metadataAddress; // FlexiTLDMetadata address
+  address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
+
   bool public buyingEnabled; // buying domains enabled
 
-  address immutable factoryAddress; // PunkTLDFactory address
-  address public metadataAddress; // FlexiTLDMetadata address
+  Ownable factory; // PunkTLDFactory address
+
+  uint256 public totalSupply;
+  uint256 public idCounter; // up only
 
   uint256 public override price; // domain price
   uint256 public royalty; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public override referral = 1000; // share of each domain purchase (in bips) that goes to the referrer (referral fee)
   uint256 public nameMaxLength = 140; // max length of a domain name
   
-  mapping (string => Domain) public override domains; // mapping (domain name => Domain struct)
+  mapping (string => Domain) public override domains; // mapping (domain name => Domain struct); Domain struct is defined in IBasePunkTLD
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (address => string) public defaultNames; // user's default domain
 
@@ -39,12 +43,17 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     uint256 _domainPrice,
     bool _buyingEnabled,
     uint256 _royalty,
-    address _factoryAddress
+    address _factoryAddress,
+    address _metadataAddress
   ) ERC721(_name, _symbol) {
     price = _domainPrice;
     buyingEnabled = _buyingEnabled;
     royalty = _royalty;
-    factoryAddress = _factoryAddress;
+    metadataAddress = _metadataAddress;
+
+    factory = Ownable(_factoryAddress);
+
+    royaltyFeeUpdater = factory.owner();
 
     transferOwnership(_tldOwner);
   }
@@ -63,11 +72,6 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   /// @notice Flexi-specific function
   function getDomainTokenId(string calldata _domainName) public view returns(uint256) {
     return domains[strings.lower(_domainName)].tokenId;
-  }
-
-  function getFactoryOwner() public override view returns(address) {
-    Ownable factory = Ownable(factoryAddress);
-    return factory.owner();
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -131,7 +135,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
     _mint(_domainHolder, idCounter);
 
-    Domain memory newDomain;
+    Domain memory newDomain; // Domain struct is defined in IBasePunkTLD
     
     // store data in Domain struct
     newDomain.name = _domainName;
@@ -158,7 +162,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   function _sendPayment(uint256 _paymentAmount, address _referrer) internal {
     if (royalty > 0 && royalty < 5000) { 
       // send royalty - must be less than 50% (5000 bips)
-      (bool sentRoyalty, ) = payable(getFactoryOwner()).call{value: ((_paymentAmount * royalty) / 10000)}("");
+      (bool sentRoyalty, ) = payable(factory.owner()).call{value: ((_paymentAmount * royalty) / 10000)}("");
       require(sentRoyalty, "Failed to send royalty to factory owner");
     }
 
@@ -227,11 +231,17 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   
   // FACTORY OWNER (current owner address of PunkTLDFactory)
 
-  /// @notice Only Factory contract owner can call this function.
+  /// @notice This changes royalty fee in the wrapper contract
   function changeRoyalty(uint256 _royalty) external {
-    require(getFactoryOwner() == _msgSender(), "Sender not factory owner");
-    require(_royalty < 5000, "Royalty cannot be 50% or higher");
-    royalty = _royalty; // royalty is in bips
+    require(_royalty <= 5000, "Cannot exceed 50%");
+    require(_msgSender() == royaltyFeeUpdater, "Sender is not royalty fee updater");
+    royalty = _royalty;
     emit TldRoyaltyChanged(_msgSender(), _royalty);
+  }
+
+  /// @notice This changes royalty fee updater address
+  function changeRoyaltyFeeUpdater(address _newUpdater) external {
+    require(_msgSender() == royaltyFeeUpdater, "Sender is not royalty fee updater");
+    royaltyFeeUpdater = _newUpdater;
   }
 }
