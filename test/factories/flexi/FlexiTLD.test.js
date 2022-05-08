@@ -306,13 +306,13 @@ describe("FlexiPunkTLD", function () {
 
   });
 
-  it("should create a new valid domain, but with uppercase letters input", async function () {
+  it("should create a new valid domain, but with uppercase and non-ascii letters input", async function () {
     await contract.toggleBuyingDomains(); // enable buying domains
 
     const price = await contract.price();
     expect(price).to.equal(domainPrice);
 
-    const newDomainName = "poɯsnᴉǝ";
+    const newDomainName = "poɯSnᴉǝ";
 
     const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
       newDomainName, // domain name (without TLD)
@@ -339,7 +339,282 @@ describe("FlexiPunkTLD", function () {
 
     const getDomainName = await contract.domainIdsNames(0);
     console.log(getDomainName);
-    //expect(getDomainName).to.equal(newDomainName.toLowerCase()); // should be lowercase
+    expect(getDomainName).to.equal(newDomainName.toLowerCase()); // should be lowercase
+  });
+
+  it("should mint a token and burn it and mint it again", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const totalSupplyBeforeMint = await contract.totalSupply();
+    expect(totalSupplyBeforeMint).to.equal(0);
+
+    const balanceBeforeMint = await contract.balanceOf(signer.address);
+    expect(balanceBeforeMint).to.equal(0);
+
+    const getDomainNameBeforeMint = await contract.domainIdsNames(0);
+    expect(getDomainNameBeforeMint).to.equal(""); // should be empty string
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    // MINT DOMAIN
+
+    const newDomainName = "signer";
+
+    await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const totalSupplyAfterMint = await contract.totalSupply();
+    expect(totalSupplyAfterMint).to.equal(1);
+
+    const balanceAfterMint = await contract.balanceOf(signer.address);
+    expect(balanceAfterMint).to.equal(1);
+
+    const getDomainDataAfterMint = await contract.domains(newDomainName);
+    expect(getDomainDataAfterMint.name).to.equal(newDomainName);
+    expect(getDomainDataAfterMint.tokenId).to.equal(0);
+    expect(getDomainDataAfterMint.holder).to.equal(signer.address);
+    expect(getDomainDataAfterMint.data).to.equal("");
+
+    const getDomainNameAfterMint = await contract.domainIdsNames(0);
+    expect(getDomainNameAfterMint).to.equal(newDomainName);
+
+    // BURN DOMAIN
+
+    const tx = await contract.burn(newDomainName);
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("Burn domain", receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("DomainBurned");
+
+    const totalSupplyAfterBurn = await contract.totalSupply();
+    expect(totalSupplyAfterBurn).to.equal(0);
+
+    const balanceAfterBurn = await contract.balanceOf(signer.address);
+    expect(balanceAfterBurn).to.equal(0);
+
+    const getDomainDataAfterBurn = await contract.domains(newDomainName);
+    expect(getDomainDataAfterBurn.holder).to.equal(ethers.constants.AddressZero);
+    expect(getDomainDataAfterBurn.name).to.equal("");
+    expect(getDomainDataAfterBurn.data).to.equal("");
+    expect(getDomainDataAfterBurn.tokenId).to.equal(0);
+
+    const getDomainNameAfterBurn = await contract.domainIdsNames(0);
+    expect(getDomainNameAfterBurn).to.equal(""); // should be empty
+
+    // MINT AGAIN
+
+    await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const totalSupplyAfterMintAgain = await contract.totalSupply();
+    expect(totalSupplyAfterMintAgain).to.equal(1);
+
+    const balanceAfterMintAgain = await contract.balanceOf(signer.address);
+    expect(balanceAfterMintAgain).to.equal(1);
+
+    const getDomainDataAfterMintAgain = await contract.domains(newDomainName);
+    expect(getDomainDataAfterMintAgain.name).to.equal(newDomainName);
+    expect(getDomainDataAfterMintAgain.tokenId).to.equal(1); // token ID is now 1, because burned IDs still count as used
+    expect(getDomainDataAfterMintAgain.holder).to.equal(signer.address);
+    expect(getDomainDataAfterMintAgain.data).to.equal("");
+
+    // token ID 0 still burned
+    const getDomainNameAfterMintAgain0 = await contract.domainIdsNames(0);
+    expect(getDomainNameAfterMintAgain0).to.equal("");
+
+    // new NFT has now ID 1
+    const getDomainNameAfterMintAgain1 = await contract.domainIdsNames(1);
+    expect(getDomainNameAfterMintAgain1).to.equal(newDomainName);
+  });
+
+  it("should mint multiple tokens, burn one and mint it again", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const totalSupplyBeforeMint = await contract.totalSupply();
+    expect(totalSupplyBeforeMint).to.equal(0);
+
+    const balanceBeforeMint = await contract.balanceOf(signer.address);
+    expect(balanceBeforeMint).to.equal(0);
+
+    const getDomainNameBeforeMint = await contract.domainIdsNames(0);
+    expect(getDomainNameBeforeMint).to.equal(""); // should be empty string
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    // MINT 3 DOMAINs
+
+    const newDomainName1 = "signer";
+    const newDomainName2 = "anotheruser";
+    const newDomainName3 = "referrer";
+
+    await contract.mint( // this approach is better for getting gasUsed value from receipt
+      newDomainName1, // domain name (without TLD)
+      signer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    await contract.mint( // this approach is better for getting gasUsed value from receipt
+      newDomainName2, // domain name (without TLD)
+      anotherUser.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    await contract.mint( // this approach is better for getting gasUsed value from receipt
+      newDomainName3, // domain name (without TLD)
+      referrer.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const totalSupplyAfterMint = await contract.totalSupply();
+    expect(totalSupplyAfterMint).to.equal(3);
+
+    const balanceAfterMint = await contract.balanceOf(signer.address);
+    expect(balanceAfterMint).to.equal(1);
+
+    const balanceAfterMint2 = await contract.balanceOf(anotherUser.address);
+    expect(balanceAfterMint2).to.equal(1);
+
+    const balanceAfterMint3 = await contract.balanceOf(referrer.address);
+    expect(balanceAfterMint3).to.equal(1);
+
+    const getDefaultDomainAfterMint = await contract.defaultNames(anotherUser.address);
+    expect(getDefaultDomainAfterMint).to.equal(newDomainName2);
+
+    const getDomainDataAfterMint = await contract.domains(newDomainName1);
+    expect(getDomainDataAfterMint.name).to.equal(newDomainName1);
+
+    const getDomainDataAfterMint2 = await contract.domains(newDomainName2);
+    expect(getDomainDataAfterMint2.name).to.equal(newDomainName2);
+    expect(getDomainDataAfterMint2.tokenId).to.equal(1);
+    expect(getDomainDataAfterMint2.holder).to.equal(anotherUser.address);
+    expect(getDomainDataAfterMint2.data).to.equal("");
+
+    const getDomainNameAfterMint = await contract.domainIdsNames(1);
+    expect(getDomainNameAfterMint).to.equal(newDomainName2);
+
+    // BURN DOMAIN
+
+    const tx = await contract.connect(anotherUser).burn(newDomainName2);
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("Burn second domain", receipt);
+
+    const events = [];
+    for (let item of receipt.events) {
+      events.push(item.event);
+    }
+
+    expect(events).to.include("DomainBurned");
+
+    const totalSupplyAfterBurn = await contract.totalSupply();
+    expect(totalSupplyAfterBurn).to.equal(2);
+
+    const balanceAfterBurn = await contract.balanceOf(signer.address);
+    expect(balanceAfterBurn).to.equal(1);
+
+    const balanceAfterBurn1 = await contract.balanceOf(anotherUser.address);
+    expect(balanceAfterBurn1).to.equal(0);
+
+    const balanceAfterBurn2 = await contract.balanceOf(referrer.address);
+    expect(balanceAfterBurn2).to.equal(1);
+
+    const getDomainDataAfterBurn = await contract.domains(newDomainName1);
+    expect(getDomainDataAfterBurn.holder).to.equal(signer.address);
+    expect(getDomainDataAfterBurn.name).to.equal("signer");
+    expect(getDomainDataAfterBurn.data).to.equal("");
+    expect(getDomainDataAfterBurn.tokenId).to.equal(0);
+
+    const getDomainDataAfterBurn2 = await contract.domains(newDomainName2);
+    expect(getDomainDataAfterBurn2.holder).to.equal(ethers.constants.AddressZero);
+    expect(getDomainDataAfterBurn2.name).to.equal("");
+    expect(getDomainDataAfterBurn2.data).to.equal("");
+    expect(getDomainDataAfterBurn2.tokenId).to.equal(0);
+
+    const getDomainDataAfterBurn3 = await contract.domains(newDomainName3);
+    expect(getDomainDataAfterBurn3.holder).to.equal(referrer.address);
+    expect(getDomainDataAfterBurn3.name).to.equal("referrer");
+    expect(getDomainDataAfterBurn3.data).to.equal("");
+    expect(getDomainDataAfterBurn3.tokenId).to.equal(2);
+
+    const getDomainNameAfterBurn = await contract.domainIdsNames(0);
+    expect(getDomainNameAfterBurn).to.equal("signer");
+
+    const getDomainNameAfterBurn2 = await contract.domainIdsNames(1);
+    expect(getDomainNameAfterBurn2).to.equal(""); // should be empty
+
+    const getDomainNameAfterBurn3 = await contract.domainIdsNames(2);
+    expect(getDomainNameAfterBurn3).to.equal("referrer");
+
+    // MINT AGAIN
+
+    await contract.mint( // this approach is better for getting gasUsed value from receipt
+      newDomainName2, // domain name (without TLD)
+      anotherUser.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    const totalSupplyAfterMintAgain = await contract.totalSupply();
+    expect(totalSupplyAfterMintAgain).to.equal(3);
+
+    const balanceAfterMintAgain = await contract.balanceOf(signer.address);
+    expect(balanceAfterMintAgain).to.equal(1);
+
+    const balanceAfterMintAgain2 = await contract.balanceOf(anotherUser.address);
+    expect(balanceAfterMintAgain2).to.equal(1);
+
+    const balanceAfterMintAgain3 = await contract.balanceOf(referrer.address);
+    expect(balanceAfterMintAgain3).to.equal(1);
+
+    const getDomainDataAfterMintAgain = await contract.domains(newDomainName2);
+    expect(getDomainDataAfterMintAgain.name).to.equal(newDomainName2);
+    expect(getDomainDataAfterMintAgain.tokenId).to.equal(3); // token ID is now 3, because burned IDs still count as used
+    expect(getDomainDataAfterMintAgain.holder).to.equal(anotherUser.address);
+    expect(getDomainDataAfterMintAgain.data).to.equal("");
+
+    // token ID 1 still burned
+    const getDomainNameAfterMintAgain1 = await contract.domainIdsNames(1);
+    expect(getDomainNameAfterMintAgain1).to.equal("");
+
+    // new NFT has now ID 3
+    const getDomainNameAfterMintAgain3 = await contract.domainIdsNames(3);
+    expect(getDomainNameAfterMintAgain3).to.equal(newDomainName2);
+    
+    const getDomainTokenIdAfterMintAgain3 = await contract.getDomainTokenId(newDomainName2);
+    expect(getDomainTokenIdAfterMintAgain3).to.equal(3);
   });
 
 });

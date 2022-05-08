@@ -302,13 +302,13 @@ describe("PunkTLD", function () {
 
   });
 
-  it("should create a new valid domain, but with uppercase letters input", async function () {
+  it("should create a new valid domain, but with uppercase and non-ascii letters input", async function () {
     await contract.toggleBuyingDomains(); // enable buying domains
 
     const price = await contract.price();
     expect(price).to.equal(domainPrice);
 
-    const newDomainName = "poɯsnᴉǝ";
+    const newDomainName = "poɯSnᴉǝ";
 
     const tx = await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
       newDomainName, // domain name (without TLD)

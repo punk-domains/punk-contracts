@@ -34,7 +34,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   
   mapping (string => Domain) public override domains; // mapping (domain name => Domain struct); Domain struct is defined in IBasePunkTLD
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
-  mapping (address => string) public defaultNames; // user's default domain
+  mapping (address => string) public override defaultNames; // user's default domain
 
   constructor(
     string memory _name,
@@ -84,24 +84,29 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   /// @notice Flexi-specific function
   function burn(string calldata _domainName) external {
-    require(domains[_domainName].holder == _msgSender(), "You do not own the selected domain");
-    uint256 tokenId = getDomainTokenId(_domainName);
+    string memory dName = strings.lower(_domainName);
+    require(domains[dName].holder == _msgSender(), "You do not own the selected domain");
+    uint256 tokenId = domains[dName].tokenId;
     delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
+    delete domains[dName]; // delete tokenId => domainName mapping
     _burn(tokenId); // burn the token
+    emit DomainBurned(_msgSender(), dName);
   }
 
   function editDefaultDomain(string calldata _domainName) external {
-    require(domains[_domainName].holder == _msgSender(), "You do not own the selected domain");
-    defaultNames[_msgSender()] = _domainName;
-    emit DefaultDomainChanged(_msgSender(), _domainName);
+    string memory dName = strings.lower(_domainName);
+    require(domains[dName].holder == _msgSender(), "You do not own the selected domain");
+    defaultNames[_msgSender()] = dName;
+    emit DefaultDomainChanged(_msgSender(), dName);
   }
 
   /// @notice Edit domain custom data. Make sure to not accidentally delete previous data. Fetch previous data first.
   /// @param _domainName Only domain name, no TLD/extension.
   /// @param _data Custom data needs to be in a JSON object format.
   function editData(string calldata _domainName, string calldata _data) external {
-    require(domains[_domainName].holder == _msgSender(), "Only domain holder can edit their data");
-    domains[_domainName].data = _data;
+    string memory dName = strings.lower(_domainName);
+    require(domains[dName].holder == _msgSender(), "Only domain holder can edit their data");
+    domains[dName].data = _data;
     emit DataChanged(_msgSender());
   }
 

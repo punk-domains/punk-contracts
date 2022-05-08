@@ -13,6 +13,7 @@ interface IBasePunkTLD is IERC721 {
   }
 
   event DomainCreated(address indexed user, address indexed owner, string fullDomainName);
+  event DomainBurned(address indexed user, string fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
   event DataChanged(address indexed user);
   event TldPriceChanged(address indexed user, uint256 tldPrice);
@@ -21,6 +22,8 @@ interface IBasePunkTLD is IERC721 {
   event DomainBuyingToggle(address indexed user, bool domainBuyingToggle);
 
   function domains(string calldata _domainName) external view returns(string memory, uint256, address, string memory);
+
+  function defaultNames(address) external view returns(string memory);
 
   function getDomainHolder(string calldata _domainName) external view returns(address);
 

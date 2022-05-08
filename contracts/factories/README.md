@@ -4,6 +4,6 @@ Factories are contracts that produce new TLD contracts. Each factory can produce
 
 Each factory contains a TLD template that needs to follow standard TLD methods (see `IBasePunkTLD` interface), but it can implement them in a different way or add new methods.
 
-The first factory to launch was the `og` factory, followed by the `flexi` factory a couple of months later.
+The first factory to launch was the `standard` factory, followed by the `flexi` factory a couple of months later.
 
 In order to easily resolve domains without being aware of all existing factories, use the unified resolver called `PunkResolver`.
