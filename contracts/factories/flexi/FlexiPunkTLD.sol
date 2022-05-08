@@ -85,7 +85,9 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   /// @notice Flexi-specific function
   function burn(string calldata _domainName) external {
     require(domains[_domainName].holder == _msgSender(), "You do not own the selected domain");
-    _burn(getDomainTokenId(_domainName));
+    uint256 tokenId = getDomainTokenId(_domainName);
+    delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
+    _burn(tokenId); // burn the token
   }
 
   function editDefaultDomain(string calldata _domainName) external {
@@ -189,7 +191,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
       }
 
       if (strings.equals(strings.toSlice(domains[domainIdsNames[tokenId]].name), strings.toSlice(defaultNames[from]))) {
-        defaultNames[from] = ""; // if previous owner had this domain name as default, unset it as default
+        delete defaultNames[from]; // if previous owner had this domain name as default, unset it as default
       }
     }
 

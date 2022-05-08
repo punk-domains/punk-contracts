@@ -20,6 +20,8 @@ contract PunkResolver is Ownable {
   // read: getDomainHolder(domainName, tld)
     // loop through factory contracts to find the TLD address (or call getTldAddress)
     // getDomainHolder from the TLD contract
+  // read: getDefaultDomain(addr, tld) - reverse resolver for a specific TLD
+  // read: getDefaultDomains(addr) - reverse resolver for all TLDs (returns a list of default domains for a given address)
   // read: getDomainData (?)
   // read: getDomainTokenUri (?)
   // read: getTldAddress
