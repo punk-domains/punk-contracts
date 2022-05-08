@@ -19,6 +19,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   address public metadataAddress; // FlexiTLDMetadata address
   address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
+  address public minter; // address which is allowed to mint domains even if contract is paused
 
   bool public buyingEnabled; // buying domains enabled
 
@@ -83,11 +84,13 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     require(domains[dName].holder == _msgSender(), "You do not own the selected domain");
     uint256 tokenId = domains[dName].tokenId;
     delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
-    delete domains[dName]; // delete tokenId => domainName mapping
+    delete domains[dName]; // delete string => Domain struct mapping
     _burn(tokenId); // burn the token
+    --totalSupply;
     emit DomainBurned(_msgSender(), dName);
   }
 
+  /// @notice Default domain is the domain name that reverse resolver returns for a given address.
   function editDefaultDomain(string calldata _domainName) external {
     string memory dName = strings.lower(_domainName);
     require(domains[dName].holder == _msgSender(), "You do not own the selected domain");
@@ -113,7 +116,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     address _domainHolder,
     address _referrer
   ) external payable override nonReentrant returns(uint256) {
-    require(buyingEnabled || _msgSender() == owner(), "Buying TLDs disabled");
+    require(buyingEnabled || _msgSender() == owner() || _msgSender() == minter, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
     _sendPayment(msg.value, _referrer);
@@ -194,10 +197,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
         delete defaultNames[from]; // if previous owner had this domain name as default, unset it as default
       }
     }
-
-    if (to == address(0)) {
-      --totalSupply;
-    }
+    
   }
 
   // OWNER
@@ -205,6 +205,11 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   /// @notice Only TLD contract owner can call this function. Flexi-specific function.
   function changeMetadataAddress(address _metadataAddress) external onlyOwner {
     metadataAddress = _metadataAddress;
+  }
+
+  /// @notice Only TLD contract owner can call this function. Flexi-specific function.
+  function changeMinter(address _minter) external onlyOwner {
+    minter = _minter;
   }
 
   /// @notice Only TLD contract owner can call this function.
@@ -231,7 +236,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     emit DomainBuyingToggle(_msgSender(), buyingEnabled);
   }
   
-  // FACTORY OWNER (current owner address of PunkTLDFactory)
+  // ROYALTY FEE UPDATER
 
   /// @notice This changes royalty fee in the wrapper contract
   function changeRoyalty(uint256 _royalty) external {
@@ -241,7 +246,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     emit TldRoyaltyChanged(_msgSender(), _royalty);
   }
 
-  /// @notice This changes royalty fee updater address
+  /// @notice This changes royalty fee updater address. Flexi-specific function.
   function changeRoyaltyFeeUpdater(address _newUpdater) external {
     require(_msgSender() == royaltyFeeUpdater, "Sender is not royalty fee updater");
     royaltyFeeUpdater = _newUpdater;
