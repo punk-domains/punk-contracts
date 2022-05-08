@@ -19,6 +19,7 @@ function calculateGasCosts(testName, receipt) {
 describe("FlexiPunkTLD", function () {
   let contract;
   let factoryContract;
+  let metadataContract;
   let signer;
   let anotherUser;
   let referrer;
@@ -37,7 +38,7 @@ describe("FlexiPunkTLD", function () {
     const forbTldsContract = await PunkForbiddenTlds.deploy();
 
     const FlexiTldMetadata = await ethers.getContractFactory("FlexiTLDMetadata");
-    const metadataContract = await FlexiTldMetadata.deploy();
+    metadataContract = await FlexiTldMetadata.deploy();
 
     const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
     factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address, metadataContract.address);
@@ -132,6 +133,36 @@ describe("FlexiPunkTLD", function () {
     expect(secondDomainData.name).to.equal("second");
     expect(secondDomainData.holder).to.equal(referrer.address);
     expect(secondDomainData.tokenId).to.equal(1);
+
+    // mint a 1-letter domain
+    await contract.connect(anotherUser).mint(
+      "a", // domain name (without TLD)
+      anotherUser.address, // domain owner
+      ethers.constants.AddressZero, // no referrer in this case
+      {
+        value: domainPrice // pay  for the domain
+      }
+    );
+
+    // check total supply of tokens
+    const totalSupplyAfterA = await contract.totalSupply();
+    expect(totalSupplyAfterA).to.equal(3);
+
+    // get domain data by domain name
+    const aDomainData = await contract.domains("a");
+    expect(aDomainData.name).to.equal("a");
+    expect(aDomainData.holder).to.equal(anotherUser.address);
+    expect(aDomainData.tokenId).to.equal(2);
+
+    // fail at minting an empty domain
+    await expect(contract.mint( // this approach is better for getting gasUsed value from receipt
+      "", // empty domain name (without TLD)
+      anotherUser.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.be.revertedWith('Domain name empty');
   });
 
   it("should transfer domain to another user", async function () {
@@ -306,6 +337,51 @@ describe("FlexiPunkTLD", function () {
 
   });
 
+  it("should change metadata", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    const price = await contract.price();
+    expect(price).to.equal(domainPrice);
+
+    const newDomainName = "techie";
+
+    // mint domain
+    await expect(contract.mint(
+      newDomainName, // domain name (without TLD)
+      signer.address, // domain owner
+      ethers.constants.AddressZero,
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.emit(contract, "DomainCreated");
+
+    // get domain token ID
+    const domainData = await contract.domains(newDomainName);
+    expect(domainData.tokenId).to.equal(0);
+
+    // get domain metadata
+    const domainMetadata = await contract.tokenURI(domainData.tokenId);
+    const mdJson = Buffer.from(domainMetadata.substring(29), "base64");
+    const mdResult = JSON.parse(mdJson);
+    expect(mdResult.name).to.equal(newDomainName+domainName);
+    expect(mdResult.description).to.equal("");
+
+    // change description in the metadata contract
+    const newDesc = "The best top-level domain";
+
+    await metadataContract.changeDescription(
+      contract.address,
+      newDesc
+    );
+
+    // get domain metadata
+    const domainMetadata2 = await contract.tokenURI(domainData.tokenId);
+    const mdJson2 = Buffer.from(domainMetadata2.substring(29), "base64");
+    const mdResult2 = JSON.parse(mdJson2);
+    expect(mdResult2.name).to.equal(newDomainName+domainName);
+    expect(mdResult2.description).to.equal(newDesc);
+  });
+
   it("should create a new valid domain, but with uppercase and non-ascii letters input", async function () {
     await contract.toggleBuyingDomains(); // enable buying domains
 
@@ -453,6 +529,9 @@ describe("FlexiPunkTLD", function () {
     const totalSupplyBeforeMint = await contract.totalSupply();
     expect(totalSupplyBeforeMint).to.equal(0);
 
+    const idCounterBeforeMint = await contract.idCounter();
+    expect(idCounterBeforeMint).to.equal(0);
+
     const balanceBeforeMint = await contract.balanceOf(signer.address);
     expect(balanceBeforeMint).to.equal(0);
 
@@ -498,6 +577,9 @@ describe("FlexiPunkTLD", function () {
     const totalSupplyAfterMint = await contract.totalSupply();
     expect(totalSupplyAfterMint).to.equal(3);
 
+    const idCounterAfterMint = await contract.idCounter();
+    expect(idCounterAfterMint).to.equal(3);
+
     const balanceAfterMint = await contract.balanceOf(signer.address);
     expect(balanceAfterMint).to.equal(1);
 
@@ -522,6 +604,16 @@ describe("FlexiPunkTLD", function () {
     const getDomainNameAfterMint = await contract.domainIdsNames(1);
     expect(getDomainNameAfterMint).to.equal(newDomainName2);
 
+    // fail at minting the existing domain before burning it
+    await expect(contract.mint( // this approach is better for getting gasUsed value from receipt
+      newDomainName2, // domain name (without TLD)
+      anotherUser.address, // domain owner
+      referrer.address, // referrer is set, so 0.1 ETH referral fee will go to referrers address
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.be.revertedWith('Domain with this name already exists');
+
     // BURN DOMAIN
 
     const tx = await contract.connect(anotherUser).burn(newDomainName2);
@@ -539,6 +631,9 @@ describe("FlexiPunkTLD", function () {
 
     const totalSupplyAfterBurn = await contract.totalSupply();
     expect(totalSupplyAfterBurn).to.equal(2);
+
+    const idCounterAfterBurn = await contract.idCounter();
+    expect(idCounterAfterBurn).to.equal(3);
 
     const balanceAfterBurn = await contract.balanceOf(signer.address);
     expect(balanceAfterBurn).to.equal(1);
@@ -590,6 +685,9 @@ describe("FlexiPunkTLD", function () {
     const totalSupplyAfterMintAgain = await contract.totalSupply();
     expect(totalSupplyAfterMintAgain).to.equal(3);
 
+    const idCounterAfterMintAgain = await contract.idCounter();
+    expect(idCounterAfterMintAgain).to.equal(4);
+
     const balanceAfterMintAgain = await contract.balanceOf(signer.address);
     expect(balanceAfterMintAgain).to.equal(1);
 
@@ -613,8 +711,6 @@ describe("FlexiPunkTLD", function () {
     const getDomainNameAfterMintAgain3 = await contract.domainIdsNames(3);
     expect(getDomainNameAfterMintAgain3).to.equal(newDomainName2);
     
-    const getDomainTokenIdAfterMintAgain3 = await contract.getDomainTokenId(newDomainName2);
-    expect(getDomainTokenIdAfterMintAgain3).to.equal(3);
   });
 
 });
