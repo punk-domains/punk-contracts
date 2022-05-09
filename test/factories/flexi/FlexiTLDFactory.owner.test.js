@@ -14,8 +14,8 @@ describe("FlexiPunkTLDFactory (onlyOwner)", function () {
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     forbTldsContract = await PunkForbiddenTlds.deploy();
 
-    const FlexiTldMetadata = await ethers.getContractFactory("FlexiTLDMetadata");
-    const metadataContract = await FlexiTldMetadata.deploy();
+    const FlexiPunkMetadata = await ethers.getContractFactory("FlexiPunkMetadata");
+    const metadataContract = await FlexiPunkMetadata.deploy();
 
     const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
     contract = await PunkTLDFactory.deploy(tldPrice, forbTldsContract.address, metadataContract.address);

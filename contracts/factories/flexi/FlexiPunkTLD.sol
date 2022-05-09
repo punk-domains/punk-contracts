@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "./interfaces/IFlexiTLDMetadata.sol";
+import "./interfaces/IFlexiPunkMetadata.sol";
 import "../../interfaces/IBasePunkTLD.sol";
 import "../../lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -17,7 +17,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   // Domain struct is defined in IBasePunkTLD
 
-  address public metadataAddress; // FlexiTLDMetadata address
+  address public metadataAddress; // FlexiPunkMetadata address
   address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
   address public minter; // address which is allowed to mint domains even if contract is paused
 
@@ -73,7 +73,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
     string memory fullDomainName = string(abi.encodePacked(domains[domainIdsNames[_tokenId]].name, name()));
 
-    return IFlexiTLDMetadata(metadataAddress).getMetadata(fullDomainName, address(this));
+    return IFlexiPunkMetadata(metadataAddress).getMetadata(fullDomainName, address(this));
   }
 
   // WRITE

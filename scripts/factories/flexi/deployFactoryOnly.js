@@ -1,0 +1,46 @@
+// Deploy factory contract only (ForbiddenTlds and FlexiPunkMetadata need to be already deployed)
+// after deployment, add factory address to the ForbiddenTlds whitelist
+// npx hardhat run scripts/factories/flexi/deployFactoryOnly.js --network polygonMumbai
+
+async function main() {
+  const contractNameFactory = "FlexiPunkTLDFactory";
+  const forbAddress = "<enter-forbidden-address>";
+  const metaAddress = "<enter-metadata-address>";
+
+  let tldPrice = "0.01"; // in ETH or MATIC on testnets
+
+  // mainnet prices
+  if (network.config.chainId === 10 || network.config.chainId === 42161) {
+    tldPrice = "30"; // ETH
+  } else if (network.config.chainId === 137) {
+    tldPrice = "80000"; // MATIC
+  } else if (network.config.chainId === 100) {
+    tldPrice = "75000"; // XDAI
+  }
+
+  const [deployer] = await ethers.getSigners();
+
+  console.log("Deploying contracts with the account:", deployer.address);
+  console.log("Account balance:", (await deployer.getBalance()).toString());
+
+  // deploy contract1
+  const contractFactory = await ethers.getContractFactory(contractNameFactory);
+  
+  console.log("ForbiddenTlds contract address:", forbAddress);
+  console.log("FlexiPunkMetadata contract address:", metaAddress);
+
+  const tldPriceWei = ethers.utils.parseUnits(tldPrice, "ether");
+  const instanceFactory = await contractFactory.deploy(tldPriceWei, forbAddress, metaAddress);
+  
+  console.log("Factory contract address:", instanceFactory.address);
+
+  console.log("Wait a minute and then run this command to verify contracts on Etherscan:");
+  console.log("npx hardhat verify --network " + network.name + " " + instanceFactory.address + ' "' + tldPriceWei + '" ' + forbAddress + ' ' + metaAddress);
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @title Punk Domains TLD Metadata contract (Flexi)
 /// @author Tempe Techie
 /// @notice Contract that stores metadata for TLD contracts.
-contract FlexiTLDMetadata {
+contract FlexiPunkMetadata {
   mapping (address => string) public descriptions; // TLD-specific descriptions, mapping(tldAddress => description)
   mapping (address => string) public brands; // TLD-specific brand names, mapping(tldAddress => brandName)
 

@@ -37,8 +37,8 @@ describe("FlexiPunkTLD", function () {
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
 
-    const FlexiTldMetadata = await ethers.getContractFactory("FlexiTLDMetadata");
-    metadataContract = await FlexiTldMetadata.deploy();
+    const FlexiPunkMetadata = await ethers.getContractFactory("FlexiPunkMetadata");
+    metadataContract = await FlexiPunkMetadata.deploy();
 
     const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
     factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address, metadataContract.address);
@@ -380,6 +380,12 @@ describe("FlexiPunkTLD", function () {
     const mdResult2 = JSON.parse(mdJson2);
     expect(mdResult2.name).to.equal(newDomainName+domainName);
     expect(mdResult2.description).to.equal(newDesc);
+
+    // fail at changing metadata description if sender is not TLD owner
+    await expect(metadataContract.connect(anotherUser).changeDescription(
+      contract.address,
+      newDesc
+    )).to.be.revertedWith('Sender not TLD owner');
   });
 
   it("should create a new valid domain, but with uppercase and non-ascii letters input", async function () {
