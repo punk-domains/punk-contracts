@@ -22,6 +22,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   address public minter; // address which is allowed to mint domains even if contract is paused
 
   bool public buyingEnabled; // buying domains enabled
+  bool public metadataFrozen;
 
   Ownable factory; // PunkTLDFactory address
 
@@ -36,6 +37,8 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   mapping (string => Domain) public override domains; // mapping (domain name => Domain struct); Domain struct is defined in IBasePunkTLD
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (address => string) public override defaultNames; // user's default domain
+
+  event FreezeMetadata(address user, address mtdAddr);
 
   constructor(
     string memory _name,
@@ -204,6 +207,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   /// @notice Only TLD contract owner can call this function. Flexi-specific function.
   function changeMetadataAddress(address _metadataAddress) external onlyOwner {
+    require(!metadataFrozen, "Cannot change metadata address anymore");
     metadataAddress = _metadataAddress;
   }
 
@@ -228,6 +232,12 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     require(_referral < 5000, "Referral fee cannot be 50% or higher");
     referral = _referral; // referral must be in bips
     emit ReferralFeeChanged(_msgSender(), _referral);
+  }
+
+  /// @notice Freeze metadata address. Only TLD contract owner can call this function.
+  function freezeMetadata() external onlyOwner {
+    metadataFrozen = true;
+    emit FreezeMetadata(_msgSender(), metadataAddress);
   }
 
   /// @notice Only TLD contract owner can call this function.

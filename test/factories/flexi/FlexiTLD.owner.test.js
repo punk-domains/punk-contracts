@@ -5,6 +5,8 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
   let factoryContract;
   let signer;
   let anotherUser;
+  let metadataContract1;
+  let metadataContract2;
 
   const domainName = ".web3";
   const domainSymbol = "WEB3";
@@ -18,10 +20,11 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
     const forbTldsContract = await PunkForbiddenTlds.deploy();
 
     const FlexiPunkMetadata = await ethers.getContractFactory("FlexiPunkMetadata");
-    const metadataContract = await FlexiPunkMetadata.deploy();
+    metadataContract1 = await FlexiPunkMetadata.deploy();
+    metadataContract2 = await FlexiPunkMetadata.deploy();
 
     const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
-    factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address, metadataContract.address);
+    factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address, metadataContract1.address);
 
     await forbTldsContract.addFactoryAddress(factoryContract.address);
 
@@ -34,7 +37,7 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
       false, // buying enabled
       domainRoyalty,
       factoryContract.address,
-      metadataContract.address
+      metadataContract1.address
     );
   });
 
@@ -168,6 +171,23 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
 
     // if user is not owner, the tx should revert
     await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender is not royalty fee updater');
+  });
+
+  it("should change metadata contract address and then freeze it", async function () {
+    const mtdAddrBefore = await contract.metadataAddress();
+    expect(mtdAddrBefore).to.equal(metadataContract1.address);
+    
+    await contract.changeMetadataAddress(metadataContract2.address);
+
+    const mtdAddrAfter = await contract.metadataAddress();
+    expect(mtdAddrAfter).to.equal(metadataContract2.address);
+
+    // if user is not owner, the tx should revert
+    await expect(contract.connect(anotherUser).changeMetadataAddress(metadataContract1.address)).to.be.revertedWith('Ownable: caller is not the owner');
+    
+    await contract.freezeMetadata();
+
+    await expect(contract.changeMetadataAddress(metadataContract1.address)).to.be.revertedWith('Cannot change metadata address anymore');
   });
 
 });

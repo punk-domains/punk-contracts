@@ -1,5 +1,5 @@
 // Deploy FlexiPunkMetadata contract
-// npx hardhat run scripts/factories/flexi/deployMetadata.js --network localhost
+// npx hardhat run scripts/factories/flexi/deployMetadata.js --network polygonMumbai
 
 async function main() {
   const contractName = "FlexiPunkMetadata";
