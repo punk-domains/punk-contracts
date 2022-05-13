@@ -124,6 +124,11 @@ contract FlexiPunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuard {
     forbiddenTlds = _forbiddenTlds;
   }
 
+  /// @notice Factory contract owner can change the metadata contract address.
+  function changeMetadataAddress(address _mAddr) external onlyOwner {
+    metadataAddress = _mAddr;
+  }
+
   /// @notice Factory contract owner can change TLD max name length.
   function changeNameMaxLength(uint256 _maxLength) external onlyOwner {
     nameMaxLength = _maxLength;

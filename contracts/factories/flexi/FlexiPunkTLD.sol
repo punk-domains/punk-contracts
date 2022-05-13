@@ -17,14 +17,14 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   // Domain struct is defined in IBasePunkTLD
 
+  address public immutable factoryAddress; // FlexiPunkTLDFactory address
   address public metadataAddress; // FlexiPunkMetadata address
-  address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
   address public minter; // address which is allowed to mint domains even if contract is paused
+  address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
+  address public royaltyFeeReceiver; // address which receives the royalty fee
 
   bool public buyingEnabled; // buying domains enabled
   bool public metadataFrozen;
-
-  Ownable factory; // PunkTLDFactory address
 
   uint256 public totalSupply;
   uint256 public idCounter; // up only
@@ -55,9 +55,11 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     royalty = _royalty;
     metadataAddress = _metadataAddress;
 
-    factory = Ownable(_factoryAddress);
+    Ownable factory = Ownable(_factoryAddress);
 
+    factoryAddress = _factoryAddress;
     royaltyFeeUpdater = factory.owner();
+    royaltyFeeReceiver = factory.owner();
 
     transferOwnership(_tldOwner);
   }
@@ -170,7 +172,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   function _sendPayment(uint256 _paymentAmount, address _referrer) internal {
     if (royalty > 0 && royalty < 5000) { 
       // send royalty - must be less than 50% (5000 bips)
-      (bool sentRoyalty, ) = payable(factory.owner()).call{value: ((_paymentAmount * royalty) / 10000)}("");
+      (bool sentRoyalty, ) = payable(royaltyFeeReceiver).call{value: ((_paymentAmount * royalty) / 10000)}("");
       require(sentRoyalty, "Failed to send royalty to factory owner");
     }
 
@@ -254,6 +256,12 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     require(_msgSender() == royaltyFeeUpdater, "Sender is not royalty fee updater");
     royalty = _royalty;
     emit TldRoyaltyChanged(_msgSender(), _royalty);
+  }
+
+  /// @notice This changes royalty fee receiver address. Flexi-specific function.
+  function changeRoyaltyFeeReceiver(address _newReceiver) external {
+    require(_msgSender() == royaltyFeeReceiver, "Sender is not royalty fee receiver");
+    royaltyFeeReceiver = _newReceiver;
   }
 
   /// @notice This changes royalty fee updater address. Flexi-specific function.

@@ -1,3 +1,5 @@
+// npx hardhat test test/factories/flexi/FlexiTLD.test.js
+
 const { expect } = require("chai");
 
 function calculateGasCosts(testName, receipt) {
@@ -388,7 +390,7 @@ describe("FlexiPunkTLD", function () {
     )).to.be.revertedWith('Sender not TLD owner');
   });
 
-  it("should create a new valid domain, but with uppercase and non-ascii letters input", async function () {
+  it("should create a new valid domain, but with non-ascii letters input", async function () {
     await contract.toggleBuyingDomains(); // enable buying domains
 
     const price = await contract.price();
