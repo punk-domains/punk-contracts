@@ -109,7 +109,7 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     uint256 finalPrice = price;
 
     if (getDiscount) {
-      finalPrice = (price * discountBps) / MAX_BPS;
+      finalPrice = price - ((price * discountBps) / MAX_BPS);
     }
 
     // send royalty fee

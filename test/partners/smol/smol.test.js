@@ -31,8 +31,6 @@ describe(partnerContractName + " (partner contract)", function () {
 
   let wrapperContract;
   const wrapperPrice = ethers.utils.parseUnits("15", paymentTokenDecimals); // in $MAGIC tokens (18 decimals)
-  const wrapperRoyalty = 2000;
-  const wrapperReferral = 1000;
 
   let nftContract1;
   const nftName1 = "Smol Brains";
@@ -117,6 +115,22 @@ describe(partnerContractName + " (partner contract)", function () {
 
     const canMintUser1 = await wrapperContract.canUserMint(user1.address);
     expect(canMintUser1).to.be.false;
+  });
+
+  it("should check if user gets a discount", async function () {
+    const balanceSigner = await nftContract1.balanceOf(signer.address);
+    expect(balanceSigner).to.equal(1);
+
+    const canMintSigner = await wrapperContract.canUserMint(signer.address);
+    expect(canMintSigner).to.be.true;
+
+    const hasDiscountBefore = await wrapperContract.canGetDiscount(signer.address);
+    expect(hasDiscountBefore).to.be.false;
+
+    await wrapperContract.toggleNftDiscount(nftContract1.address);
+
+    const hasDiscountAfter = await wrapperContract.canGetDiscount(signer.address);
+    expect(hasDiscountAfter).to.be.true;
   });
 
   it("should add/remove an NFT to the supported NFTs array (only owner)", async function () {
@@ -236,6 +250,36 @@ describe(partnerContractName + " (partner contract)", function () {
 
     const balanceDomainAfter2 = await tldContract.balanceOf(user1.address);
     expect(balanceDomainAfter2).to.equal(2);
+
+    // should get a discount when the NFT contract gets listed for a discount
+    await wrapperContract.toggleNftDiscount(nftContract1.address); // NFT contract whitelisted for a 20% discount
+
+    const userPayTokenBalanceBefore = await paymentTokenContract.balanceOf(user1.address);
+    console.log("User1 payment token balance before minting with discount: " + ethers.utils.formatEther(userPayTokenBalanceBefore) + " " + paymentTokenSymbol);
+
+    console.log("Price: " + ethers.utils.formatEther(wrapperPrice) + " " + paymentTokenSymbol);
+
+    const discount = await wrapperContract.discountBps();
+    console.log("Discount: " + Number(discount)/100 + "%");
+
+    // Give payment token allowance
+    await paymentTokenContract.connect(user1).approve(
+      wrapperContract.address, // spender
+      wrapperPrice // amount
+    );
+
+    // mint a discounted domain
+    await wrapperContract.connect(user1).mint(
+      "user1third", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+    );
+
+    const balanceDomainAfter3 = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter3).to.equal(3);
+
+    const userPayTokenBalanceAfter = await paymentTokenContract.balanceOf(user1.address);
+    console.log("User1 payment token balance AFTER minting with discount: " + ethers.utils.formatEther(userPayTokenBalanceAfter) + " " + paymentTokenSymbol);
   });
 
   it("should allow owner to add a new NFT address and user to mint with any of them", async function () {
