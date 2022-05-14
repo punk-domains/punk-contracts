@@ -13,8 +13,11 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
 
   uint256 public price; // domain price in $MAGIC
   uint256 public royaltyFee = 2_000; // share of each domain purchase (in bips) that goes to Punk Domains
-  uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
+  uint256 public referralFee = 0; // share of each domain purchase (in bips) that goes to the referrer
+  uint256 public discountBps = 2_000; // discount for selected NFT collections (see discountEligible mapping)
   uint256 public constant MAX_BPS = 10_000;
+
+  mapping (address => bool) public discountEligible; // NFT collections eligible for a discount
 
   // $MAGIC contract
   IERC20 public immutable magic;
@@ -41,6 +44,20 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
   }
 
   // READ
+
+  /// @notice Returns true or false if address is eligible for a discount
+  function canGetDiscount(address _user) public view returns(bool getDiscount) {
+    IERC721Enumerable nftContract;
+    for (uint256 i = 0; i < supportedNfts.length && !getDiscount; i++) {
+      nftContract = IERC721Enumerable(supportedNfts[i]);
+
+      if (nftContract.balanceOf(_user) > 0) {
+        getDiscount = discountEligible[supportedNfts[i]];
+      }
+    }
+
+    return getDiscount;
+  }
 
   /// @notice Returns true or false if address is eligible to mint a .smol domain
   function canUserMint(address _user) public view returns(bool canMint) {
@@ -73,16 +90,36 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     address _referrer
   ) external nonReentrant returns(uint256) {
     require(!paused, "Minting paused");
-    require(canUserMint(msg.sender), "User cannot mint a domain");
+
+    bool canMint = false;
+    bool getDiscount = false;
+
+    IERC721Enumerable nftContract;
+    for (uint256 i = 0; i < supportedNfts.length && !getDiscount; i++) {
+      nftContract = IERC721Enumerable(supportedNfts[i]);
+
+      if (nftContract.balanceOf(msg.sender) > 0) {
+        canMint = true;
+        getDiscount = discountEligible[supportedNfts[i]];
+      }
+    }
+
+    require(canMint, "User cannot mint a domain");
+
+    uint256 finalPrice = price;
+
+    if (getDiscount) {
+      finalPrice = (price * discountBps) / MAX_BPS;
+    }
 
     // send royalty fee
-    uint256 royaltyPayment = (price * royaltyFee) / MAX_BPS;
-    uint256 ownerPayment = price - royaltyPayment;
+    uint256 royaltyPayment = (finalPrice * royaltyFee) / MAX_BPS;
+    uint256 ownerPayment = finalPrice - royaltyPayment;
     magic.transferFrom(msg.sender, tldContract.getFactoryOwner(), royaltyPayment);
 
     // send referral fee
     if (referralFee > 0 && _referrer != address(0)) {
-      uint256 referralPayment = (price * referralFee) / MAX_BPS;
+      uint256 referralPayment = (finalPrice * referralFee) / MAX_BPS;
       ownerPayment -= referralPayment;
       magic.transferFrom(msg.sender, _referrer, referralPayment);
     }
@@ -100,14 +137,14 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     supportedNfts.push(_nftAddress);
   }
 
+  /// @notice Change discount BPS (basis points, for example 10% is 1000 bps)
+  function changeDiscountBps(uint256 _discountBps) external onlyOwner {
+    discountBps = _discountBps;
+  }
+
   /// @notice Change max domain name length in the TLD contract
   function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
     tldContract.changeNameMaxLength(_maxLength);
-  }
-
-  /// @notice Change NFT metadata description in the TLD contract
-  function changeTldDescription(string calldata _description) external onlyOwner {
-    tldContract.changeDescription(_description);
   }
 
   /// @notice This changes price in the wrapper contract
@@ -122,6 +159,11 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     require(_referral <= 2000, "Cannot exceed 20%");
     referralFee = _referral;
     emit ReferralChanged(msg.sender, _referral);
+  }
+
+  /// @notice Change NFT metadata description in the TLD contract
+  function changeTldDescription(string calldata _description) external onlyOwner {
+    tldContract.changeDescription(_description);
   }
 
   /// @notice Owner can mint a domain without holding/using an NFT
@@ -151,6 +193,11 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
   /// @notice Transfer .smol TLD ownership to another address
   function transferTldOwnership(address _newTldOwner) external onlyOwner {
     tldContract.transferOwnership(_newTldOwner);
+  }
+
+  /// @notice Toggle discount eligibility for an NFT collection
+  function toggleNftDiscount(address _nftAddress) external onlyOwner {
+    discountEligible[_nftAddress] = !discountEligible[_nftAddress];
   }
 
   function togglePaused() external onlyOwner {

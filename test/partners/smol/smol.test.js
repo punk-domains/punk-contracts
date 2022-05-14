@@ -385,7 +385,7 @@ describe(partnerContractName + " (partner contract)", function () {
 
   it("should change referral fee (only owner)", async function () {
     const refBefore = await wrapperContract.referralFee();
-    expect(refBefore).to.equal(1000);
+    expect(refBefore).to.equal(0);
 
     const newRef = 1500;
 
