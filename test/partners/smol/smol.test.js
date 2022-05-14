@@ -280,6 +280,8 @@ describe(partnerContractName + " (partner contract)", function () {
 
     const userPayTokenBalanceAfter = await paymentTokenContract.balanceOf(user1.address);
     console.log("User1 payment token balance AFTER minting with discount: " + ethers.utils.formatEther(userPayTokenBalanceAfter) + " " + paymentTokenSymbol);
+    
+    expect(Number(userPayTokenBalanceBefore)-Number(userPayTokenBalanceAfter)).to.equal(Number(wrapperPrice)-(Number(wrapperPrice)*(Number(discount)/10000)));
   });
 
   it("should allow owner to add a new NFT address and user to mint with any of them", async function () {
