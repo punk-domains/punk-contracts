@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import "./interfaces/IPunkTLD.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SmolPunkDomains is Ownable, ReentrancyGuard {
@@ -47,9 +47,9 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
 
   /// @notice Returns true or false if address is eligible for a discount
   function canGetDiscount(address _user) public view returns(bool getDiscount) {
-    IERC721Enumerable nftContract;
+    IERC721 nftContract;
     for (uint256 i = 0; i < supportedNfts.length && !getDiscount; i++) {
-      nftContract = IERC721Enumerable(supportedNfts[i]);
+      nftContract = IERC721(supportedNfts[i]);
 
       if (nftContract.balanceOf(_user) > 0) {
         getDiscount = discountEligible[supportedNfts[i]];
@@ -61,9 +61,9 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
 
   /// @notice Returns true or false if address is eligible to mint a .smol domain
   function canUserMint(address _user) public view returns(bool canMint) {
-    IERC721Enumerable nftContract;
+    IERC721 nftContract;
     for (uint256 i = 0; i < supportedNfts.length && !canMint; i++) {
-      nftContract = IERC721Enumerable(supportedNfts[i]);
+      nftContract = IERC721(supportedNfts[i]);
 
       if (nftContract.balanceOf(_user) > 0) {
         canMint = true;
@@ -94,9 +94,9 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
     bool canMint = false;
     bool getDiscount = false;
 
-    IERC721Enumerable nftContract;
+    IERC721 nftContract;
     for (uint256 i = 0; i < supportedNfts.length && !getDiscount; i++) {
-      nftContract = IERC721Enumerable(supportedNfts[i]);
+      nftContract = IERC721(supportedNfts[i]);
 
       if (nftContract.balanceOf(msg.sender) > 0) {
         canMint = true;
@@ -181,7 +181,7 @@ contract SmolPunkDomains is Ownable, ReentrancyGuard {
 
   /// @notice Recover any ERC-721 token mistakenly sent to this contract address
   function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
-    IERC721Enumerable(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
 
   /// @notice Owner can remove whitelisted NFT address
