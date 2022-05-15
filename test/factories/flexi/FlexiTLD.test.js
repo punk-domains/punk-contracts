@@ -622,6 +622,18 @@ describe("FlexiPunkTLD", function () {
       }
     )).to.be.revertedWith('Domain with this name already exists');
 
+    // set domain data
+    const domainDataString = "{'url': 'https://ethereum.org'}";
+
+    await contract.connect(anotherUser).editData(
+      newDomainName2,
+      domainDataString
+    );
+
+    // check domain data before burn
+    const domainDataBeforeBurn = await contract.getDomainData(newDomainName2);
+    expect(domainDataBeforeBurn).to.equal(domainDataString);
+
     // BURN DOMAIN
 
     const tx = await contract.connect(anotherUser).burn(newDomainName2);
@@ -642,6 +654,10 @@ describe("FlexiPunkTLD", function () {
 
     const idCounterAfterBurn = await contract.idCounter();
     expect(idCounterAfterBurn).to.equal(3);
+
+    // check domain data after burn
+    const domainDataAfterBurn = await contract.getDomainData(newDomainName2);
+    expect(domainDataAfterBurn).to.equal("");
 
     const balanceAfterBurn = await contract.balanceOf(signer.address);
     expect(balanceAfterBurn).to.equal(1);

@@ -192,7 +192,6 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
     if (from != address(0)) { // run on every transfer but not on mint
       domains[domainIdsNames[tokenId]].holder = to; // change holder address in Domain struct
-      domains[domainIdsNames[tokenId]].data = ""; // reset custom data
       
       if (bytes(defaultNames[to]).length == 0 && to != address(0)) {
         defaultNames[to] = domains[domainIdsNames[tokenId]].name; // if default domain name is not set for that holder, set it now
