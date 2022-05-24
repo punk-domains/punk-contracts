@@ -92,3 +92,55 @@ npx hardhat verify --network mumbai <contract-address> "argument"
 ### Verify TLD contracts
 
 Verifying TLD contracts generated through the factory is a bit tricky, but there is a way around the issue. See `scripts/temp/deployTld.js` for instructions.
+
+## Audit tools
+
+### Flatten the contracts
+
+Most audit tools will require you to flatten the contracts. This means that all contracts that are defined under the imports will actuallz be imported into one .sol file, so all code is in one place.
+
+First create a new folder called flattened:
+
+```bash
+mkdir flattened
+```
+
+To flatten a contract, run this command:
+
+```bash
+npx hardhat flatten <path-to-contract> >> flattened/<flat-contract-name>.sol
+```
+
+You may also need to give all contracts in the flattened file the same Solidity version. And you may need to delete all SPDX lines except the very first one.
+
+### Mythrill
+
+```bash
+myth -v4 analyze flattened/PunkForbiddenTlds.sol
+```
+
+Flags:
+
+- `v4`: verbose
+- `o`: output
+- `a`: address onchain
+- `l`: automatically retrieve dependencies
+- `max-depth`: maximum recursion depth
+
+Docs: https://mythril-classic.readthedocs.io/en/master/security-analysis.html 
+
+### Slither
+
+Install Slither:
+
+```bash
+pip3 install slither-analyzer --user
+```
+
+Run it in the `flattened` folder:
+
+```bash
+slither .
+```
+
+Docs: https://github.com/crytic/slither

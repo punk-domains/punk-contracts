@@ -1,4 +1,6 @@
 .idea
+flattened
+venv
 
 #Hardhat files
 cache
