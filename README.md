@@ -97,7 +97,7 @@ Verifying TLD contracts generated through the factory is a bit tricky, but there
 
 ### Flatten the contracts
 
-Most audit tools will require you to flatten the contracts. This means that all contracts that are defined under the imports will actuallz be imported into one .sol file, so all code is in one place.
+Most audit tools will require you to flatten the contracts. This means that all contracts that are defined under the imports will actually be imported into one .sol file, so all code is in one place.
 
 First create a new folder called flattened:
 
