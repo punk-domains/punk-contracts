@@ -36,7 +36,7 @@ describe("Punk Angel NFT", function () {
   });
 
   it("should fetch and parse metadata", async function () {
-    const tokenId = 21;
+    const tokenId = 43;
 
     const metadata = await metadataContract.getMetadata(tokenId);
     
