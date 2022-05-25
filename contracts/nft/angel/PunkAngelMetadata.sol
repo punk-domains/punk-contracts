@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 /// @author Tempe Techie
 /// @notice Contract that generates metadata for the Punk Angel NFT.
 contract PunkAngelMetadata {
-  enum Cat{ ARMS, BG, DRESS, HAIR, FACE, SKIN }
+  enum Cat{ ARMS, BG, DRESS, FACE, HAIR, SKIN }
 
   string[] bg1 = ["3A1174", "007E6F", "3d43b4", "cb5eee", "f06966", "402662", "f40076", "737dfe", "402565", "000066"];
   string[] bg2 = ["741911", "004300", "041348", "4be1ec", "fad6a6", "3900a6", "342711", "ffcac9", "30be96", "6699ff"];
@@ -19,13 +19,14 @@ contract PunkAngelMetadata {
   string[] dress = ["000000", "F3E600", "ffffff", "FF003C", "000000", "04DAF6", "ffffff"];
 
   string[] face = [
-  "",
-  '<g id="layer_7" data-name="layer 7"><rect class="cls-24" x="175.52" y="158.97" width="134.28" height="64.92" rx="32.38"/><path class="cls-25" d="M277.41,166a25.42,25.42,0,0,1,25.39,25.39v.15a25.42,25.42,0,0,1-25.39,25.39H207.9a25.42,25.42,0,0,1-25.38-25.39v-.15A25.42,25.42,0,0,1,207.9,166h69.51m0-7H207.9a32.48,32.48,0,0,0-32.38,32.39v.15A32.48,32.48,0,0,0,207.9,223.9h69.51a32.48,32.48,0,0,0,32.39-32.39v-.15A32.48,32.48,0,0,0,277.41,159Z"/></g>',
-  "", "", 
-  '<g id="layer_8" data-name="layer 8"><path class="cls-24" d="M242.39,199a142.43,142.43,0,0,1-48.83-8.5v-8.7c1.46-.52,21.89-7.54,49.79-7.54a154.94,154.94,0,0,1,48.41,7.54v8.71C290.36,191.06,270.31,199,242.39,199Z" /><path class="cls-25" d="M243.35,174.37a154.79,154.79,0,0,1,48.29,7.5v8.53c-1.93.78-21.78,8.45-49.25,8.45a142.43,142.43,0,0,1-48.71-8.45v-8.53c2-.71,22.23-7.5,49.67-7.5h0m0-.25c-29.17,0-49.92,7.57-49.92,7.57v8.88a142.71,142.71,0,0,0,49,8.53c29.17,0,49.5-8.53,49.5-8.53v-8.88a155.22,155.22,0,0,0-48.54-7.57Z" /><line class="cls-26" x1="201.69" y1="186.61" x2="259.5" y2="186.61" /><line class="cls-27" x1="267.84" y1="186.61" x2="282.57" y2="186.61" /></g>', 
-  "",
-  '<g id="layer_9" data-name="layer 9"><path class="cls-19" d="M195.67,192.08s8.14-.71,20,5.48c0,0,7.61,4.07,12-1.59,0,0,8.67-10.44,15-11.68,0,0,6.9.89,13.09,11a12.77,12.77,0,0,0,13.8,2.66s14-7.26,20.35-6.28l7.78,3.45s-5.3,44.94-19.81,59.62l-23.36,7.78-1.59,15h-20.7l-1.94-15.39-21.23-5.66s-14-5.66-21.94-60.86Z"/><path class="cls-24" d="M224.87,223.31l3.53.08,6.72,7.52h14.33l7.26-7.52h4.07V234l-8,22.29h-20l-7.78-23Z"/><path class="cls-25" d="M226.87,220s2.3-13.21,15.6-13c0,0,10.82-.36,14.83,13Z"/><rect class="cls-25" x="233.97" y="265.86" width="17.25" height="10.08" rx="5.04"/><ellipse class="cls-24" cx="265.22" cy="251.65" rx="4.45" ry="4.99"/><ellipse class="cls-24" cx="220.42" cy="251.65" rx="4.45" ry="4.99"/><rect class="cls-26" x="237.84" y="235.13" width="8.96" height="15.81" rx="4.14"/><ellipse class="cls-24" cx="292.59" cy="227.66" rx="24.5" ry="12.92" transform="translate(1.35 457.03) rotate(-76.11)"/><ellipse class="cls-19" cx="295.63" cy="228.41" rx="15.82" ry="8.34" transform="translate(2.93 460.55) rotate(-76.11)"/><ellipse class="cls-24" cx="296.98" cy="228.74" rx="11.45" ry="6.03" transform="translate(3.63 462.12) rotate(-76.11)"/><ellipse class="cls-24" cx="192.15" cy="227.66" rx="12.92" ry="24.5" transform="translate(-49.04 52.79) rotate(-13.89)"/><ellipse class="cls-19" cx="190.16" cy="228.15" rx="8.34" ry="15.82" transform="translate(-49.21 52.33) rotate(-13.89)"/><ellipse class="cls-24" cx="188.82" cy="228.48" rx="6.03" ry="11.45" transform="translate(-49.33 52.02) rotate(-13.89)"/><path class="cls-24" d="M233.47,198.68s8.85-9,17.93,0v3.66s-8.37-7.9-17.93,0Z"/><rect class="cls-24" x="235.42" y="267.74" width="14.21" height="1.24"/><rect class="cls-24" x="235.36" y="273.05" width="14.21" height="1.24"/><rect class="cls-24" x="235.36" y="270.4" width="14.21" height="1.24"/></g>',
-  ""];
+    "",
+    '<g id="layer_7" data-name="layer 7"><rect class="cls-24" x="175.52" y="158.97" width="134.28" height="64.92" rx="32.38"/><path class="cls-25" d="M277.41,166a25.42,25.42,0,0,1,25.39,25.39v.15a25.42,25.42,0,0,1-25.39,25.39H207.9a25.42,25.42,0,0,1-25.38-25.39v-.15A25.42,25.42,0,0,1,207.9,166h69.51m0-7H207.9a32.48,32.48,0,0,0-32.38,32.39v.15A32.48,32.48,0,0,0,207.9,223.9h69.51a32.48,32.48,0,0,0,32.39-32.39v-.15A32.48,32.48,0,0,0,277.41,159Z"/></g>', 
+    "", "", 
+    '<g id="layer_8" data-name="layer 8"><path class="cls-24" d="M242.39,199a142.43,142.43,0,0,1-48.83-8.5v-8.7c1.46-.52,21.89-7.54,49.79-7.54a154.94,154.94,0,0,1,48.41,7.54v8.71C290.36,191.06,270.31,199,242.39,199Z" /><path class="cls-25" d="M243.35,174.37a154.79,154.79,0,0,1,48.29,7.5v8.53c-1.93.78-21.78,8.45-49.25,8.45a142.43,142.43,0,0,1-48.71-8.45v-8.53c2-.71,22.23-7.5,49.67-7.5h0m0-.25c-29.17,0-49.92,7.57-49.92,7.57v8.88a142.71,142.71,0,0,0,49,8.53c29.17,0,49.5-8.53,49.5-8.53v-8.88a155.22,155.22,0,0,0-48.54-7.57Z" /><line class="cls-26" x1="201.69" y1="186.61" x2="259.5" y2="186.61" /><line class="cls-27" x1="267.84" y1="186.61" x2="282.57" y2="186.61" /></g>',
+    "",
+    '<g id="layer_9" data-name="layer 9"><path class="cls-19" d="M195.67,192.08s8.14-.71,20,5.48c0,0,7.61,4.07,12-1.59,0,0,8.67-10.44,15-11.68,0,0,6.9.89,13.09,11a12.77,12.77,0,0,0,13.8,2.66s14-7.26,20.35-6.28l7.78,3.45s-5.3,44.94-19.81,59.62l-23.36,7.78-1.59,15h-20.7l-1.94-15.39-21.23-5.66s-14-5.66-21.94-60.86Z"/><path class="cls-24" d="M224.87,223.31l3.53.08,6.72,7.52h14.33l7.26-7.52h4.07V234l-8,22.29h-20l-7.78-23Z"/><path class="cls-25" d="M226.87,220s2.3-13.21,15.6-13c0,0,10.82-.36,14.83,13Z"/><rect class="cls-25" x="233.97" y="265.86" width="17.25" height="10.08" rx="5.04"/><ellipse class="cls-24" cx="265.22" cy="251.65" rx="4.45" ry="4.99"/><ellipse class="cls-24" cx="220.42" cy="251.65" rx="4.45" ry="4.99"/><rect class="cls-26" x="237.84" y="235.13" width="8.96" height="15.81" rx="4.14"/><ellipse class="cls-24" cx="292.59" cy="227.66" rx="24.5" ry="12.92" transform="translate(1.35 457.03) rotate(-76.11)"/><ellipse class="cls-19" cx="295.63" cy="228.41" rx="15.82" ry="8.34" transform="translate(2.93 460.55) rotate(-76.11)"/><ellipse class="cls-24" cx="296.98" cy="228.74" rx="11.45" ry="6.03" transform="translate(3.63 462.12) rotate(-76.11)"/><ellipse class="cls-24" cx="192.15" cy="227.66" rx="12.92" ry="24.5" transform="translate(-49.04 52.79) rotate(-13.89)"/><ellipse class="cls-19" cx="190.16" cy="228.15" rx="8.34" ry="15.82" transform="translate(-49.21 52.33) rotate(-13.89)"/><ellipse class="cls-24" cx="188.82" cy="228.48" rx="6.03" ry="11.45" transform="translate(-49.33 52.02) rotate(-13.89)"/><path class="cls-24" d="M233.47,198.68s8.85-9,17.93,0v3.66s-8.37-7.9-17.93,0Z"/><rect class="cls-24" x="235.42" y="267.74" width="14.21" height="1.24"/><rect class="cls-24" x="235.36" y="273.05" width="14.21" height="1.24"/><rect class="cls-24" x="235.36" y="270.4" width="14.21" height="1.24"/></g>',
+    ""
+  ];
 
   string[] arms = [
     "","",
@@ -58,7 +59,7 @@ contract PunkAngelMetadata {
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
         '{"name": "Cyberpunk Angel #', Strings.toString(_tokenId), '", ',
-        '"description": "A collection of Punk Angel NFTs.", ',
+        '"description": "A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains", ',
         '"image": "', _getImage(_tokenId), '"}'))))
     );
   }
