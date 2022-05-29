@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PunkAngelWhitelist is Ownable {
 
-  bool public paused = true;
+  bool public paused = false;
   uint256 public totalAddresses = 0;
   uint256 public totalAmount = 0;
   
@@ -25,7 +25,7 @@ contract PunkAngelWhitelist is Ownable {
   // WRITE
   function joinWhitelist(uint256 _amount) external {
     require(!paused || msg.sender == owner(), "Whitelisting is paused.");
-    require(_amount < 50_000, "Amount is too high.");
+    require(_amount <= 50_000, "Amount is too high.");
 
     _addToWhitelist(msg.sender, _amount);
   }

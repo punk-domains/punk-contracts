@@ -1,4 +1,4 @@
-// npx hardhat run scripts/nft/angel/deployWhitelist.js --network polygonMumbai
+// npx hardhat run scripts/nft/angel/deployWhitelist.js --network xdai
 
 const contractNameFactory = "PunkAngelWhitelist";
 

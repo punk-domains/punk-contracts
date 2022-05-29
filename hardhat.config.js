@@ -28,7 +28,7 @@ module.exports = {
       chainId: 137,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 75000000000, // 75 gwei
+      gasPrice: 45000000000, // 45 gwei
     },
     arbitrumTestnet: {
       url: 'https://rinkeby.arbitrum.io/rpc',

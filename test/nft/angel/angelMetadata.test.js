@@ -10,7 +10,7 @@ describe("Punk Angel Metadata", function () {
   });
 
   it("should fetch and parse metadata", async function () {
-    const tokenId = 19;
+    const tokenId = 114;
 
     const metadata = await metadataContract.getMetadata(tokenId);
     
