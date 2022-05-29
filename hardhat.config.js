@@ -16,20 +16,6 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
     },
-    ropsten: {
-      url: 'https://eth-ropsten.alchemyapi.io/v2/' + process.env.ALCHEMY_API_KEY_ROPSTEN,
-      chainId: 3,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-      gas: "auto", // gas limit
-      gasPrice: 2000000000, // 2 gwei
-    },
-    rinkeby: {
-      url: 'https://eth-rinkeby.alchemyapi.io/v2/' + process.env.ALCHEMY_API_KEY_RINKEBY,
-      chainId: 4,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-      gas: "auto", // gas limit
-      gasPrice: 20000000000, // 20 gwei
-    },
     polygonMumbai: {
       url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,
       chainId: 80001,
@@ -42,7 +28,7 @@ module.exports = {
       chainId: 137,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 75000000000, // 75 gwei
+      gasPrice: 45000000000, // 45 gwei
     },
     arbitrumTestnet: {
       url: 'https://rinkeby.arbitrum.io/rpc',
@@ -52,8 +38,8 @@ module.exports = {
       gasPrice: 1000000000, // 1 gwei
     },
     arbitrumOne: {
-      //url: 'https://arb-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ARBITRUM,
-      url: "https://arb1.arbitrum.io/rpc",
+      url: 'https://arb-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ARBITRUM,
+      //url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
@@ -93,8 +79,6 @@ module.exports = {
     apiKey: {
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,
-      ropsten: process.env.ETHERSCAN_API_KEY,
-      rinkeby: process.env.ETHERSCAN_API_KEY,
       optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       arbitrumTestnet: process.env.ARBISCAN_API_KEY,
