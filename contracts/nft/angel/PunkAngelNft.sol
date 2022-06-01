@@ -10,7 +10,8 @@ import "./IPunkAngelMetadata.sol";
 
 contract PunkAngelNft is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
   bool public metadataFrozen = false;
-  bool public paused = true;
+  bool public pauseMinting = true;
+  bool public pauseTransfers = false;
   bool public stopMint = false; // permanently stop the minting (even if max supply is not hit)
 
   uint256 public idCounter;
@@ -54,7 +55,7 @@ contract PunkAngelNft is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
     address _receiver,
     uint256 amount
   ) external nonReentrant returns(uint256) {
-    require(!paused, "Minting paused");
+    require(!pauseMinting, "Minting paused");
     require(!stopMint, "Minting permanently stopped");
     require(totalSupply() < maxSupply, "Max supply already reached");
     require(amount < 100, "Amount is too high");
@@ -81,23 +82,42 @@ contract PunkAngelNft is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
     emit PriceChanged(_msgSender(), _price);
   }
 
-  // TODO: changeMaxSupply
+  function changeMaxSupply(uint256 _newMaxSupply) external onlyOwner {
+    require(!stopMint, "Minting permanently stopped");
+    maxSupply = _newMaxSupply;
+  }
   
   function changeMetadataAddress(address _metadataAddress) external onlyOwner {
     require(!metadataFrozen, "Cannot change metadata address anymore");
     metadataAddress = _metadataAddress;
   }
 
-  // TODO: freezeMetadata
-  // TODO: toggleMinter
-  // TODO: stopMintingPermanently
+  /// @notice Permanently freeze metadata
+  function freezeMetadata() external onlyOwner {
+    metadataFrozen = true;
+  }
 
-  function togglePaused() external onlyOwner {
-    paused = !paused;
+  /// @notice Add or remove a minter address
+  function toggleMinter(address _minter) external onlyOwner {
+    minters[_minter] = !minters[_minter];
+  }
+  
+  /// @notice Stop minting permanently
+  function stopMintingPermanently() external onlyOwner {
+    stopMint = true;
+  }
+
+  function toggleMintingPaused() external onlyOwner {
+    pauseMinting = !pauseMinting;
+  }
+
+  function toggleTransfersPaused() external onlyOwner {
+    pauseTransfers = !pauseTransfers;
   }
   
   // ERC721Enumerable required functions
   function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override(ERC721, ERC721Enumerable) {
+    require(!pauseTransfers, "Transfers are paused");
     super._beforeTokenTransfer(from, to, tokenId);
   }
 

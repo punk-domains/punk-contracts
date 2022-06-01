@@ -17,14 +17,13 @@ function calculateGasCosts(testName, receipt) {
   console.log(testName + " gas cost (Polygon): $" + String(Number(gasCostMatic)*matic));
 }
 
-describe("Punk Angel Metadata", function () {
+describe("Punk Angel NFT", function () {
   let contract;
   let metadataContract;
   let usdcContract;
-  let signer;
-  let anotherUser;
-
-  const provider = waffle.provider;
+  let owner;
+  let user1;
+  let user2;
 
   const nftName = "Punk Angel";
   const nftSymbol = "PDANGEL";
@@ -34,7 +33,7 @@ describe("Punk Angel Metadata", function () {
   const nftPrice = ethers.utils.parseUnits("500", usdcDecimals); // NFT price is in USDC (mwei, 6 decimals)
 
   beforeEach(async function () {
-    [signer, anotherUser] = await ethers.getSigners();
+    [owner, user1, user2] = await ethers.getSigners();
 
     // mock USDC contract
     const Erc20ContractDecimals = await ethers.getContractFactory("MockErc20TokenDecimals");
@@ -62,5 +61,139 @@ describe("Punk Angel Metadata", function () {
     const symbol = await contract.symbol();
     expect(symbol).to.equal(nftSymbol);
   });
+
+  it("should mint 1 new NFT", async function () {
+    // USDC balance before minting USDC
+    const user1UsdcBalanceBefore1 = await usdcContract.balanceOf(user1.address);
+    expect(user1UsdcBalanceBefore1).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
+
+    // mint 500 USDC for user1
+    await usdcContract.mint(user1.address, nftPrice);
+
+    // USDC balance after minting USDC (but before minting NFT)
+    const user1UsdcBalanceBefore2 = await usdcContract.balanceOf(user1.address);
+    expect(user1UsdcBalanceBefore2).to.equal(nftPrice);
+
+    // NFT balance before
+    const user1NftBalanceBefore = await contract.balanceOf(user1.address);
+    expect(user1NftBalanceBefore).to.equal(0);
+
+    // give USDC allowance to the NFT contract
+    await usdcContract.connect(user1).approve(
+      contract.address, // spender
+      nftPrice // allowance for the NFT price
+    );
+
+    // fail at minting when contract is paused
+    await expect(contract.connect(user1).mint(
+      user1.address,
+      1
+    )).to.be.revertedWith('Minting paused');
+
+    // unpause contract
+    await contract.toggleMintingPaused();
+
+    // mint 1 NFT
+    const tx = await contract.connect(user1).mint(
+      user1.address,
+      1
+    );
+
+    const receipt = await tx.wait()
+
+    calculateGasCosts("Mint 1 NFT", receipt);
+
+    // USDC balance after minting NFT
+    const user1UsdcBalanceAfter = await usdcContract.balanceOf(user1.address);
+    expect(user1UsdcBalanceAfter).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
+
+    // NFT balance after
+    const user1NftBalanceAfter = await contract.balanceOf(user1.address);
+    expect(user1NftBalanceAfter).to.equal(1);
+    
+    // owner of NFT #1
+    const ownerOf1 = await contract.ownerOf(nftIdCounter); // ID counter set in constructor
+    expect(ownerOf1).to.equal(user1.address);
+
+    // fetch tokenURI data
+    const metadata = await contract.tokenURI(nftIdCounter);
+
+    const mdJson = Buffer.from(metadata.substring(29), "base64");
+    const mdResult = JSON.parse(mdJson);
+
+    expect(mdResult.name).to.equal("Cyberpunk Angel #" + nftIdCounter);
+    expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains"); 
+    
+  });
+
+  it("should fail at minting when minting is stopped permanently", async function () {
+    // USDC balance before minting USDC
+    const user1UsdcBalanceBefore1 = await usdcContract.balanceOf(user1.address);
+    expect(user1UsdcBalanceBefore1).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
+
+    // mint 1000 USDC for user1
+    await usdcContract.mint(user1.address, ethers.utils.parseUnits("1000", usdcDecimals));
+
+    // USDC balance after minting USDC (but before minting NFT)
+    const user1UsdcBalanceBefore2 = await usdcContract.balanceOf(user1.address);
+    expect(user1UsdcBalanceBefore2).to.equal(ethers.utils.parseUnits("1000", usdcDecimals));
+
+    // check NFT contract owner USDC balance (should be 1000 USDC minted in constructor)
+    const ownerUsdcBalanceBefore = await usdcContract.balanceOf(owner.address);
+    expect(ownerUsdcBalanceBefore).to.equal(ethers.utils.parseUnits("1000", usdcDecimals));
+
+    // NFT balance before
+    const user1NftBalanceBefore = await contract.balanceOf(user1.address);
+    expect(user1NftBalanceBefore).to.equal(0);
+
+    // give USDC allowance to the NFT contract
+    await usdcContract.connect(user1).approve(
+      contract.address, // spender
+      ethers.utils.parseUnits("1000", usdcDecimals) // allowance for 1000 USDC
+    );
+
+    // unpause contract
+    await contract.toggleMintingPaused();
+
+    // mint 1 NFT
+    await contract.connect(user1).mint(
+      user1.address,
+      1
+    );
+
+    // USDC balance after minting NFT
+    const user1UsdcBalanceAfter = await usdcContract.balanceOf(user1.address);
+    expect(user1UsdcBalanceAfter).to.equal(ethers.utils.parseUnits("500", usdcDecimals));
+
+    // check NFT contract owner USDC balance AFTER
+    const ownerUsdcBalanceAfter = await usdcContract.balanceOf(owner.address);
+    expect(ownerUsdcBalanceAfter).to.equal(ethers.utils.parseUnits("1500", usdcDecimals));
+
+    // NFT balance after
+    const user1NftBalanceAfter = await contract.balanceOf(user1.address);
+    expect(user1NftBalanceAfter).to.equal(1);
+
+    // permanently stop the minting
+    await contract.stopMintingPermanently();
+
+    // fail at minting when contract is permanently stopped
+    await expect(contract.connect(user1).mint(
+      user1.address,
+      1
+    )).to.be.revertedWith('Minting permanently stopped');
+    
+  });
+
+  // it("should allow minter to mint for free", async function () {}
+    // also toggle a minter
+
+  // it("should fail at trying to mint over the max amount for one mint", async function () {}
+
+  // it("should fail at trying to mint over the max supply", async function () {}
+
+  // it("should prevent transfers when transfers are paused", async function () {}
+
+  // it("should freeze metadata", async function () {}
+    // also change metadata before freezing it
 
 });
