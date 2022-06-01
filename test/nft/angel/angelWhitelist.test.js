@@ -45,6 +45,8 @@ describe("Punk Angel Whitelist", function () {
     const totalAmountBefore = await contract.totalAmount();
     expect(totalAmountBefore).to.equal(0);
 
+    await contract.togglePaused();
+
     // fail at whitelisting when contract is paused
     await expect(contract.connect(user1).joinWhitelist(
       amount
@@ -108,8 +110,6 @@ describe("Punk Angel Whitelist", function () {
   });
 
   it("should fail at whitelisting if amount is too high", async function () {
-    await contract.togglePaused();
-
     await expect(contract.connect(user1).joinWhitelist(
       51000
     )).to.be.revertedWith('Amount is too high.');
