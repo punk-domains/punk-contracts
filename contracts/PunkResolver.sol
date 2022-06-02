@@ -14,6 +14,7 @@ contract PunkResolver is Ownable {
 
   // TODO:
   // upgradable contract
+  // use _msgSender()
   // read: a list of all existing Factory contracts
   // read: a list of all deprecated TLD contracts
   // read: return a list of all existing active TLDs
