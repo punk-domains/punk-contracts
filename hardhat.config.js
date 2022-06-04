@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
+require('@openzeppelin/hardhat-upgrades');
 require('dotenv').config();
 
 /**
@@ -11,10 +12,7 @@ module.exports = {
   networks: {
     localhost: {
       url: 'http://127.0.0.1:8545/',
-      chainId: 31337,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-      gas: "auto", // gas limit
-      gasPrice: 2000000000, // 2 gwei
+      chainId: 31337
     },
     polygonMumbai: {
       url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,

@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "./interfaces/IBasePunkTLDFactory.sol";
-import "./interfaces/IBasePunkTLD.sol";
-import "./lib/strings.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../interfaces/IBasePunkTLDFactory.sol";
+import "../interfaces/IBasePunkTLD.sol";
+import "../lib/strings.sol";
 
-/// @title Punk Domains Resolver
+/// @title Punk Domains Resolver v1
 /// @author Tempe Techie
 /// @notice This contract resolves all punk domains and TLDs on the particular blockchain where it is deployed
-contract PunkResolver is Ownable {
+contract PunkResolverV1 is OwnableUpgradeable {
   using strings for string;
+
+  mapping (string => bool) public deprecatedTlds;
+  address[] public factories;
 
   // TODO:
   // upgradable contract
   // use _msgSender()
   // read: a list of all existing Factory contracts
-  // read: a list of all deprecated TLD contracts
+  // read: a list of all deprecated TLD contracts?
   // read: return a list of all existing active TLDs
   // read: getDomainHolder(domainName, tld)
     // loop through factory contracts to find the TLD address (or call getTldAddress)
