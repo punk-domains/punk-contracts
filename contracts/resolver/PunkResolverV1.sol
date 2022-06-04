@@ -12,7 +12,7 @@ import "../lib/strings.sol";
 contract PunkResolverV1 is OwnableUpgradeable {
   using strings for string;
 
-  mapping (string => bool) public deprecatedTlds;
+  mapping (address => bool) public deprecatedTlds; // deprecate an address, not TLD name
   address[] public factories;
 
   // TODO:
