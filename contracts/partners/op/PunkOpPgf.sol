@@ -3,12 +3,11 @@ pragma solidity ^0.8.4;
 
 import "../../factories/standard/interfaces/IPunkTLD.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // receive and redirect ETH
-contract PunkOpPgf is Ownable, ReentrancyGuard {
+contract PunkOpPgf is Ownable {
   address public pgfAddress;
   IPunkTLD tldContract;
 
