@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // receive and redirect ETH
 contract PunkOpPgf is Ownable {
   address public pgfAddress;
-  IPunkTLD tldContract;
+  IPunkTLD immutable public tldContract;
 
   // CONSTRUCTOR
   constructor(
@@ -20,14 +20,17 @@ contract PunkOpPgf is Ownable {
     tldContract = IPunkTLD(_tldAddress);
   }
 
-  // OWNER
+  // EVENTS
+  event PgfAddressChanged(address user, address newPgfAddress);
 
+  // OWNER
   function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
     tldContract.changeNameMaxLength(_maxLength);
   }
 
   function changePgfAddress(address _newPgfAddress) external onlyOwner {
     pgfAddress = _newPgfAddress;
+    emit PgfAddressChanged(msg.sender, _newPgfAddress);
   }
 
   function changeTldDescription(string calldata _description) external onlyOwner {
