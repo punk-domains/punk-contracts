@@ -6,26 +6,23 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// receive and redirect ETH
+/// @title Punk Domains Revenue Redirect Contract
+/// @author Tempe Techie
+/// @notice This smart contract redirects revenue from domain purchases to public goods funding (PGF)
 contract PunkOpPgf is Ownable {
-  address public pgfAddress;
-  IPunkTLD immutable public tldContract;
+  address public pgfAddress; // official Optimism's PGF address
 
   // CONSTRUCTOR
-  constructor(
-    address _pgfAddress,
-    address _tldAddress
-  ) {
+  constructor(address _pgfAddress) {
     pgfAddress = _pgfAddress;
-    tldContract = IPunkTLD(_tldAddress);
   }
 
   // EVENTS
   event PgfAddressChanged(address user, address newPgfAddress);
 
   // OWNER
-  function changeMaxDomainNameLength(uint256 _maxLength) external onlyOwner {
-    tldContract.changeNameMaxLength(_maxLength);
+  function changeMaxDomainNameLength(address _tldAddress, uint256 _maxLength) external onlyOwner {
+    IPunkTLD(_tldAddress).changeNameMaxLength(_maxLength);
   }
 
   function changePgfAddress(address _newPgfAddress) external onlyOwner {
@@ -33,17 +30,17 @@ contract PunkOpPgf is Ownable {
     emit PgfAddressChanged(msg.sender, _newPgfAddress);
   }
 
-  function changeTldDescription(string calldata _description) external onlyOwner {
-    tldContract.changeDescription(_description);
+  function changeTldDescription(address _tldAddress, string calldata _description) external onlyOwner {
+    IPunkTLD(_tldAddress).changeDescription(_description);
   }
 
-  function changeTldPrice(uint256 _price) external onlyOwner {
-    tldContract.changePrice(_price);
+  function changeTldPrice(address _tldAddress, uint256 _price) external onlyOwner {
+    IPunkTLD(_tldAddress).changePrice(_price);
   }
 
   /// @notice Referral fee cannot be 5000 bps or higher
-  function changeTldReferralFee(uint256 _referral) external onlyOwner {
-    tldContract.changeReferralFee(_referral);
+  function changeTldReferralFee(address _tldAddress, uint256 _referral) external onlyOwner {
+    IPunkTLD(_tldAddress).changeReferralFee(_referral);
   }
 
   // recover ERC20 tokens mistakenly sent to this contract
@@ -56,8 +53,8 @@ contract PunkOpPgf is Ownable {
     IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
 
-  function transferTldOwnership(address _newTldOwner) external onlyOwner {
-    tldContract.transferOwnership(_newTldOwner);
+  function transferTldOwnership(address _tldAddress, address _newTldOwner) external onlyOwner {
+    IPunkTLD(_tldAddress).transferOwnership(_newTldOwner);
   }
 
   // manually redirect ETH from contract (in case it wasn't redirected automatically)

@@ -2,7 +2,6 @@
 
 const contractName = "PunkOpPgf";
 const assetReceiver = "enter-asset-receiver-contract-address";
-const tldAddress = "enter-op-contract-address";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -12,12 +11,12 @@ async function main() {
 
   // deploy contract
   const contract = await ethers.getContractFactory(contractName);
-  const instance = await contract.deploy(assetReceiver, tldAddress);
+  const instance = await contract.deploy(assetReceiver);
   
   console.log("Contract address:", instance.address);
 
-  console.log("Wait a minute and then run this command to verify contracts on Etherscan:");
-  console.log("npx hardhat verify --network " + network.name + " " + instance.address + " " + assetReceiver + " " + tldAddress);
+  console.log("Wait a minute and then run this command to verify contracts on block explorer:");
+  console.log("npx hardhat verify --network " + network.name + " " + instance.address + " " + assetReceiver);
 }
 
 main()
