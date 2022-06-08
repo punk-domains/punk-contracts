@@ -23,8 +23,9 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   address public royaltyFeeUpdater; // address which is allowed to change the royalty fee
   address public royaltyFeeReceiver; // address which receives the royalty fee
 
-  bool public buyingEnabled; // buying domains enabled
-  bool public metadataFrozen;
+  bool public buyingEnabled = false; // buying domains enabled
+  bool public buyingDisabledForever = false; // buying domains disabled forever
+  bool public metadataFrozen = false; // metadata frozen forever
 
   uint256 public totalSupply;
   uint256 public idCounter; // up only
@@ -39,6 +40,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   mapping (address => string) public override defaultNames; // user's default domain
 
   event FreezeMetadata(address user, address mtdAddr);
+  event MintingDisabledForever(address user);
 
   constructor(
     string memory _name,
@@ -121,7 +123,8 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     address _domainHolder,
     address _referrer
   ) external payable override nonReentrant returns(uint256) {
-    require(buyingEnabled || _msgSender() == owner() || _msgSender() == minter, "Buying TLDs disabled");
+    require(!buyingDisabledForever, "Domain minting disabled forever");
+    require(buyingEnabled || _msgSender() == owner() || _msgSender() == minter, "Buying domains disabled");
     require(msg.value >= price, "Value below price");
 
     _sendPayment(msg.value, _referrer);
@@ -233,6 +236,12 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     require(_referral < 5000, "Referral fee cannot be 50% or higher");
     referral = _referral; // referral must be in bips
     emit ReferralFeeChanged(_msgSender(), _referral);
+  }
+
+  /// @notice Only TLD contract owner can call this function. Flexi-specific function.
+  function disableBuyingForever() external onlyOwner {
+    buyingDisabledForever = true; // this action is irreversible
+    emit MintingDisabledForever(_msgSender());
   }
 
   /// @notice Freeze metadata address. Only TLD contract owner can call this function.

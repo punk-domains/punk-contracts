@@ -13,7 +13,7 @@ import "../lib/strings.sol";
 contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   using strings for string;
 
-  mapping (address => bool) public deprecatedTlds; // deprecate an address, not TLD name
+  mapping (address => bool) public isTldDeprecated; // deprecate an address, not TLD name
   address[] public factories;
 
   // initializer (only for V1!)
@@ -27,7 +27,12 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     return factories;
   }
 
-  // WRITE
+  // notice: get a list of all active TLDs across all factories
+  //function getTldsArray() public view returns(address[] memory) {
+    // TODO: address or string or both? (struct?)
+  //} 
+
+  // OWNER
   function addFactoryAddress(address _factoryAddress) external onlyOwner {
     factories.push(_factoryAddress);
   }
@@ -40,8 +45,6 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   // TODO:
   // upgradable contract
   // use _msgSender()
-  // read: a list of all existing Factory contracts
-  // read: a list of all deprecated TLD contracts?
   // read: return a list of all existing active TLDs
   // read: getDomainHolder(domainName, tld)
     // loop through factory contracts to find the TLD address (or call getTldAddress)

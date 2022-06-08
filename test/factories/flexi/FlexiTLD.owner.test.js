@@ -1,3 +1,5 @@
+// npx hardhat test test/factories/flexi/FlexiTLD.owner.test.js 
+
 const { expect } = require("chai");
 
 describe("FlexiPunkTLD (onlyOwner)", function () {
@@ -75,7 +77,6 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
 
     const newDomainName = "techie";
 
-    // mint a new valid domain as TLD owner
     await expect(contract.connect(anotherUser).mint(
       newDomainName, // domain name (without TLD)
       anotherUser.address, // domain holder
@@ -83,7 +84,48 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
       {
         value: domainPrice // pay  for the domain
       }
-    )).to.be.revertedWith('Buying TLDs disabled');
+    )).to.be.revertedWith('Buying domains disabled');
+  });
+  
+  it("should fail to create a new valid domain if buying is disabled forever", async function () {
+    await contract.toggleBuyingDomains(); // enable buying domains
+
+    // buying domains should be enabled
+    const buyingEnabled = await contract.buyingEnabled();
+    expect(buyingEnabled).to.be.true;
+
+    const newDomainName = "techie";
+
+    await contract.connect(anotherUser).mint(
+      newDomainName, // domain name (without TLD)
+      anotherUser.address, // domain holder
+      ethers.constants.AddressZero, // referrer
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )
+
+    // disable buying forever
+    await contract.disableBuyingForever();
+
+    // fail at minting new domains
+    await expect(contract.mint(
+      "test1domain", // domain name (without TLD)
+      anotherUser.address, // domain holder
+      ethers.constants.AddressZero, // referrer
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.be.revertedWith('Domain minting disabled forever');
+    
+    await expect(contract.connect(anotherUser).mint(
+      "test2domain", // domain name (without TLD)
+      anotherUser.address, // domain holder
+      ethers.constants.AddressZero, // referrer
+      {
+        value: domainPrice // pay  for the domain
+      }
+    )).to.be.revertedWith('Domain minting disabled forever');
   });
 
   it("should change the price of a domain", async function () {
