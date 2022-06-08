@@ -18,9 +18,9 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
 
   // initializer (only for V1!)
   function initialize() public initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-    }
+    __Context_init_unchained();
+    __Ownable_init_unchained();
+  }
 
   // READ
   function getFactoriesArray() public view returns(address[] memory) {
@@ -52,8 +52,6 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   // read: getDomainTokenUri (?)
   // read: getTldAddress
   // read: getTldFactoryAddress
-  // write (only owner): add factory contract address
-  // write (only owner): remove factory contract address
   // write (only owner): add deprecated TLD address
   // write (only owner): remove deprecated TLD address
 }

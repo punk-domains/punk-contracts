@@ -44,6 +44,24 @@ describe("Punk Resolver Proxy", function () {
     await contract.addFactoryAddress(factoryContract1.address);
 
     const factoryAddresses2 = await contract.getFactoriesArray();
-    expect(factoryAddresses2).to.eql([factoryContract1.address]);
+    expect(factoryAddresses2).to.have.members([factoryContract1.address]);
+
+    await expect(contract.connect(user1).addFactoryAddress(
+      factoryContract2.address
+    )).to.be.revertedWith('Ownable: caller is not the owner');
+
+    await contract.addFactoryAddress(factoryContract2.address);
+
+    const factoryAddresses3 = await contract.getFactoriesArray();
+    expect(factoryAddresses3).to.have.members([factoryContract1.address, factoryContract2.address]);
+
+    await contract.removeFactoryAddress(0); // remove factory contract 1
+
+    const factoryAddresses4 = await contract.getFactoriesArray();
+    expect(factoryAddresses4).to.have.members([factoryContract2.address]);
+
+    await expect(contract.connect(user1).removeFactoryAddress(
+      0
+    )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 });
