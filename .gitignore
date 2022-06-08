@@ -1,6 +1,7 @@
 .idea
 flattened
 venv
+.openzeppelin
 
 #Hardhat files
 cache

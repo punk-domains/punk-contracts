@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IBasePunkTLDFactory.sol";
 import "../interfaces/IBasePunkTLD.sol";
 import "../lib/strings.sol";
@@ -9,11 +10,32 @@ import "../lib/strings.sol";
 /// @title Punk Domains Resolver v1
 /// @author Tempe Techie
 /// @notice This contract resolves all punk domains and TLDs on the particular blockchain where it is deployed
-contract PunkResolverV1 is OwnableUpgradeable {
+contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   using strings for string;
 
   mapping (address => bool) public deprecatedTlds; // deprecate an address, not TLD name
   address[] public factories;
+
+  // initializer (only for V1!)
+  function initialize() public initializer {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+    }
+
+  // READ
+  function getFactoriesArray() public view returns(address[] memory) {
+    return factories;
+  }
+
+  // WRITE
+  function addFactoryAddress(address _factoryAddress) external onlyOwner {
+    factories.push(_factoryAddress);
+  }
+
+  function removeFactoryAddress(uint _addrIndex) external onlyOwner {
+    factories[_addrIndex] = factories[factories.length - 1];
+    factories.pop();
+  }
 
   // TODO:
   // upgradable contract
