@@ -29,6 +29,24 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   }
 
   // READ
+
+  // reverse resolver
+  function getDefaultDomain(address _addr, string calldata _tld) public view returns(string memory) {
+    uint256 fLength = factories.length;
+    for (uint256 i = 0; i < fLength;) {
+      address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
+
+      if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
+        return string(IBasePunkTLD(tldAddr).defaultNames(_addr));
+      }
+
+      unchecked { ++i; }
+    }
+
+    return "";
+  }
+
+  // domain resolver
   function getDomainHolder(string calldata _domainName, string calldata _tld) public view returns(address) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
@@ -40,6 +58,23 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
 
       unchecked { ++i; }
     }
+
+    return address(0);
+  }
+  
+  function getDomainData(string calldata _domainName, string calldata _tld) public view returns(string memory) {
+    uint256 fLength = factories.length;
+    for (uint256 i = 0; i < fLength;) {
+      address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
+
+      if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
+        return string(IBasePunkTLD(tldAddr).getDomainData(_domainName));
+      }
+
+      unchecked { ++i; }
+    }
+
+    return "";
   }
 
   function getFactoriesArray() public view returns(address[] memory) {
@@ -50,6 +85,7 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   /*
   function getTldAddressesArray() public view returns(address[] memory) {
     // TODO: address or string or both? (struct?)
+      // could also be concatenated into string
     address[] memory _tldAddresses = new address[](8); // TODO: count how many TLDs there are
 
     uint256 fLength = factories.length;
@@ -79,11 +115,11 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   // upgradable contract
   // use _msgSender()
   // read: return a list of all existing active TLDs
-  // read: getDomainHolder(domainName, tld)
-    // loop through factory contracts to find the TLD address (or call getTldAddress)
-    // getDomainHolder from the TLD contract
-  // read: getDefaultDomain(addr, tld) - reverse resolver for a specific TLD
+
+  // read: getFirstDefaultDomain(addr) - return a single domain name without giving TLD name as attribute
+  
   // read: getDefaultDomains(addr) - reverse resolver for all TLDs (returns a list of default domains for a given address)
+  
   // read: getDomainData (?)
   // read: getDomainTokenUri (?)
   // read: getTldAddress

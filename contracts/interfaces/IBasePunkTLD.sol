@@ -25,6 +25,8 @@ interface IBasePunkTLD is IERC721 {
 
   function defaultNames(address) external view returns(string memory);
 
+  function getDomainData(string calldata _domainName) external view returns(string memory);
+
   function getDomainHolder(string calldata _domainName) external view returns(address);
 
   function price() external view returns (uint256);

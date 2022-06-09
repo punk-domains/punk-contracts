@@ -158,6 +158,83 @@ describe("Punk Resolver Proxy", function () {
     expect(domainHolderViaResolverNonExisting).to.equal(ethers.constants.AddressZero);
   });
 
+  it('fetches a default domain for a user address', async function () {
+    // query default domain via TLD contract before
+    const defaultDomainViaTldBefore = await tldContract1.defaultNames(user1.address);
+    expect(defaultDomainViaTldBefore).to.equal("");
+
+    // create domain name
+    const domainName = "user1";
+
+    await tldContract1.mint(
+      domainName, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice1 // pay  for the domain
+      }
+    );
+
+    // check default domain via TLD contract after
+    const defaultDomainViaTldAfter = await tldContract1.defaultNames(user1.address);
+    expect(defaultDomainViaTldAfter).to.equal(domainName);
+
+    // check default domain via Resolver before
+    const defaultDomainViaResolverBefore = await contract.getDefaultDomain(user1.address, tldName1);
+    expect(defaultDomainViaResolverBefore).to.equal("");
+
+    // add factory address to the resolver contract
+    await contract.addFactoryAddress(factoryContract1.address);
+
+    // check default domain via Resolver after
+    const defaultDomainViaResolverAfter = await contract.getDefaultDomain(user1.address, tldName1);
+    expect(defaultDomainViaResolverAfter).to.equal(domainName);
+
+    // check non-existing default domain via Resolver
+    const defaultDomainViaResolverNonExisting = await contract.getDefaultDomain(user2.address, tldName1);
+    expect(defaultDomainViaResolverNonExisting).to.equal("");
+  });
+
+  it('fetches domain data', async function () {
+    const domainName = "user1";
+
+    // check domain holder via TLD contract before
+    const domainDataViaTldBefore = await tldContract1.getDomainData(domainName);
+    expect(domainDataViaTldBefore).to.equal("");
+
+    // create domain name
+    await tldContract1.mint(
+      domainName, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice1 // pay  for the domain
+      }
+    );
+
+    const newDomainData = "new data";
+
+    await tldContract1.connect(user1).editData(domainName, newDomainData);
+
+    // check domain holder via TLD contract after
+    const domainDataViaTldAfter = await tldContract1.getDomainData(domainName);
+    expect(domainDataViaTldAfter).to.equal(newDomainData);
+
+    // check domain holder via Resolver before
+    const domainDataViaResolverBefore = await contract.getDomainData(domainName, tldName1);
+    expect(domainDataViaResolverBefore).to.equal("");
+
+    // add factory address to the resolver contract
+    await contract.addFactoryAddress(factoryContract1.address);
+
+    // check domain holder via Resolver after
+    const domainDataViaResolverAfter = await contract.getDomainData(domainName, tldName1);
+    expect(domainDataViaResolverAfter).to.equal(newDomainData);
+
+    // check non-existing domain name via Resolver
+    const domainDataViaResolverNonExisting = await contract.getDomainData("nonExistingDomain", tldName1);
+    expect(domainDataViaResolverNonExisting).to.equal("");
+  });
 
   //it('', async function () {});
   //it('', async function () {});
