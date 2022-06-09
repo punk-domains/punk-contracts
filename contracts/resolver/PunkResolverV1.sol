@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IBasePunkTLDFactory.sol";
 import "../interfaces/IBasePunkTLD.sol";
 import "../lib/strings.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title Punk Domains Resolver v1
 /// @author Tempe Techie
@@ -15,12 +16,6 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
 
   mapping (address => bool) public isTldDeprecated; // deprecate an address, not TLD name
   address[] public factories;
-
-  /*
-  struct TldData {
-    address tldAddress;
-    string tldName;
-  }*/
 
   // initializer (only for V1!)
   function initialize() public initializer {
@@ -81,25 +76,31 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     return factories;
   }
 
-  /// @notice get a list of all active TLDs across all factories
-  /*
-  function getTldAddressesArray() public view returns(address[] memory) {
-    // TODO: address or string or both? (struct?)
-      // could also be concatenated into string
-    address[] memory _tldAddresses = new address[](8); // TODO: count how many TLDs there are
+  /// @notice get a stringified CSV of all active TLDs (name,address) across all factories
+  function getTlds() public view returns(string memory) {
+    bytes memory result;
 
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       string[] memory tldNames = IBasePunkTLDFactory(factories[i]).getTldsArray();
 
       for (uint256 j = 0; j < tldNames.length; ++j) {
-        _tldAddresses.push(IBasePunkTLDFactory(factories[i]).tldNamesAddresses(tldNames[j]));
+        address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(tldNames[j]);
+        string memory tldName = tldNames[j];
+
+        if (!isTldDeprecated[tldAddr]) {
+          result = abi.encodePacked(
+            result, 
+            abi.encodePacked(tldName, ',', Strings.toHexString(uint256(uint160(tldAddr)), 20), '\n')
+          );
+        }
       }
 
       unchecked { ++i; }
     }
-  } 
-  */
+
+    return string(result);
+  }
 
   // OWNER
   function addFactoryAddress(address _factoryAddress) external onlyOwner {

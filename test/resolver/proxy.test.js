@@ -18,7 +18,7 @@ describe("Punk Resolver Proxy", function () {
   let user2;
 
   // TLD1
-  const tldName1 = ".wagmi";
+  const tldName1 = ".wagmi🤘";
   const domainSymbol1 = ".WAGMI";
   const domainPrice1 = ethers.utils.parseUnits("1", "ether");
   const domainRoyalty1 = 10; // royalty in bips (10 bips is 0.1%)
@@ -236,7 +236,21 @@ describe("Punk Resolver Proxy", function () {
     expect(domainDataViaResolverNonExisting).to.equal("");
   });
 
-  //it('', async function () {});
+  it('fetches a stringified CSV of all active TLDs', async function () {
+    const tldsCsvStringBefore = await contract.getTlds();
+    expect(tldsCsvStringBefore).to.be.empty;
+
+    await contract.addFactoryAddress(factoryContract1.address);
+    await contract.addFactoryAddress(factoryContract2.address);
+
+    const tldsCsvStringAfter = await contract.getTlds();
+    expect(tldsCsvStringAfter).to.include(tldName1);
+    console.log(tldsCsvStringAfter);
+
+    // TODO: test the exclusion of deprecated TLD
+      // also in the getDomainHolder test
+  });
+
   //it('', async function () {});
   //it('', async function () {});
 });
