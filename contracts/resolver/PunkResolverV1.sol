@@ -25,7 +25,7 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
 
   // READ
 
-  // reverse resolver
+  // reverse resolver: get user's default name for a given TLD
   function getDefaultDomain(address _addr, string calldata _tld) public view returns(string memory) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
@@ -39,6 +39,37 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     }
 
     return "";
+  }
+
+  // reverse resolver: get user's default names (all TLDs)
+  function getDefaultDomains(address _addr) public view returns(string memory) {
+    bytes memory result;
+
+    uint256 fLength = factories.length;
+    for (uint256 i = 0; i < fLength;) {
+      string[] memory tldNames = IBasePunkTLDFactory(factories[i]).getTldsArray();
+
+      for (uint256 j = 0; j < tldNames.length; ++j) {
+        string memory tldName = tldNames[j];
+        address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(tldName);
+        string memory defaultName = IBasePunkTLD(tldAddr).defaultNames(_addr);
+
+        if (
+          strings.len(strings.toSlice(defaultName)) > 0 && 
+          !isTldDeprecated[tldAddr]
+        ) {
+          if (j == (tldNames.length-1)) { // last TLD (do not include space at the end)
+            result = abi.encodePacked(result, defaultName, tldName);
+          } else {
+            result = abi.encodePacked(result, defaultName, tldName, " ");
+          }
+        }
+      }
+
+      unchecked { ++i; }
+    }
+
+    return string(result);
   }
 
   // domain resolver
@@ -85,8 +116,9 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
       string[] memory tldNames = IBasePunkTLDFactory(factories[i]).getTldsArray();
 
       for (uint256 j = 0; j < tldNames.length; ++j) {
-        address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(tldNames[j]);
         string memory tldName = tldNames[j];
+        address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(tldName);
+        
 
         if (!isTldDeprecated[tldAddr]) {
           result = abi.encodePacked(
@@ -115,13 +147,9 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   // TODO:
   // upgradable contract
   // use _msgSender()
-  // read: return a list of all existing active TLDs
 
   // read: getFirstDefaultDomain(addr) - return a single domain name without giving TLD name as attribute
   
-  // read: getDefaultDomains(addr) - reverse resolver for all TLDs (returns a list of default domains for a given address)
-  
-  // read: getDomainData (?)
   // read: getDomainTokenUri (?)
   // read: getTldAddress
   // read: getTldFactoryAddress

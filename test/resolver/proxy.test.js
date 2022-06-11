@@ -18,22 +18,19 @@ describe("Punk Resolver Proxy", function () {
   let user2;
 
   // TLD1
-  const tldName1 = ".wagmi🤘";
+  const tldName1 = ".wagmi";
   const domainSymbol1 = ".WAGMI";
   const domainPrice1 = ethers.utils.parseUnits("1", "ether");
-  const domainRoyalty1 = 10; // royalty in bips (10 bips is 0.1%)
   
   // TLD2
   const tldName2 = ".degen";
   const domainSymbol2 = ".DEGEN";
   const domainPrice2 = ethers.utils.parseUnits("2", "ether");
-  const domainRoyalty2 = 20; // royalty in bips (10 bips is 0.1%)
 
   // TLD1
   const tldName3 = ".ape";
   const domainSymbol3 = ".APE";
   const domainPrice3 = ethers.utils.parseUnits("3", "ether");
-  const domainRoyalty3 = 30; // royalty in bips (10 bips is 0.1%)
 
   beforeEach(async function () {
     [signer, user1, user2] = await ethers.getSigners();
@@ -249,6 +246,56 @@ describe("Punk Resolver Proxy", function () {
 
     // TODO: test the exclusion of deprecated TLD
       // also in the getDomainHolder test
+  });
+
+
+  it('fetches a list of default domains for a user address across all TLDs', async function () {
+    // query default domain via TLD contract before
+    const defaultDomainViaTldBefore = await tldContract1.defaultNames(user1.address);
+    expect(defaultDomainViaTldBefore).to.equal("");
+
+    // create domain name
+    const domainName = "user1";
+
+    await tldContract1.mint(
+      domainName, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice1 // pay  for the domain
+      }
+    );
+
+    await tldContract3.mint(
+      domainName, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice3 // pay  for the domain
+      }
+    );
+
+    // check default domain via TLD contract after
+    const defaultDomainViaTldAfter = await tldContract1.defaultNames(user1.address);
+    expect(defaultDomainViaTldAfter).to.equal(domainName);
+
+    // check default domain via Resolver before
+    const defaultDomainViaResolverBefore = await contract.getDefaultDomains(user1.address);
+    expect(defaultDomainViaResolverBefore).to.equal("");
+
+    // add factory addresses to the resolver contract
+    await contract.addFactoryAddress(factoryContract1.address);
+    await contract.addFactoryAddress(factoryContract2.address);
+
+    // check default domain via Resolver after
+    const defaultDomainViaResolverAfter = await contract.getDefaultDomains(user1.address);
+    console.log(defaultDomainViaResolverAfter);
+
+    expect(defaultDomainViaResolverAfter).to.equal(domainName + tldName1 + " " + domainName + tldName3);
+
+    // check non-existing default domain via Resolver
+    const defaultDomainViaResolverNonExisting = await contract.getDefaultDomains(user2.address);
+    expect(defaultDomainViaResolverNonExisting).to.equal("");
   });
 
   //it('', async function () {});
