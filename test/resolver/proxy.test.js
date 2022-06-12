@@ -87,7 +87,7 @@ describe("Punk Resolver Proxy", function () {
     tldContract3 = await hre.ethers.getContractAt("PunkTLD", tldAddress3);
   });
   
-  it('adds and removes a factory address', async function () {
+  it('adds and removes a factory address (only owner)', async function () {
     const owner = await contract.owner();
     expect(owner).to.equal(signer.address);
 
@@ -113,6 +113,7 @@ describe("Punk Resolver Proxy", function () {
     const factoryAddresses4 = await contract.getFactoriesArray();
     expect(factoryAddresses4).to.have.members([factoryContract2.address]);
 
+    // fail if user is not owner
     await expect(contract.connect(user1).removeFactoryAddress(
       0
     )).to.be.revertedWith('Ownable: caller is not the owner');
@@ -344,6 +345,26 @@ describe("Punk Resolver Proxy", function () {
     // check non-existing default domain via Resolver
     const defaultDomainViaResolverNonExisting = await contract.getFirstDefaultDomain(user2.address);
     expect(defaultDomainViaResolverNonExisting).to.equal("");
+  });
+
+  it('un/sets a TLD as deprecated (only owner)', async function () {
+    const isDeprecatedBefore = await contract.isTldDeprecated(tldContract2.address);
+    expect(isDeprecatedBefore).to.be.false;
+
+    await contract.addDeprecatedTldAddress(tldContract2.address);
+
+    const isDeprecatedAfter1 = await contract.isTldDeprecated(tldContract2.address);
+    expect(isDeprecatedAfter1).to.be.true;
+
+    await contract.removeDeprecatedTldAddress(tldContract2.address);
+
+    const isDeprecatedAfter2 = await contract.isTldDeprecated(tldContract2.address);
+    expect(isDeprecatedAfter2).to.be.false;
+
+    // should fail if user is not owner
+    await expect(
+      contract.connect(user1).addDeprecatedTldAddress(tldContract2.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   //it('', async function () {});

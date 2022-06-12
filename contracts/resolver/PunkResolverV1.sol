@@ -164,21 +164,25 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   function addFactoryAddress(address _factoryAddress) external onlyOwner {
     factories.push(_factoryAddress);
   }
+  
+  function addDeprecatedTldAddress(address _deprecatedTldAddress) external onlyOwner {
+    isTldDeprecated[_deprecatedTldAddress] = true;
+  }
 
   function removeFactoryAddress(uint _addrIndex) external onlyOwner {
     factories[_addrIndex] = factories[factories.length - 1];
     factories.pop();
   }
 
+  function removeDeprecatedTldAddress(address _deprecatedTldAddress) external onlyOwner {
+    isTldDeprecated[_deprecatedTldAddress] = false;
+  }
+
   // TODO:
   // upgradable contract
   // use _msgSender()
 
-  // read: getFirstDefaultDomain(addr) - return a single domain name without giving TLD name as attribute
-  
   // read: getDomainTokenUri (?)
   // read: getTldAddress
   // read: getTldFactoryAddress
-  // write (only owner): add deprecated TLD address
-  // write (only owner): remove deprecated TLD address
 }
