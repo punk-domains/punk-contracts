@@ -196,7 +196,7 @@ describe("Punk Resolver Proxy", function () {
   it('fetches domain data', async function () {
     const domainName = "user1";
 
-    // check domain holder via TLD contract before
+    // check domain data via TLD contract before
     const domainDataViaTldBefore = await tldContract1.getDomainData(domainName);
     expect(domainDataViaTldBefore).to.equal("");
 
@@ -214,18 +214,18 @@ describe("Punk Resolver Proxy", function () {
 
     await tldContract1.connect(user1).editData(domainName, newDomainData);
 
-    // check domain holder via TLD contract after
+    // check domain data via TLD contract after
     const domainDataViaTldAfter = await tldContract1.getDomainData(domainName);
     expect(domainDataViaTldAfter).to.equal(newDomainData);
 
-    // check domain holder via Resolver before
+    // check domain data via Resolver before
     const domainDataViaResolverBefore = await contract.getDomainData(domainName, tldName1);
     expect(domainDataViaResolverBefore).to.equal("");
 
     // add factory address to the resolver contract
     await contract.addFactoryAddress(factoryContract1.address);
 
-    // check domain holder via Resolver after
+    // check domain data via Resolver after
     const domainDataViaResolverAfter = await contract.getDomainData(domainName, tldName1);
     expect(domainDataViaResolverAfter).to.equal(newDomainData);
 
@@ -367,6 +367,38 @@ describe("Punk Resolver Proxy", function () {
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  //it('', async function () {});
+  it('fetch domain metadata via tokenURI', async function () {
+    const domainName = "user1";
+
+    // create domain name
+    await tldContract1.mint(
+      domainName, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice1 // pay  for the domain
+      }
+    );
+
+    // check domain metadata via TLD contract
+    const domainMetadataViaTldAfter = await tldContract1.tokenURI(0);
+    const mdJson = Buffer.from(domainMetadataViaTldAfter.substring(29), "base64");
+    const mdResult = JSON.parse(mdJson);
+    expect(mdResult.name).to.equal(domainName+tldName1);
+
+    // check domain metadata via Resolver contract
+    const domainMetadataViaTldAfter2 = await contract.getDomainTokenUri(domainName, tldName1);
+    expect(domainMetadataViaTldAfter2).to.be.empty;
+
+    // add factory address to the resolver contract
+    await contract.addFactoryAddress(factoryContract1.address);
+
+    // check domain metadata via Resolver contract
+    const domainMetadataViaTldAfter3 = await contract.getDomainTokenUri(domainName, tldName1);
+    const mdJson2 = Buffer.from(domainMetadataViaTldAfter3.substring(29), "base64");
+    const mdResult2 = JSON.parse(mdJson2);
+    expect(mdResult2.name).to.equal(domainName+tldName1);
+  });
+
   //it('', async function () {});
 });

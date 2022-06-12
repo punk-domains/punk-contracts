@@ -7,6 +7,7 @@ import "../interfaces/IBasePunkTLDFactory.sol";
 import "../interfaces/IBasePunkTLD.sol";
 import "../lib/strings.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
 /// @title Punk Domains Resolver v1
 /// @author Tempe Techie
@@ -104,6 +105,23 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     return "";
   }
 
+  /// @notice fetch domain metadata for a given domain (tokenURI)
+  function getDomainTokenUri(string calldata _domainName, string calldata _tld) public view returns(string memory) {
+    uint256 fLength = factories.length;
+    for (uint256 i = 0; i < fLength;) {
+      address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
+
+      if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
+        (, uint256 _tokenId, , ) = IBasePunkTLD(tldAddr).domains(_domainName);
+        return IERC721Metadata(tldAddr).tokenURI(_tokenId);
+      }
+
+      unchecked { ++i; }
+    }
+
+    return "";
+  }
+
   function getFactoriesArray() public view returns(address[] memory) {
     return factories;
   }
@@ -179,10 +197,6 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   }
 
   // TODO:
-  // upgradable contract
-  // use _msgSender()
-
-  // read: getDomainTokenUri (?)
   // read: getTldAddress
   // read: getTldFactoryAddress
 }
