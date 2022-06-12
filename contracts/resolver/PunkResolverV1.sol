@@ -72,7 +72,7 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     return string(result);
   }
 
-  // domain resolver
+  /// @notice domain resolver
   function getDomainHolder(string calldata _domainName, string calldata _tld) public view returns(address) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
@@ -88,6 +88,7 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     return address(0);
   }
   
+  /// @notice fetch domain data for a given domain
   function getDomainData(string calldata _domainName, string calldata _tld) public view returns(string memory) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
@@ -105,6 +106,31 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
 
   function getFactoriesArray() public view returns(address[] memory) {
     return factories;
+  }
+
+  /// @notice reverse resolver: get single user's default name, the first that comes (all TLDs)
+  function getFirstDefaultDomain(address _addr) public view returns(string memory) {
+    uint256 fLength = factories.length;
+    for (uint256 i = 0; i < fLength;) {
+      string[] memory tldNames = IBasePunkTLDFactory(factories[i]).getTldsArray();
+
+      for (uint256 j = 0; j < tldNames.length; ++j) {
+        string memory tldName = tldNames[j];
+        address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(tldName);
+        string memory defaultName = IBasePunkTLD(tldAddr).defaultNames(_addr);
+
+        if (
+          strings.len(strings.toSlice(defaultName)) > 0 && 
+          !isTldDeprecated[tldAddr]
+        ) {
+          return string(abi.encodePacked(defaultName, tldName));
+        }
+      }
+
+      unchecked { ++i; }
+    }
+
+    return "";
   }
 
   /// @notice get a stringified CSV of all active TLDs (name,address) across all factories
