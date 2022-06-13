@@ -154,6 +154,13 @@ describe("Punk Resolver Proxy", function () {
     // check non-existing domain name via Resolver
     const domainHolderViaResolverNonExisting = await contract.getDomainHolder("nonExistingDomain", tldName1);
     expect(domainHolderViaResolverNonExisting).to.equal(ethers.constants.AddressZero);
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    // should return 0x0 address because TLD is deprecated
+    const domainHolderViaResolverDeprecated = await contract.getDomainHolder(domainName, tldName1);
+    expect(domainHolderViaResolverDeprecated).to.equal(ethers.constants.AddressZero);
   });
 
   it('fetches a default domain for a user address', async function () {
@@ -191,6 +198,13 @@ describe("Punk Resolver Proxy", function () {
     // check non-existing default domain via Resolver
     const defaultDomainViaResolverNonExisting = await contract.getDefaultDomain(user2.address, tldName1);
     expect(defaultDomainViaResolverNonExisting).to.equal("");
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    // should return empty string because TLD is deprecated
+    const domainDomainViaResolverDeprecated = await contract.getDomainData(user1.address, tldName1);
+    expect(domainDomainViaResolverDeprecated).to.equal("");
   });
 
   it('fetches domain data', async function () {
@@ -232,6 +246,30 @@ describe("Punk Resolver Proxy", function () {
     // check non-existing domain name via Resolver
     const domainDataViaResolverNonExisting = await contract.getDomainData("nonExistingDomain", tldName1);
     expect(domainDataViaResolverNonExisting).to.equal("");
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    // should return 0x0 address because TLD is deprecated
+    const domainDataViaResolverDeprecated = await contract.getDomainData(domainName, tldName1);
+    expect(domainDataViaResolverDeprecated).to.equal("");
+  });
+
+  it('fetches the address of a given TLD', async function () {
+    const tldAddressBefore = await contract.getTldAddress(tldName1);
+    expect(tldAddressBefore).to.equal(ethers.constants.AddressZero);
+
+    await contract.addFactoryAddress(factoryContract1.address);
+    await contract.addFactoryAddress(factoryContract2.address);
+
+    const tldAddressAfter1 = await contract.getTldAddress(tldName1);
+    expect(tldAddressAfter1).to.equal(tldContract1.address);
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    const tldAddressAfter2 = await contract.getTldAddress(tldName1);
+    expect(tldAddressAfter2).to.equal(ethers.constants.AddressZero);
   });
 
   it('fetches a stringified CSV of all active TLDs', async function () {
@@ -245,8 +283,12 @@ describe("Punk Resolver Proxy", function () {
     expect(tldsCsvStringAfter).to.include(tldName1);
     console.log(tldsCsvStringAfter);
 
-    // TODO: test the exclusion of deprecated TLD
-      // also in the getDomainHolder test
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    const tldsCsvStringAfter2 = await contract.getTlds();
+    expect(tldsCsvStringAfter2).to.not.include(tldName1);
+    console.log(tldsCsvStringAfter2);
   });
 
   it('fetches a list of default domains for a user address across all TLDs', async function () {
@@ -296,6 +338,15 @@ describe("Punk Resolver Proxy", function () {
     // check non-existing default domain via Resolver
     const defaultDomainViaResolverNonExisting = await contract.getDefaultDomains(user2.address);
     expect(defaultDomainViaResolverNonExisting).to.equal("");
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    // should return 1 less domain name because TLD is deprecated
+    const defaultDomainViaResolverAfter2 = await contract.getDefaultDomains(user1.address);
+    console.log(defaultDomainViaResolverAfter2);
+
+    expect(defaultDomainViaResolverAfter2).to.equal(domainName + tldName3);
   });
 
   it('fetches a single users default domain name, the first that comes', async function () {
@@ -345,6 +396,13 @@ describe("Punk Resolver Proxy", function () {
     // check non-existing default domain via Resolver
     const defaultDomainViaResolverNonExisting = await contract.getFirstDefaultDomain(user2.address);
     expect(defaultDomainViaResolverNonExisting).to.equal("");
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    // should return a different domain name because the first TLD is deprecated
+    const defaultDomainViaResolverAfter2 = await contract.getDefaultDomains(user1.address);
+    expect(defaultDomainViaResolverAfter2).to.equal(domainName + tldName3);
   });
 
   it('un/sets a TLD as deprecated (only owner)', async function () {
@@ -398,6 +456,13 @@ describe("Punk Resolver Proxy", function () {
     const mdJson2 = Buffer.from(domainMetadataViaTldAfter3.substring(29), "base64");
     const mdResult2 = JSON.parse(mdJson2);
     expect(mdResult2.name).to.equal(domainName+tldName1);
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    // should return an empty string because the TLD is deprecated
+    const domainMetadataViaTldAfter4 = await contract.getDomainTokenUri(domainName, tldName1);
+    expect(domainMetadataViaTldAfter4).to.be.empty;
   });
 
   //it('', async function () {});
