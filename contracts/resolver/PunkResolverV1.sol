@@ -169,6 +169,24 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
     return address(0);
   }
 
+  /// @notice get the address of the factory contract through which a given TLD was created
+  function getTldFactoryAddress(string calldata _tldName) public view returns(address) {
+    uint256 fLength = factories.length;
+    for (uint256 i = 0; i < fLength;) {
+      address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tldName);
+
+      if (tldAddr != address(0) && !isTldDeprecated[tldAddr]) {
+        return factories[i];
+      } else if (isTldDeprecated[tldAddr]) {
+        return address(0);
+      }
+
+      unchecked { ++i; }
+    }
+
+    return address(0);
+  }
+
   /// @notice get a stringified CSV of all active TLDs (name,address) across all factories
   function getTlds() public view returns(string memory) {
     bytes memory result;
@@ -213,8 +231,4 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   function removeDeprecatedTldAddress(address _deprecatedTldAddress) external onlyOwner {
     isTldDeprecated[_deprecatedTldAddress] = false;
   }
-
-  // TODO:
-  // read: getTldAddress
-  // read: getTldFactoryAddress
 }

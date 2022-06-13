@@ -465,5 +465,20 @@ describe("Punk Resolver Proxy", function () {
     expect(domainMetadataViaTldAfter4).to.be.empty;
   });
 
-  //it('', async function () {});
+  it('fetches the address of the factory through which a given TLD was created', async function () {
+    const factoryAddressBefore = await contract.getTldFactoryAddress(tldName1);
+    expect(factoryAddressBefore).to.equal(ethers.constants.AddressZero);
+
+    await contract.addFactoryAddress(factoryContract1.address);
+    await contract.addFactoryAddress(factoryContract2.address);
+
+    const factoryAddressAfter1 = await contract.getTldFactoryAddress(tldName1);
+    expect(factoryAddressAfter1).to.equal(factoryContract1.address);
+
+    // deprecate a TLD
+    await contract.addDeprecatedTldAddress(tldContract1.address);
+
+    const factoryAddressAfter2 = await contract.getTldFactoryAddress(tldName1);
+    expect(factoryAddressAfter2).to.equal(ethers.constants.AddressZero);
+  });
 });
