@@ -2,7 +2,7 @@
 // see instructions here: https://github.com/tempe-techie/upgradable-contracts#b-upgrades-with-gnosis-safe 
 
 const contractName = "PunkResolverV2";
-const proxyAddress = "";
+const proxyAddress = "0xC17E9347Ce26D7630A98eC4158Bd7200E54bf4Cd";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
