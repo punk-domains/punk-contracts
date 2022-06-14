@@ -18,6 +18,10 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   mapping (address => bool) public isTldDeprecated; // deprecate an address, not TLD name
   address[] public factories;
 
+  event FactoryAddressAdded(address user, address fAddr);
+  event DeprecatedTldAdded(address user, address tAddr);
+  event DeprecatedTldRemoved(address user, address tAddr);
+
   // initializer (only for V1!)
   function initialize() public initializer {
     __Context_init_unchained();
@@ -217,10 +221,12 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
   // OWNER
   function addFactoryAddress(address _factoryAddress) external onlyOwner {
     factories.push(_factoryAddress);
+    emit FactoryAddressAdded(_msgSender(), _factoryAddress);
   }
   
   function addDeprecatedTldAddress(address _deprecatedTldAddress) external onlyOwner {
     isTldDeprecated[_deprecatedTldAddress] = true;
+    emit DeprecatedTldAdded(_msgSender(), _deprecatedTldAddress);
   }
 
   function removeFactoryAddress(uint _addrIndex) external onlyOwner {
@@ -230,5 +236,6 @@ contract PunkResolverV1 is Initializable, OwnableUpgradeable {
 
   function removeDeprecatedTldAddress(address _deprecatedTldAddress) external onlyOwner {
     isTldDeprecated[_deprecatedTldAddress] = false;
+    emit DeprecatedTldRemoved(_msgSender(), _deprecatedTldAddress);
   }
 }
