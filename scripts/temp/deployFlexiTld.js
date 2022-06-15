@@ -4,7 +4,7 @@ This script is needed to verify contracts that are generated through contract fa
 How to use:
 - First deploy the Factory contract
 - Then in deployTld.js replace the owner and factory addresses with the ones you want
-- Then deploy the PunkTLD contract: npx hardhat run scripts/temp/deployFlexiTld.js --network polygonMumbai
+- Then deploy the PunkTLD contract: npx hardhat run scripts/temp/deployFlexiTld.js --network optimisticKovan
 - Go to arguments.js file and enter correct addresses (and other data if changed in deployTld.js)
 - Verify it (see command line for the Verify command). Something like: npx hardhat verify --network polygonMumbai --constructor-args scripts/arguments.js <deployed-contract-address>
 - After successful verification, every TLD contract created through the factory will show contract code. 
@@ -26,12 +26,12 @@ async function main() {
   
   const tldName = ".test";
   const tldSymbol = "TEST";
-  const tldOwner = "0xb29050965A5AC70ab487aa47546cdCBc97dAE45D" // "<enter-owner-address>";
+  const tldOwner = "<enter-owner-address>";
   const tldPrice = ethers.utils.parseUnits("0.1", "ether");
   const buyingEnabled = false;
   const royalty = 0;
-  const factoryAddress = "0xf81dfed588af7be10ba095fb9e31ce3333b8618c" // "<enter-factory-address>";
-  const metadataAddress = "0xf0ec43efd96a71fc01c6aecf9a4a241ec7845397"; // "<enter-metadata-address>";
+  const factoryAddress = "<enter-factory-address>";
+  const metadataAddress = "<enter-metadata-address>";
 
   const instance1 = await contract1.deploy(
     tldName, tldSymbol, tldOwner, tldPrice, buyingEnabled, royalty, factoryAddress, metadataAddress
