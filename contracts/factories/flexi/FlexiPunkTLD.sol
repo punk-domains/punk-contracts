@@ -39,7 +39,6 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (address => string) public override defaultNames; // user's default domain
 
-  event FreezeMetadata(address user, address mtdAddr);
   event MintingDisabledForever(address user);
 
   constructor(
@@ -92,6 +91,11 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     uint256 tokenId = domains[dName].tokenId;
     delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
     delete domains[dName]; // delete string => Domain struct mapping
+
+    if (keccak256(bytes(defaultNames[_msgSender()])) == keccak256(bytes(dName))) {
+      delete defaultNames[_msgSender()];
+    }
+
     _burn(tokenId); // burn the token
     --totalSupply;
     emit DomainBurned(_msgSender(), dName);
@@ -247,7 +251,6 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   /// @notice Freeze metadata address. Only TLD contract owner can call this function.
   function freezeMetadata() external onlyOwner {
     metadataFrozen = true;
-    emit FreezeMetadata(_msgSender(), metadataAddress);
   }
 
   /// @notice Only TLD contract owner can call this function.

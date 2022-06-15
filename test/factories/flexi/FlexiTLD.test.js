@@ -499,6 +499,9 @@ describe("FlexiPunkTLD", function () {
     const getDomainNameAfterBurn = await contract.domainIdsNames(0);
     expect(getDomainNameAfterBurn).to.equal(""); // should be empty
 
+    const getDefaultDomainNameAfterBurn = await contract.defaultNames(signer.address);
+    expect(getDefaultDomainNameAfterBurn).to.equal(""); // should be empty
+
     // MINT AGAIN
 
     await contract["mint(string,address,address)"]( // this approach is better for getting gasUsed value from receipt
