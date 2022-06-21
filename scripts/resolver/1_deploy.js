@@ -1,4 +1,12 @@
-// npx hardhat run scripts/resolver/1_deploy.js --network polygonMumbai
+// npx hardhat run scripts/resolver/1_deploy.js --network polygon
+// after deployment:
+// - Mark proxy contract as proxy on Etherscan-based explorers (Contract > More options > Is this a proxy)
+// - Add factory addresses to the Resolver
+// - Check if there's any TLD to deprecate
+// - Move ownership to Gnosis Safe (2 things):
+//   - transferOwnership() function -> this allows owner to add/remove factories and deprecated TLDs (note that you'll need to manually add implementation ABI to Gnosis Safe to find these methods)
+//   - transfer the ownership of the ProxyAdmin -> this allows owner to do contract upgrades
+//     - find the ProxyAdmin address in the .openzeppelin folder
 
 const contractName = "PunkResolverV1";
 
@@ -9,7 +17,7 @@ async function main() {
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
   const contract = await ethers.getContractFactory(contractName);
-  const instance = await upgrades.deployProxy(contract); // alternative: upgrades.deployProxy(contract, {initializer: 'initialize'});
+  const instance = await upgrades.deployProxy(contract, {initializer: 'initialize'});
   await instance.deployed();
 
   console.log("Proxy address:", instance.address);

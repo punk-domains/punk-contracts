@@ -1,5 +1,5 @@
 // Deploy factory contract only (ForbiddenTlds and FlexiPunkMetadata need to be already deployed)
-// after deployment, add factory address to the ForbiddenTlds whitelist
+// after deployment, add factory address to the ForbiddenTlds whitelist and to the Resolver
 // npx hardhat run scripts/factories/flexi/deployFactoryOnly.js --network polygonMumbai
 
 async function main() {
