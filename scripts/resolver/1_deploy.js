@@ -1,4 +1,4 @@
-// npx hardhat run scripts/resolver/1_deploy.js --network polygon
+// npx hardhat run scripts/resolver/1_deploy.js --network xdai
 // after deployment:
 // - Mark proxy contract as proxy on Etherscan-based explorers (Contract > More options > Is this a proxy)
 // - Add factory addresses to the Resolver
