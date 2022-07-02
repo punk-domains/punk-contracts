@@ -6,11 +6,11 @@ function calculateGasCosts(testName, receipt) {
   console.log(testName + " gasUsed: " + receipt.gasUsed);
 
   // coin prices in USD
-  const matic = 2;
-  const eth = 3000;
+  const matic = 0.5;
+  const eth = 1000;
   
   const gasCostMatic = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("35", "gwei")) * Number(receipt.gasUsed)), "ether");
-  const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("100", "gwei")) * Number(receipt.gasUsed)), "ether");
+  const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("21", "gwei")) * Number(receipt.gasUsed)), "ether");
   const gasCostArbitrum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("1.25", "gwei")) * Number(receipt.gasUsed)), "ether");
 
   console.log(testName + " gas cost (Ethereum): $" + String(Number(gasCostEthereum)*eth));
