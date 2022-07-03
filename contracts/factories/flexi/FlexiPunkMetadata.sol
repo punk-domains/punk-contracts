@@ -33,8 +33,8 @@ contract FlexiPunkMetadata {
     string memory svgBase64Encoded = Base64.encode(bytes(string(abi.encodePacked(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">',
         '<defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">',
-        '<stop offset="0%" style="stop-color:rgb(58,17,116);stop-opacity:1" />',
-        '<stop offset="100%" style="stop-color:rgb(116,25,17);stop-opacity:1" /></linearGradient></defs>',
+        '<stop offset="0%" style="stop-color:rgb(68,67,241);stop-opacity:1" />',
+        '<stop offset="100%" style="stop-color:rgb(144,85,247);stop-opacity:1" /></linearGradient></defs>',
         '<rect x="0" y="0" width="500" height="500" fill="url(#grad)"/>',
         '<text x="50%" y="50%" dominant-baseline="middle" fill="white" text-anchor="middle" font-size="x-large">',
         _fullDomainName,'</text><text x="50%" y="70%" dominant-baseline="middle" fill="white" text-anchor="middle">',

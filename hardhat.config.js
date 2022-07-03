@@ -14,6 +14,13 @@ module.exports = {
       url: 'http://127.0.0.1:8545/',
       chainId: 31337
     },
+    mainnet: {
+      url: 'https://eth-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ETHEREUM,
+      chainId: 1,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 10000000000, // 10 gwei
+    },
     polygonMumbai: {
       url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,
       chainId: 80001,
@@ -75,6 +82,7 @@ module.exports = {
 
   etherscan: {
     apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,
       optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
