@@ -28,7 +28,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
   bool public metadataFrozen = false; // metadata frozen forever
 
   uint256 public totalSupply;
-  uint256 public idCounter; // up only
+  uint256 public idCounter = 1; // up only
 
   uint256 public override price; // domain price
   uint256 public royalty; // share of each domain purchase (in bips) that goes to Punk Domains
