@@ -115,6 +115,12 @@ describe("WildBunchDomainMinter (partner contract)", function () {
     const domainHolder = await tldContract.getDomainHolder("user1");
     expect(domainHolder).to.equal(user1.address);
 
+    const domainTokenIdName0 = await tldContract.domainIdsNames(0);
+    expect(domainTokenIdName0).to.equal("");
+
+    const domainTokenIdName1 = await tldContract.domainIdsNames(1);
+    expect(domainTokenIdName1).to.equal("user1");
+
     // should fail if user does not hold NFT
     await expect(mintContract.connect(user2).mint(
       "user2fail", // domain name (without TLD)
