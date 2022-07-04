@@ -61,7 +61,7 @@ describe("FlexiPunkTLD (onlyOwner)", function () {
     )).to.emit(contract, "DomainCreated");
 
     // get domain name by token ID
-    const firstDomainName = await contract.domainIdsNames(0);
+    const firstDomainName = await contract.domainIdsNames(1); // token ID 1
     expect(firstDomainName).to.equal(newDomainName);
 
     // get domain data by domain name

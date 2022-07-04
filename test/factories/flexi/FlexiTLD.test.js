@@ -107,14 +107,14 @@ describe("FlexiPunkTLD", function () {
     expect(ethers.BigNumber.from(balanceReferrerAfter).sub(balanceReferrerBefore)).to.equal(ethers.BigNumber.from("100000000000000000"));
 
     // get domain name by token ID
-    const firstDomainName = await contract.domainIdsNames(0);
+    const firstDomainName = await contract.domainIdsNames(1);
     expect(firstDomainName).to.equal(newDomainName);
 
     // get domain data by domain name
     const firstDomainData = await contract.domains(newDomainName);
     expect(firstDomainData.name).to.equal(newDomainName);
     expect(firstDomainData.holder).to.equal(signer.address);
-    expect(firstDomainData.tokenId).to.equal(0);
+    expect(firstDomainData.tokenId).to.equal(1);
 
     // mint another domain
     await contract["mint(string,address,address)"](
@@ -134,7 +134,7 @@ describe("FlexiPunkTLD", function () {
     const secondDomainData = await contract.domains("second");
     expect(secondDomainData.name).to.equal("second");
     expect(secondDomainData.holder).to.equal(referrer.address);
-    expect(secondDomainData.tokenId).to.equal(1);
+    expect(secondDomainData.tokenId).to.equal(2);
 
     // mint a 1-letter domain
     await contract.connect(anotherUser).mint(
@@ -154,7 +154,7 @@ describe("FlexiPunkTLD", function () {
     const aDomainData = await contract.domains("a");
     expect(aDomainData.name).to.equal("a");
     expect(aDomainData.holder).to.equal(anotherUser.address);
-    expect(aDomainData.tokenId).to.equal(2);
+    expect(aDomainData.tokenId).to.equal(3);
 
     // fail at minting an empty domain
     await expect(contract.mint( // this approach is better for getting gasUsed value from receipt
@@ -171,7 +171,7 @@ describe("FlexiPunkTLD", function () {
     await contract.toggleBuyingDomains(); // enable buying domains
 
     const newDomainName = "techie";
-    const tokenId = 0;
+    const tokenId = 1;
 
     await expect(contract["mint(string,address,address)"](
       newDomainName, // domain name (without TLD)
@@ -359,7 +359,7 @@ describe("FlexiPunkTLD", function () {
 
     // get domain token ID
     const domainData = await contract.domains(newDomainName);
-    expect(domainData.tokenId).to.equal(0);
+    expect(domainData.tokenId).to.equal(1);
 
     // get domain metadata
     const domainMetadata = await contract.tokenURI(domainData.tokenId);
@@ -421,7 +421,7 @@ describe("FlexiPunkTLD", function () {
     const totalSupplyAfter = await contract.totalSupply();
     expect(totalSupplyAfter).to.equal(1);
 
-    const getDomainName = await contract.domainIdsNames(0);
+    const getDomainName = await contract.domainIdsNames(1);
     console.log(getDomainName);
     expect(getDomainName).to.equal(newDomainName.toLowerCase()); // should be lowercase
   });
@@ -435,7 +435,7 @@ describe("FlexiPunkTLD", function () {
     const balanceBeforeMint = await contract.balanceOf(signer.address);
     expect(balanceBeforeMint).to.equal(0);
 
-    const getDomainNameBeforeMint = await contract.domainIdsNames(0);
+    const getDomainNameBeforeMint = await contract.domainIdsNames(1); // token ID 1
     expect(getDomainNameBeforeMint).to.equal(""); // should be empty string
 
     const price = await contract.price();
@@ -462,11 +462,11 @@ describe("FlexiPunkTLD", function () {
 
     const getDomainDataAfterMint = await contract.domains(newDomainName);
     expect(getDomainDataAfterMint.name).to.equal(newDomainName);
-    expect(getDomainDataAfterMint.tokenId).to.equal(0);
+    expect(getDomainDataAfterMint.tokenId).to.equal(1);
     expect(getDomainDataAfterMint.holder).to.equal(signer.address);
     expect(getDomainDataAfterMint.data).to.equal("");
 
-    const getDomainNameAfterMint = await contract.domainIdsNames(0);
+    const getDomainNameAfterMint = await contract.domainIdsNames(1);
     expect(getDomainNameAfterMint).to.equal(newDomainName);
 
     // BURN DOMAIN
@@ -496,7 +496,7 @@ describe("FlexiPunkTLD", function () {
     expect(getDomainDataAfterBurn.data).to.equal("");
     expect(getDomainDataAfterBurn.tokenId).to.equal(0);
 
-    const getDomainNameAfterBurn = await contract.domainIdsNames(0);
+    const getDomainNameAfterBurn = await contract.domainIdsNames(1);
     expect(getDomainNameAfterBurn).to.equal(""); // should be empty
 
     const getDefaultDomainNameAfterBurn = await contract.defaultNames(signer.address);
@@ -521,16 +521,16 @@ describe("FlexiPunkTLD", function () {
 
     const getDomainDataAfterMintAgain = await contract.domains(newDomainName);
     expect(getDomainDataAfterMintAgain.name).to.equal(newDomainName);
-    expect(getDomainDataAfterMintAgain.tokenId).to.equal(1); // token ID is now 1, because burned IDs still count as used
+    expect(getDomainDataAfterMintAgain.tokenId).to.equal(2); // token ID is now 2, because burned IDs still count as used
     expect(getDomainDataAfterMintAgain.holder).to.equal(signer.address);
     expect(getDomainDataAfterMintAgain.data).to.equal("");
 
-    // token ID 0 still burned
-    const getDomainNameAfterMintAgain0 = await contract.domainIdsNames(0);
+    // token ID 1 still burned
+    const getDomainNameAfterMintAgain0 = await contract.domainIdsNames(1); // token ID 1 is burned and will not be used again
     expect(getDomainNameAfterMintAgain0).to.equal("");
 
-    // new NFT has now ID 1
-    const getDomainNameAfterMintAgain1 = await contract.domainIdsNames(1);
+    // new NFT has now ID 2
+    const getDomainNameAfterMintAgain1 = await contract.domainIdsNames(2); // new domain has ID 2
     expect(getDomainNameAfterMintAgain1).to.equal(newDomainName);
   });
 
@@ -541,12 +541,12 @@ describe("FlexiPunkTLD", function () {
     expect(totalSupplyBeforeMint).to.equal(0);
 
     const idCounterBeforeMint = await contract.idCounter();
-    expect(idCounterBeforeMint).to.equal(0);
+    expect(idCounterBeforeMint).to.equal(1);
 
     const balanceBeforeMint = await contract.balanceOf(signer.address);
     expect(balanceBeforeMint).to.equal(0);
 
-    const getDomainNameBeforeMint = await contract.domainIdsNames(0);
+    const getDomainNameBeforeMint = await contract.domainIdsNames(1);
     expect(getDomainNameBeforeMint).to.equal(""); // should be empty string
 
     const price = await contract.price();
@@ -589,7 +589,7 @@ describe("FlexiPunkTLD", function () {
     expect(totalSupplyAfterMint).to.equal(3);
 
     const idCounterAfterMint = await contract.idCounter();
-    expect(idCounterAfterMint).to.equal(3);
+    expect(idCounterAfterMint).to.equal(4); // 3 token IDs has been created. The next domain will have ID 4.
 
     const balanceAfterMint = await contract.balanceOf(signer.address);
     expect(balanceAfterMint).to.equal(1);
@@ -608,11 +608,11 @@ describe("FlexiPunkTLD", function () {
 
     const getDomainDataAfterMint2 = await contract.domains(newDomainName2);
     expect(getDomainDataAfterMint2.name).to.equal(newDomainName2);
-    expect(getDomainDataAfterMint2.tokenId).to.equal(1);
+    expect(getDomainDataAfterMint2.tokenId).to.equal(2);
     expect(getDomainDataAfterMint2.holder).to.equal(anotherUser.address);
     expect(getDomainDataAfterMint2.data).to.equal("");
 
-    const getDomainNameAfterMint = await contract.domainIdsNames(1);
+    const getDomainNameAfterMint = await contract.domainIdsNames(2);
     expect(getDomainNameAfterMint).to.equal(newDomainName2);
 
     // fail at minting the existing domain before burning it
@@ -656,7 +656,7 @@ describe("FlexiPunkTLD", function () {
     expect(totalSupplyAfterBurn).to.equal(2);
 
     const idCounterAfterBurn = await contract.idCounter();
-    expect(idCounterAfterBurn).to.equal(3);
+    expect(idCounterAfterBurn).to.equal(4);
 
     // check domain data after burn
     const domainDataAfterBurn = await contract.getDomainData(newDomainName2);
@@ -675,7 +675,7 @@ describe("FlexiPunkTLD", function () {
     expect(getDomainDataAfterBurn.holder).to.equal(signer.address);
     expect(getDomainDataAfterBurn.name).to.equal("signer");
     expect(getDomainDataAfterBurn.data).to.equal("");
-    expect(getDomainDataAfterBurn.tokenId).to.equal(0);
+    expect(getDomainDataAfterBurn.tokenId).to.equal(1);
 
     const getDomainDataAfterBurn2 = await contract.domains(newDomainName2);
     expect(getDomainDataAfterBurn2.holder).to.equal(ethers.constants.AddressZero);
@@ -687,15 +687,15 @@ describe("FlexiPunkTLD", function () {
     expect(getDomainDataAfterBurn3.holder).to.equal(referrer.address);
     expect(getDomainDataAfterBurn3.name).to.equal("referrer");
     expect(getDomainDataAfterBurn3.data).to.equal("");
-    expect(getDomainDataAfterBurn3.tokenId).to.equal(2);
+    expect(getDomainDataAfterBurn3.tokenId).to.equal(3);
 
-    const getDomainNameAfterBurn = await contract.domainIdsNames(0);
+    const getDomainNameAfterBurn = await contract.domainIdsNames(1);
     expect(getDomainNameAfterBurn).to.equal("signer");
 
-    const getDomainNameAfterBurn2 = await contract.domainIdsNames(1);
+    const getDomainNameAfterBurn2 = await contract.domainIdsNames(2);
     expect(getDomainNameAfterBurn2).to.equal(""); // should be empty
 
-    const getDomainNameAfterBurn3 = await contract.domainIdsNames(2);
+    const getDomainNameAfterBurn3 = await contract.domainIdsNames(3);
     expect(getDomainNameAfterBurn3).to.equal("referrer");
 
     // MINT AGAIN
@@ -713,7 +713,7 @@ describe("FlexiPunkTLD", function () {
     expect(totalSupplyAfterMintAgain).to.equal(3);
 
     const idCounterAfterMintAgain = await contract.idCounter();
-    expect(idCounterAfterMintAgain).to.equal(4);
+    expect(idCounterAfterMintAgain).to.equal(5);
 
     const balanceAfterMintAgain = await contract.balanceOf(signer.address);
     expect(balanceAfterMintAgain).to.equal(1);
@@ -726,16 +726,16 @@ describe("FlexiPunkTLD", function () {
 
     const getDomainDataAfterMintAgain = await contract.domains(newDomainName2);
     expect(getDomainDataAfterMintAgain.name).to.equal(newDomainName2);
-    expect(getDomainDataAfterMintAgain.tokenId).to.equal(3); // token ID is now 3, because burned IDs still count as used
+    expect(getDomainDataAfterMintAgain.tokenId).to.equal(4); // token ID is now 4, because burned IDs still count as used
     expect(getDomainDataAfterMintAgain.holder).to.equal(anotherUser.address);
     expect(getDomainDataAfterMintAgain.data).to.equal("");
 
-    // token ID 1 still burned
-    const getDomainNameAfterMintAgain1 = await contract.domainIdsNames(1);
+    // token ID 2 still burned
+    const getDomainNameAfterMintAgain1 = await contract.domainIdsNames(2);
     expect(getDomainNameAfterMintAgain1).to.equal("");
 
-    // new NFT has now ID 3
-    const getDomainNameAfterMintAgain3 = await contract.domainIdsNames(3);
+    // new NFT has now ID 4
+    const getDomainNameAfterMintAgain3 = await contract.domainIdsNames(4);
     expect(getDomainNameAfterMintAgain3).to.equal(newDomainName2);
     
   });

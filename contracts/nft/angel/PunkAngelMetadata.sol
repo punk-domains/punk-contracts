@@ -69,8 +69,7 @@ contract PunkAngelMetadata is Ownable {
 
   function getMetadata(
     string calldata _fullDomainName, 
-    uint256 _tokenId, 
-    address _tldAddress
+    uint256 _tokenId
   ) external view returns(string memory) {
     string memory features = idToUniqueFeatures[_tokenId];
     uint256 domainLength = bytes(_fullDomainName).length - 10; // 10 is length of .punkangel
@@ -159,8 +158,10 @@ contract PunkAngelMetadata is Ownable {
   }
 
   // WRITE (MINTER)
-  function setUniqueFeaturesId(uint256 _tokenId, string[] calldata _unqs) external {
+  function setUniqueFeaturesId(uint256 _tokenId, string[] calldata _unqs, uint256 _price) external {
     require(msg.sender == minter, "Only minter can set unique features ID.");
+
+    pricePaid[_tokenId] = _price;
 
     uint256 length = _unqs.length;
     

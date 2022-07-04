@@ -17,6 +17,7 @@ function calculateGasCosts(testName, receipt) {
   console.log(testName + " gas cost (Polygon): $" + String(Number(gasCostMatic)*matic));
 }
 
+/*
 describe("Punk Angel NFT", function () {
   let contract;
   let metadataContract;
@@ -55,14 +56,14 @@ describe("Punk Angel NFT", function () {
     );
   });
 
-  it("should confirm NFT name & symbol", async function () {
+  xit("should confirm NFT name & symbol", async function () {
     const name = await contract.name();
     expect(name).to.equal(nftName);
     const symbol = await contract.symbol();
     expect(symbol).to.equal(nftSymbol);
   });
 
-  it("should mint 1 new NFT", async function () {
+  xit("should mint 1 new NFT", async function () {
     // USDC balance before minting USDC
     const user1UsdcBalanceBefore1 = await usdcContract.balanceOf(user1.address);
     expect(user1UsdcBalanceBefore1).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
@@ -126,7 +127,7 @@ describe("Punk Angel NFT", function () {
     
   });
 
-  it("should fail at minting when minting is stopped permanently", async function () {
+  xit("should fail at minting when minting is stopped permanently", async function () {
     // USDC balance before minting USDC
     const user1UsdcBalanceBefore1 = await usdcContract.balanceOf(user1.address);
     expect(user1UsdcBalanceBefore1).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
@@ -197,3 +198,4 @@ describe("Punk Angel NFT", function () {
     // also change metadata before freezing it
 
 });
+*/
