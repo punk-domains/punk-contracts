@@ -11,7 +11,7 @@ describe("Punk Angel Metadata", function () {
     const PunkAngelMetadata = await ethers.getContractFactory("PunkAngelMetadata");
     metadataContract = await PunkAngelMetadata.deploy(signer.address);
 
-    const features1 = "3A1174741911F257FFCA965A000000031"; // bg1, bg2, hair, skin, dress, face (0-3), arms (0-3), lips (0-2)
+    const features1 = "3A1174741911F257FFCA965A000000231"; // bg1, bg2, hair, skin, dress, face (0-3), arms (0-3), lips (0-2)
   
     await metadataContract.setUniqueFeaturesId(1, [features1]); 
   
@@ -25,6 +25,8 @@ describe("Punk Angel Metadata", function () {
     
     const mdJson = Buffer.from(metadata.substring(29), "base64");
     const mdResult = JSON.parse(mdJson);
+
+    //console.log(mdResult);
 
     expect(mdResult.name).to.equal(domainName);
     expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains"); 

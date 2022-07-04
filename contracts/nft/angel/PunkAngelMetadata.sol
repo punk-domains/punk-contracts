@@ -5,13 +5,15 @@ import "base64-sol/base64.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @title Punk Angel NFT Metadata contract
+/// @title Punk Angel domain metadata contract
 /// @author Tempe Techie
-/// @notice Contract that generates metadata for the Punk Angel NFT.
+/// @notice Contract that generates metadata for the Punk Angel domain.
 contract PunkAngelMetadata is Ownable {
+  address public minter;
+
   mapping(string => uint256) public uniqueFeaturesId; // uniqueFeaturesId => tokenId
   mapping(uint256 => string) public idToUniqueFeatures; // tokenId => uniqueFeaturesId
-  address public minter;
+  mapping(uint256 => uint256) public pricePaid; // tokenId => price (price that user paid for the domain)
 
   constructor(address _minter) {
     minter = _minter;
@@ -71,10 +73,14 @@ contract PunkAngelMetadata is Ownable {
     address _tldAddress
   ) external view returns(string memory) {
     string memory features = idToUniqueFeatures[_tokenId];
+    uint256 domainLength = bytes(_fullDomainName).length - 10; // 10 is length of .punkangel
 
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
-        '{"name": "',_fullDomainName ,'", ',
+        '{"name": "', _fullDomainName ,'", ',
+        '"paid": "', Strings.toString(pricePaid[_tokenId]) ,'", ',
+        '"length": "', Strings.toString(domainLength) ,'", ',
+        '"attributes": [', _getTraits(features) ,'], ',
         '"description": "A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains", ',
         '"image": "', _getImage(features, _fullDomainName), '"}'))))
     );
@@ -121,6 +127,35 @@ contract PunkAngelMetadata is Ownable {
     ))));
 
     return string(abi.encodePacked("data:image/svg+xml;base64,", svgBase64Encoded));
+  }
+
+  function _getTraits(string memory _features) internal pure returns (string memory) {
+    string memory faceIndexStr = getSlice(31, 31, _features);
+    string memory lipsIndexStr = getSlice(33, 33, _features);
+
+    string memory faceItem = "None";
+    if (stringToUint8(faceIndexStr) == 1) {
+      faceItem = "Big VR glasses";
+    } else if (stringToUint8(faceIndexStr) == 2) {
+      faceItem = "Thin VR glasses";
+    } else if (stringToUint8(faceIndexStr) == 3) {
+      faceItem = "Gas mask";
+    }
+
+    string memory expression = "Serious";
+    if (stringToUint8(lipsIndexStr) == 1) {
+      expression = "Smile";
+    } else if (stringToUint8(lipsIndexStr) == 2) {
+      expression = "Surprise";
+    }
+
+    return string(abi.encodePacked(
+      '{"trait_type": "Hair color", "value": "#', getSlice(13, 18, _features) ,'"}, ',
+      '{"trait_type": "Dress color", "value": "#', getSlice(25, 30, _features) ,'"}, ',
+      '{"trait_type": "Skin color", "value": "#', getSlice(19, 24, _features) ,'"}, ',
+      '{"trait_type": "Face item", "value": "', faceItem ,'"}, ',
+      '{"trait_type": "Expression", "value": "', expression ,'"}'
+    ));
   }
 
   // WRITE (MINTER)
