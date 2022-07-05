@@ -25,7 +25,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   bool public buyingEnabled = false; // buying domains enabled
   bool public buyingDisabledForever = false; // buying domains disabled forever
-  bool public metadataFrozen = false; // metadata frozen forever
+  bool public metadataFrozen = false; // metadata address frozen forever
 
   uint256 public totalSupply;
   uint256 public idCounter = 1; // up only
@@ -250,7 +250,7 @@ contract FlexiPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   /// @notice Freeze metadata address. Only TLD contract owner can call this function.
   function freezeMetadata() external onlyOwner {
-    metadataFrozen = true;
+    metadataFrozen = true; // this action is irreversible
   }
 
   /// @notice Only TLD contract owner can call this function.
