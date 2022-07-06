@@ -77,11 +77,18 @@ module.exports = {
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
       gasPrice: 20000000000, // 20 gwei
+    },
+    bsc: { // BNB Smart Chain mainnet
+      url: 'https://bscrpc.com',
+      chainId: 56,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 5000000000, // 5 gwei
     }
   },
 
   etherscan: {
-    apiKey: {
+    apiKey: { // all possible key names here: https://gist.github.com/tempe-techie/95a3ad4e81b46c895928a0524fc2b7ac
       mainnet: process.env.ETHERSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,
@@ -89,6 +96,7 @@ module.exports = {
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       arbitrumTestnet: process.env.ARBISCAN_API_KEY,
       arbitrumOne: process.env.ARBISCAN_API_KEY,
+      bsc: process.env.BSC_API_KEY,
       sokol: "randomstring",
       xdai: "randomstring"
     }

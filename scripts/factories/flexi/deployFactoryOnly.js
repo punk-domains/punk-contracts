@@ -1,10 +1,10 @@
 // Deploy factory contract only (ForbiddenTlds and FlexiPunkMetadata need to be already deployed)
 // after deployment, add factory address to the ForbiddenTlds whitelist and to the Resolver
-// npx hardhat run scripts/factories/flexi/deployFactoryOnly.js --network polygonMumbai
+// npx hardhat run scripts/factories/flexi/deployFactoryOnly.js --network bsc
 
 async function main() {
   const contractNameFactory = "FlexiPunkTLDFactory";
-  const forbAddress = "<enter-forbidden-address>";
+  const forbAddress = "<enter-forbidden-tlds-contract-address>";
   const metaAddress = "<enter-metadata-address>";
 
   let tldPrice = "0.01"; // in ETH or MATIC on testnets
@@ -16,6 +16,8 @@ async function main() {
     tldPrice = "80000"; // MATIC
   } else if (network.config.chainId === 100) {
     tldPrice = "75000"; // XDAI
+  } else if (network.config.chainId === 56) {
+    tldPrice = "250"; // BNB
   }
 
   const [deployer] = await ethers.getSigners();
