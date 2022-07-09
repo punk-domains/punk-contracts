@@ -1,201 +1,293 @@
-// npx hardhat test test/nft/angel/angel.test.js
+// Run tests:
+// npx hardhat test test/nft/angel/angel.test.js 
+
 const { expect } = require("chai");
 
 function calculateGasCosts(testName, receipt) {
   console.log(testName + " gasUsed: " + receipt.gasUsed);
 
   // coin prices in USD
-  const matic = 2;
-  const eth = 3000;
+  const eth = 1000;
   
-  const gasCostMatic = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("35", "gwei")) * Number(receipt.gasUsed)), "ether");
-  const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("100", "gwei")) * Number(receipt.gasUsed)), "ether");
+  const gasCostEthereum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("20", "gwei")) * Number(receipt.gasUsed)), "ether");
   const gasCostArbitrum = ethers.utils.formatUnits(String(Number(ethers.utils.parseUnits("1.25", "gwei")) * Number(receipt.gasUsed)), "ether");
 
   console.log(testName + " gas cost (Ethereum): $" + String(Number(gasCostEthereum)*eth));
   console.log(testName + " gas cost (Arbitrum): $" + String(Number(gasCostArbitrum)*eth));
-  console.log(testName + " gas cost (Polygon): $" + String(Number(gasCostMatic)*matic));
 }
 
-/*
-describe("Punk Angel NFT", function () {
-  let contract;
+describe("Punk Angel minting contract", function () {
+  let tldContract;
+  const tldName = ".punkangel";
+  const tldSymbol = ".PUNKANGEL";
+  const tldPrice = 0;
+  const tldRoyalty = 0;
+  const tldReferral = 0;
+
+  let paymentTokenContract;
+  const paymentTokenDecimals = 6;
+  const paymentTokenName = "USDC";
+  const paymentTokenSymbol = "USDC";
+
+  let mintContract;
+  const price1char = ethers.utils.parseUnits("10000", paymentTokenDecimals);
+  const price2char = ethers.utils.parseUnits("3000", paymentTokenDecimals);
+  const price3char = ethers.utils.parseUnits("999", paymentTokenDecimals);
+  const price4char = ethers.utils.parseUnits("199", paymentTokenDecimals);
+  const price5char = ethers.utils.parseUnits("69", paymentTokenDecimals);
+
   let metadataContract;
-  let usdcContract;
-  let owner;
+
+  let signer;
   let user1;
   let user2;
 
-  const nftName = "Punk Angel";
-  const nftSymbol = "PDANGEL";
-  const nftIdCounter = 1;
-
-  const usdcDecimals = 6;
-  const nftPrice = ethers.utils.parseUnits("500", usdcDecimals); // NFT price is in USDC (mwei, 6 decimals)
-
   beforeEach(async function () {
-    [owner, user1, user2] = await ethers.getSigners();
+    [signer, user1, user2] = await ethers.getSigners();
 
-    // mock USDC contract
+    //----
+    const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
+    const forbTldsContract = await PunkForbiddenTlds.deploy();
+
+    const FlexiPunkMetadata = await ethers.getContractFactory("FlexiPunkMetadata");
+    const flexiMetadataContract = await FlexiPunkMetadata.deploy();
+
+    const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
+    const priceToCreateTld = ethers.utils.parseUnits("100", "ether");
+    const factoryContract = await PunkTLDFactory.deploy(priceToCreateTld, forbTldsContract.address, flexiMetadataContract.address);
+
+    await forbTldsContract.addFactoryAddress(factoryContract.address);
+
+    const PunkTLD = await ethers.getContractFactory("FlexiPunkTLD");
+    tldContract = await PunkTLD.deploy(
+      tldName,
+      tldSymbol,
+      signer.address, // TLD owner
+      tldPrice,
+      false, // buying enabled
+      tldRoyalty,
+      factoryContract.address,
+      flexiMetadataContract.address
+    );
+
+    // Create mock payment token
     const Erc20ContractDecimals = await ethers.getContractFactory("MockErc20TokenDecimals");
-    usdcContract = await Erc20ContractDecimals.deploy("USD Coin", "USDC", usdcDecimals); // 1000 USDC were minted for signer
+    paymentTokenContract = await Erc20ContractDecimals.deploy(paymentTokenName, paymentTokenSymbol, paymentTokenDecimals);
 
-    // metadata contract
+    // transfer all signer's tokens to user1
+    paymentTokenContract.transfer(user1.address, ethers.utils.parseUnits("1000", paymentTokenDecimals));
+
+    // deploy Punk Angels metadata contract
     const PunkAngelMetadata = await ethers.getContractFactory("PunkAngelMetadata");
     metadataContract = await PunkAngelMetadata.deploy();
 
-    // punk angel NFT contract
-    const PunkAngelNft = await ethers.getContractFactory("PunkAngelNft");
-    contract = await PunkAngelNft.deploy(
-      nftName,
-      nftSymbol,
-      nftIdCounter,
-      nftPrice,
-      metadataContract.address,
-      usdcContract.address
+    // add it to the TLD contract
+    await tldContract.changeMetadataAddress(metadataContract.address);
+
+    // Minter contract
+    const minterCode = await ethers.getContractFactory("PunkAngelMinter");
+    mintContract = await minterCode.deploy(
+      paymentTokenContract.address, // payment token address
+      tldContract.address, // TLD address
+      metadataContract.address, // metadata contract
+      price1char, price2char, price3char, price4char, price5char
     );
+
+    // set minter contract as TLD minter address
+    await tldContract.changeMinter(mintContract.address);
+
+    // set minter contract in the metadata contract
+    await metadataContract.changeMinter(mintContract.address);
   });
 
-  xit("should confirm NFT name & symbol", async function () {
-    const name = await contract.name();
-    expect(name).to.equal(nftName);
-    const symbol = await contract.symbol();
-    expect(symbol).to.equal(nftSymbol);
+  it("should confirm TLD name & symbol", async function () {
+    const _tldName = await tldContract.name();
+    expect(_tldName).to.equal(tldName);
+    const _tldSymbol = await tldContract.symbol();
+    expect(_tldSymbol).to.equal(tldSymbol);
   });
 
-  xit("should mint 1 new NFT", async function () {
-    // USDC balance before minting USDC
-    const user1UsdcBalanceBefore1 = await usdcContract.balanceOf(user1.address);
-    expect(user1UsdcBalanceBefore1).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
+  it("should mint two 5+ char domains", async function () {
+    const featureIds = ["3A1174741911F257FFCA965A000000231", "3A1174741911F257FFCA965A000000121", "3A1174741911F257FFCA965A000000020"];
 
-    // mint 500 USDC for user1
-    await usdcContract.mint(user1.address, nftPrice);
+    await mintContract.togglePaused();
 
-    // USDC balance after minting USDC (but before minting NFT)
-    const user1UsdcBalanceBefore2 = await usdcContract.balanceOf(user1.address);
-    expect(user1UsdcBalanceBefore2).to.equal(nftPrice);
+    // user1 has 1000 payment tokens
 
-    // NFT balance before
-    const user1NftBalanceBefore = await contract.balanceOf(user1.address);
-    expect(user1NftBalanceBefore).to.equal(0);
-
-    // give USDC allowance to the NFT contract
-    await usdcContract.connect(user1).approve(
-      contract.address, // spender
-      nftPrice // allowance for the NFT price
+    // Give payment token allowance
+    await paymentTokenContract.connect(user1).approve(
+      mintContract.address, // spender
+      price5char // amount
     );
 
-    // fail at minting when contract is paused
-    await expect(contract.connect(user1).mint(
-      user1.address,
-      1
-    )).to.be.revertedWith('Minting paused');
+    // how many domains user1 has before minting
+    const balanceDomainBefore = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainBefore).to.equal(0);
 
-    // unpause contract
-    await contract.toggleMintingPaused();
+    // TLD contract owner's balance before minting
+    const ownerBalanceBefore = await paymentTokenContract.balanceOf(signer.address);
+    expect(ownerBalanceBefore).to.equal(0);
+    console.log("Signer's payment token balance before first mint: " + ethers.utils.formatUnits(ownerBalanceBefore, paymentTokenDecimals) + " " + paymentTokenSymbol);
 
-    // mint 1 NFT
-    const tx = await contract.connect(user1).mint(
-      user1.address,
-      1
+    // Mint a domain
+    const tx = await mintContract.connect(user1).mint(
+      "user1", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      featureIds
     );
 
-    const receipt = await tx.wait()
+    const receipt = await tx.wait();
 
-    calculateGasCosts("Mint 1 NFT", receipt);
+    calculateGasCosts("Mint", receipt);
 
-    // USDC balance after minting NFT
-    const user1UsdcBalanceAfter = await usdcContract.balanceOf(user1.address);
-    expect(user1UsdcBalanceAfter).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
+    // get metadata
+    const metadata1 = await tldContract.tokenURI(1);
+  
+    const mdJson1 = Buffer.from(metadata1.substring(29), "base64");
+    const mdResult1 = JSON.parse(mdJson1);
 
-    // NFT balance after
-    const user1NftBalanceAfter = await contract.balanceOf(user1.address);
-    expect(user1NftBalanceAfter).to.equal(1);
+    expect(mdResult1.name).to.equal("user1.punkangel");
+    //console.log(mdResult1.image);
+
+    const balanceDomainAfter = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter).to.equal(1);
+
+    const domainHolder = await tldContract.getDomainHolder("user1");
+    expect(domainHolder).to.equal(user1.address);
+
+    // TLD contract owner's balance after minting
+    const ownerBalanceAfter = await paymentTokenContract.balanceOf(signer.address);
+    expect(ownerBalanceAfter).to.equal(price5char); // signer gets both royalty and the rest of the domain payment
+    console.log("Signer's payment token balance after first mint: " + ethers.utils.formatUnits(ownerBalanceAfter, paymentTokenDecimals) + " " + paymentTokenSymbol);
+
+    // Give payment token allowance
+    await paymentTokenContract.connect(user1).approve(
+      mintContract.address, // spender
+      price5char // amount
+    );
+
+    // should not fail at minting another domain
+    await mintContract.connect(user1).mint(
+      "user1second", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      featureIds
+    );
+
+    const balanceDomainAfter2 = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter2).to.equal(2);
+
+    // get metadata2
+    const metadata2 = await tldContract.tokenURI(2);
+  
+    const mdJson2 = Buffer.from(metadata2.substring(29), "base64");
+    const mdResult2 = JSON.parse(mdJson2);
+
+    expect(mdResult2.name).to.equal("user1second.punkangel");
+    //console.log(mdResult1.image);
+
+    // should FAIL at minting a domain with 4 chars
+
+    // Give payment token allowance
+    await paymentTokenContract.connect(user1).approve(
+      mintContract.address, // spender
+      price5char // amount
+    );
+
+    // should fail if domain is 4 chars, but payment is for 5 chars (too low)
+    await expect(mintContract.connect(user1).mint(
+      "user", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      featureIds
+    )).to.be.reverted;
+
+    const balanceDomainAfter3 = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter3).to.equal(2);
+
+    // should revert becuase feature IDs is already taken
+    await expect(mintContract.connect(user1).mint(
+      "hello", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      ["3A1174741911F257FFCA965A000000231", "3A1174741911F257FFCA965A000000121"] // already used feature IDs
+    )).to.be.revertedWith("Feature IDs already used");
+
+    const balanceDomainAfter4 = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter4).to.equal(2);
+  });
+
+  it("should change domain price (only owner)", async function () {
+    const priceBefore = await mintContract.price5char();
+    expect(priceBefore).to.equal(price5char);
+
+    const newPrice = ethers.utils.parseUnits("70", paymentTokenDecimals); // domain price is in payment tokens
+
+    await mintContract.changePrice(
+      newPrice, 
+      5 // chars (price for domains with 5 chars)
+    );
+
+    const priceAfter = await mintContract.price5char();
+    expect(priceAfter).to.equal(newPrice);
+
+    // cannot be zero
+    await expect(mintContract.changePrice(0, 5)).to.be.revertedWith('Cannot be zero');
     
-    // owner of NFT #1
-    const ownerOf1 = await contract.ownerOf(nftIdCounter); // ID counter set in constructor
-    expect(ownerOf1).to.equal(user1.address);
-
-    // fetch tokenURI data
-    const metadata = await contract.tokenURI(nftIdCounter);
-
-    const mdJson = Buffer.from(metadata.substring(29), "base64");
-    const mdResult = JSON.parse(mdJson);
-
-    expect(mdResult.name).to.equal("Cyberpunk Angel #" + nftIdCounter);
-    expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains"); 
-    
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).changePrice(123456, 5)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  xit("should fail at minting when minting is stopped permanently", async function () {
-    // USDC balance before minting USDC
-    const user1UsdcBalanceBefore1 = await usdcContract.balanceOf(user1.address);
-    expect(user1UsdcBalanceBefore1).to.equal(ethers.utils.parseUnits("0", usdcDecimals));
+  it("should change referral fee (only owner)", async function () {
+    const refBefore = await mintContract.referralFee();
+    expect(refBefore).to.equal(1000);
 
-    // mint 1000 USDC for user1
-    await usdcContract.mint(user1.address, ethers.utils.parseUnits("1000", usdcDecimals));
+    const newRef = 1500;
 
-    // USDC balance after minting USDC (but before minting NFT)
-    const user1UsdcBalanceBefore2 = await usdcContract.balanceOf(user1.address);
-    expect(user1UsdcBalanceBefore2).to.equal(ethers.utils.parseUnits("1000", usdcDecimals));
+    await mintContract.changeReferralFee(newRef);
 
-    // check NFT contract owner USDC balance (should be 1000 USDC minted in constructor)
-    const ownerUsdcBalanceBefore = await usdcContract.balanceOf(owner.address);
-    expect(ownerUsdcBalanceBefore).to.equal(ethers.utils.parseUnits("1000", usdcDecimals));
+    const refAfter = await mintContract.referralFee();
+    expect(refAfter).to.equal(newRef);
 
-    // NFT balance before
-    const user1NftBalanceBefore = await contract.balanceOf(user1.address);
-    expect(user1NftBalanceBefore).to.equal(0);
+    // cannot exceed 20%
+    await expect(mintContract.changeReferralFee(2100)).to.be.revertedWith('Cannot exceed 20%');
 
-    // give USDC allowance to the NFT contract
-    await usdcContract.connect(user1).approve(
-      contract.address, // spender
-      ethers.utils.parseUnits("1000", usdcDecimals) // allowance for 1000 USDC
-    );
-
-    // unpause contract
-    await contract.toggleMintingPaused();
-
-    // mint 1 NFT
-    await contract.connect(user1).mint(
-      user1.address,
-      1
-    );
-
-    // USDC balance after minting NFT
-    const user1UsdcBalanceAfter = await usdcContract.balanceOf(user1.address);
-    expect(user1UsdcBalanceAfter).to.equal(ethers.utils.parseUnits("500", usdcDecimals));
-
-    // check NFT contract owner USDC balance AFTER
-    const ownerUsdcBalanceAfter = await usdcContract.balanceOf(owner.address);
-    expect(ownerUsdcBalanceAfter).to.equal(ethers.utils.parseUnits("1500", usdcDecimals));
-
-    // NFT balance after
-    const user1NftBalanceAfter = await contract.balanceOf(user1.address);
-    expect(user1NftBalanceAfter).to.equal(1);
-
-    // permanently stop the minting
-    await contract.stopMintingPermanently();
-
-    // fail at minting when contract is permanently stopped
-    await expect(contract.connect(user1).mint(
-      user1.address,
-      1
-    )).to.be.revertedWith('Minting permanently stopped');
-    
+    // if user is not owner, the tx should revert
+    await expect(mintContract.connect(user1).changeReferralFee(666)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  // it("should allow minter to mint for free", async function () {}
-    // also toggle a minter
+  it("should recover ERC-20 tokens mistakenly sent to contract address", async function () {
+    const ERC20MockToken = await ethers.getContractFactory("MockErc20Token");
+    const mockErc20Contract = await ERC20MockToken.deploy("Mock", "MOCK");
 
-  // it("should fail at trying to mint over the max amount for one mint", async function () {}
+    const signerBalance = await mockErc20Contract.balanceOf(signer.address);
+    expect(Number(ethers.utils.formatEther(signerBalance))).to.equal(1000); // 1000 tokens minted in the ERC20 contract constructor
 
-  // it("should fail at trying to mint over the max supply", async function () {}
+    const mintContractBalance = await mockErc20Contract.balanceOf(mintContract.address);
+    expect(mintContractBalance).to.equal(0); // should be 0
 
-  // it("should prevent transfers when transfers are paused", async function () {}
+    // send 200 tokens to contract
+    await mockErc20Contract.transfer(mintContract.address, ethers.utils.parseEther("200"));
 
-  // it("should freeze metadata", async function () {}
-    // also change metadata before freezing it
+    const signerBalance2 = await mockErc20Contract.balanceOf(signer.address);
+    expect(Number(ethers.utils.formatEther(signerBalance2))).to.equal(800);
+
+    const mintContractBalance2 = await mockErc20Contract.balanceOf(mintContract.address);
+    expect(Number(ethers.utils.formatEther(mintContractBalance2))).to.equal(200);
+
+    // recover tokens from contract
+    await mintContract.recoverERC20(
+      mockErc20Contract.address, // token address
+      ethers.utils.parseEther("200"), // token amount
+      signer.address // recipient
+    );
+
+    const signerBalance3 = await mockErc20Contract.balanceOf(signer.address);
+    expect(Number(ethers.utils.formatEther(signerBalance3))).to.equal(1000); // back to 1000
+
+    const mintContractBalance3 = await mockErc20Contract.balanceOf(mintContract.address);
+    expect(Number(ethers.utils.formatEther(mintContractBalance3))).to.equal(0); // back to 0
+  });
 
 });
-*/

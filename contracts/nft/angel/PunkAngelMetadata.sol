@@ -15,10 +15,6 @@ contract PunkAngelMetadata is Ownable {
   mapping(uint256 => string) public idToUniqueFeatures; // tokenId => uniqueFeaturesId
   mapping(uint256 => uint256) public pricePaid; // tokenId => price (price that user paid for the domain)
 
-  constructor(address _minter) {
-    minter = _minter;
-  }
-
   // face:
   // - 0: no item on the face
   // - 1: big VR glasses
@@ -158,7 +154,11 @@ contract PunkAngelMetadata is Ownable {
   }
 
   // WRITE (MINTER)
-  function setUniqueFeaturesId(uint256 _tokenId, string[] calldata _unqs, uint256 _price) external {
+  function setUniqueFeaturesId(
+    uint256 _tokenId, 
+    string[] calldata _unqs, 
+    uint256 _price
+  ) external returns(string memory selectedFeatureId) {
     require(msg.sender == minter, "Only minter can set unique features ID.");
 
     pricePaid[_tokenId] = _price;
@@ -171,11 +171,13 @@ contract PunkAngelMetadata is Ownable {
       if (uniqueFeaturesId[_unq] == 0) {
         uniqueFeaturesId[_unq] = _tokenId;
         idToUniqueFeatures[_tokenId] = _unq;
-        break;
+        return _unq;
       }
 
       unchecked { ++i; }
     }
+
+    revert("Feature IDs already used");
 
   }
 
