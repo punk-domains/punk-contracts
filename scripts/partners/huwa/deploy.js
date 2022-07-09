@@ -1,4 +1,4 @@
-// npx hardhat run scripts/partners/huwa/deploy.js --network arbitrumTestnet
+// npx hardhat run scripts/partners/huwa/deploy.js --network bsc
 
 const contractNameFactory = "HuwaDomainMinter";
 
