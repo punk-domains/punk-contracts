@@ -169,9 +169,22 @@ contract PunkAngelMetadata is Ownable {
       string calldata _unq = _unqs[i];
       
       if (uniqueFeaturesId[_unq] == 0) {
-        uniqueFeaturesId[_unq] = _tokenId;
-        idToUniqueFeatures[_tokenId] = _unq;
-        return _unq;
+        if (bytes(_unq).length == 33) {
+          // check the last three digits in _unq (if in correct range)
+          string memory faceIndexStr = getSlice(31, 31, _unq);
+          string memory armsIndexStr = getSlice(32, 32, _unq);
+          string memory lipsIndexStr = getSlice(33, 33, _unq);
+
+          if (
+            stringToUint8(faceIndexStr) <= 3 && 
+            stringToUint8(armsIndexStr) <= 3 && 
+            stringToUint8(lipsIndexStr) <= 2
+          ) {
+            uniqueFeaturesId[_unq] = _tokenId;
+            idToUniqueFeatures[_tokenId] = _unq;
+            return _unq;
+          }
+        }
       }
 
       unchecked { ++i; }
