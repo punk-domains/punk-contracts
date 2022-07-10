@@ -154,6 +154,9 @@ contract PunkAngelMetadata is Ownable {
   }
 
   // WRITE (MINTER)
+  
+  // Each domain has a unique features ID. Example: 3A1174741911F257FFCA965A000000231.
+  // First 5 entries in the ID are colors, the last 3 digits are indices for face items, arm wires, and lips expressions
   function setUniqueFeaturesId(
     uint256 _tokenId, 
     string[] calldata _unqs, 

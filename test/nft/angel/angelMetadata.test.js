@@ -9,13 +9,13 @@ describe("Punk Angel Metadata", function () {
     [signer] = await ethers.getSigners();
 
     const PunkAngelMetadata = await ethers.getContractFactory("PunkAngelMetadata");
-    metadataContract = await PunkAngelMetadata.deploy(signer.address);
+    metadataContract = await PunkAngelMetadata.deploy();
+    await metadataContract.changeMinter(signer.address);
 
     const features1 = "3A1174741911F257FFCA965A000000231"; // bg1, bg2, hair, skin, dress, face (0-3), arms (0-3), lips (0-2)
   
     const domainPrice = ethers.utils.parseUnits("1", "ether");
     await metadataContract.setUniqueFeaturesId(1, [features1], domainPrice);
-  
   });
 
   it("should fetch and parse metadata", async function () {

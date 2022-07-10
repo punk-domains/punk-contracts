@@ -63,7 +63,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
     address _referrer,
     string[] calldata _featureIds
   ) external nonReentrant returns(uint256 tokenId) {
-    require(!paused || msg.sender == owner(), "Minting paused");
+    require(!paused || _msgSender() == owner(), "Minting paused");
     require(totalPayments < maxTotalPayments, "Max total payments reached");
 
     // find price
@@ -93,11 +93,11 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
     if (referralFee > 0 && _referrer != address(0)) {
       uint256 referralPayment = (selectedPrice * referralFee) / MAX_BPS;
       selectedPrice -= referralPayment;
-      paymentToken.transferFrom(msg.sender, _referrer, referralPayment);
+      paymentToken.transferFrom(_msgSender(), _referrer, referralPayment);
     }
 
     // send the rest to the owner
-    paymentToken.transferFrom(msg.sender, tldContract.owner(), selectedPrice);
+    paymentToken.transferFrom(_msgSender(), tldContract.owner(), selectedPrice);
 
     // update total payments
     totalPayments += selectedPrice;
