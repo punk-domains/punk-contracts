@@ -14,6 +14,9 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
   uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
   uint256 public constant MAX_BPS = 10_000;
 
+  uint256 public maxTotalPayments;
+  uint256 public totalPayments; // total amount of payments in the payment token
+
   uint256 public price1char; // 1 char domain price
   uint256 public price2char; // 2 chars domain price
   uint256 public price3char; // 3 chars domain price
@@ -33,6 +36,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
     address _tokenAddress,
     address _tldAddress,
     address _metadataAddress,
+    uint256 _maxTotalPayments,
     uint256 _price1char,
     uint256 _price2char,
     uint256 _price3char,
@@ -42,6 +46,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
     paymentToken = IERC20(_tokenAddress);
     tldContract = IFlexiPunkTLD(_tldAddress);
     metadataContract = IPunkAngelMetadata(_metadataAddress);
+    maxTotalPayments = _maxTotalPayments;
     price1char = _price1char;
     price2char = _price2char;
     price3char = _price3char;
@@ -59,6 +64,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
     string[] calldata _featureIds
   ) external nonReentrant returns(uint256 tokenId) {
     require(!paused || msg.sender == owner(), "Minting paused");
+    require(totalPayments < maxTotalPayments, "Max total payments reached");
 
     // find price
     uint256 domainLength = strings.len(strings.toSlice(_domainName));
@@ -92,9 +98,21 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
 
     // send the rest to the owner
     paymentToken.transferFrom(msg.sender, tldContract.owner(), selectedPrice);
+
+    // update total payments
+    totalPayments += selectedPrice;
+
+    if (totalPayments >= maxTotalPayments) {
+      paused = true;
+    }
   }
 
   // OWNER
+
+  /// @notice This changes referral fee in the wrapper contract
+  function changeMaxTotalPayments(uint256 _maxPay) external onlyOwner {
+    maxTotalPayments = _maxPay;
+  }
 
   /// @notice This changes price in the minter contract
   function changePrice(uint256 _price, uint256 _chars) external onlyOwner {

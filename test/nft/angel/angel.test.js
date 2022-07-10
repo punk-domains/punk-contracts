@@ -30,7 +30,8 @@ describe("Punk Angel minting contract", function () {
   const paymentTokenSymbol = "USDC";
 
   let mintContract;
-  const price1char = ethers.utils.parseUnits("10000", paymentTokenDecimals);
+  const maxTotalPayments = ethers.utils.parseUnits("100000", paymentTokenDecimals); // $100k
+  const price1char = ethers.utils.parseUnits("10000", paymentTokenDecimals); // $10k
   const price2char = ethers.utils.parseUnits("3000", paymentTokenDecimals);
   const price3char = ethers.utils.parseUnits("999", paymentTokenDecimals);
   const price4char = ethers.utils.parseUnits("199", paymentTokenDecimals);
@@ -90,6 +91,7 @@ describe("Punk Angel minting contract", function () {
       paymentTokenContract.address, // payment token address
       tldContract.address, // TLD address
       metadataContract.address, // metadata contract
+      maxTotalPayments,
       price1char, price2char, price3char, price4char, price5char
     );
 
@@ -216,6 +218,173 @@ describe("Punk Angel minting contract", function () {
 
     const balanceDomainAfter4 = await tldContract.balanceOf(user1.address);
     expect(balanceDomainAfter4).to.equal(2);
+  });
+
+  it("should pause minting when max payment amount is reached", async function () {
+    // max payment amount is $100k
+    // 10 domains (1 char for $10k)
+
+    const featureIds = [
+      "3A1174741911F257FFCA965A000000231", 
+      "3A1174741911F257FFCA965A000000121", 
+      "3A1174741911F257FFCA965A000000120",
+      "3A1174741911F257FFCA965A000000110",
+      "3A1174741911F257FFCA965A000000000",
+      "3A1174741911F257FFCA965A000000100",
+      "3A1174741911F257FFCA965A000000210",
+      "3A1174741911F257FFCA965A000000200",
+      "3A1174741911F257FFCA965A000000220",
+      "3A1174741911F257FFCA965A000000221"
+    ];
+
+    const pausedBefore1 = await mintContract.paused();
+    expect(pausedBefore1).to.be.true;
+
+    await mintContract.togglePaused();
+
+    const pausedBefore2 = await mintContract.paused();
+    expect(pausedBefore2).to.be.false;
+
+    // mint new payment tokens for user1
+    await paymentTokenContract.connect(user1).mint(
+      user1.address,
+      maxTotalPayments
+    );
+
+    // Give payment token allowance
+    await paymentTokenContract.connect(user1).approve(
+      mintContract.address, // spender
+      maxTotalPayments // amount
+    );
+
+    // how many domains user1 has before minting
+    const balanceDomainBefore = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainBefore).to.equal(0);
+
+    // TLD contract owner's balance before minting
+    const ownerBalanceBefore = await paymentTokenContract.balanceOf(signer.address);
+    expect(ownerBalanceBefore).to.equal(0);
+    console.log("Signer's payment token balance before first mint: " + ethers.utils.formatUnits(ownerBalanceBefore, paymentTokenDecimals) + " " + paymentTokenSymbol);
+
+    // Mint 10 domains
+    await mintContract.connect(user1).mint(
+      "0", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[0]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "1", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[1]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "2", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[2]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "3", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[3]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "4", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[4]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "5", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[5]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "6", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[6]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "7", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[7]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "8", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[8]]
+    );
+    
+    await mintContract.connect(user1).mint(
+      "9", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      [featureIds[9]]
+    );
+
+    // get metadata for 5.punkangel
+    const metadata = await tldContract.tokenURI(6);
+  
+    const mdJson = Buffer.from(metadata.substring(29), "base64");
+    const mdResult = JSON.parse(mdJson);
+
+    expect(mdResult.name).to.equal("5.punkangel");
+    expect(mdResult.paid).to.equal(price1char);
+    expect(Number(mdResult.length)).to.equal(1);
+    console.log(mdResult.attributes);
+
+    const pausedAfter = await mintContract.paused();
+    expect(pausedAfter).to.be.true;
+
+    const balanceDomainAfter = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter).to.equal(10);
+
+    // TLD contract owner's balance after minting
+    const ownerBalanceAfter = await paymentTokenContract.balanceOf(signer.address);
+    expect(ownerBalanceAfter).to.equal(maxTotalPayments); // signer gets both royalty and the rest of the domain payment
+    console.log("Signer's payment token balance after first mint: " + ethers.utils.formatUnits(ownerBalanceAfter, paymentTokenDecimals) + " " + paymentTokenSymbol);
+    
+    // TRY ANOTHER MINT
+
+    // Give payment token allowance
+    await paymentTokenContract.connect(user1).approve(
+      mintContract.address, // spender
+      maxTotalPayments // amount
+    );
+
+    // should revert because minting is paused
+    await expect(mintContract.connect(user1).mint(
+      "hello", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      ["3A1174741911F257FFCA965A000000331"]
+    )).to.be.revertedWith("Minting paused");
+
+    // unpause minting
+    await mintContract.togglePaused();
+
+    // should revert because max payment is reached
+    await expect(mintContract.connect(user1).mint(
+      "hello", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      ["3A1174741911F257FFCA965A000000331"]
+    )).to.be.revertedWith("Max total payments reached");
   });
 
   it("should change domain price (only owner)", async function () {
