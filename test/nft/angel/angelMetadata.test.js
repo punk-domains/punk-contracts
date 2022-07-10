@@ -23,15 +23,19 @@ describe("Punk Angel Metadata", function () {
     const domainName = "techie.punkangel";
 
     const metadata = await metadataContract.getMetadata(domainName, tokenId);
+
+    console.log(metadata)
     
     const mdJson = Buffer.from(metadata.substring(29), "base64");
     const mdResult = JSON.parse(mdJson);
 
     // metadata: 
     //console.log(mdResult);
+    console.log(mdResult.name);
+    console.log(mdResult.attributes);
 
     expect(mdResult.name).to.equal(domainName);
-    expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains"); 
+    expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains/#/nft/angel"); 
 
     // SVG image:
     console.log(mdResult.image);

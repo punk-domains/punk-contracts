@@ -116,6 +116,14 @@ describe("Punk Angel minting contract", function () {
 
     // user1 has 1000 payment tokens
 
+    // should fail at minting before allowance is set
+    await expect(mintContract.connect(user1).mint(
+      "1234", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      featureIds
+    )).to.be.reverted;
+
     // Give payment token allowance
     await paymentTokenContract.connect(user1).approve(
       mintContract.address, // spender
@@ -133,7 +141,7 @@ describe("Punk Angel minting contract", function () {
 
     // Mint a domain
     const tx = await mintContract.connect(user1).mint(
-      "user1", // domain name (without TLD)
+      "user12", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
       featureIds
@@ -149,13 +157,13 @@ describe("Punk Angel minting contract", function () {
     const mdJson1 = Buffer.from(metadata1.substring(29), "base64");
     const mdResult1 = JSON.parse(mdJson1);
 
-    expect(mdResult1.name).to.equal("user1.punkangel");
+    expect(mdResult1.name).to.equal("user12.punkangel");
     //console.log(mdResult1.image);
 
     const balanceDomainAfter = await tldContract.balanceOf(user1.address);
     expect(balanceDomainAfter).to.equal(1);
 
-    const domainHolder = await tldContract.getDomainHolder("user1");
+    const domainHolder = await tldContract.getDomainHolder("user12");
     expect(domainHolder).to.equal(user1.address);
 
     // TLD contract owner's balance after minting
@@ -345,7 +353,6 @@ describe("Punk Angel minting contract", function () {
 
     expect(mdResult.name).to.equal("5.punkangel");
     expect(mdResult.paid).to.equal(price1char);
-    expect(Number(mdResult.length)).to.equal(1);
     console.log(mdResult.attributes);
 
     const pausedAfter = await mintContract.paused();

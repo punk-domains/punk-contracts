@@ -26,7 +26,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
   // TLD contract (.punkangel)
   IERC20 public immutable paymentToken; // payment token
   IFlexiPunkTLD public immutable tldContract; // TLD contract
-  IPunkAngelMetadata public immutable metadataContract; // metadata contract
+  IPunkAngelMetadata public metadataContract; // metadata contract
 
   // EVENTS
   event FeatureMinted(string indexed featureId_);
@@ -78,7 +78,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
       selectedPrice = price3char;
     } else if (domainLength == 4) {
       selectedPrice = price4char;
-    } else if (domainLength == 5) {
+    } else {
       selectedPrice = price5char;
     }
 
@@ -109,9 +109,14 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
 
   // OWNER
 
-  /// @notice This changes referral fee in the wrapper contract
+  /// @notice This changes referral fee in the minter contract
   function changeMaxTotalPayments(uint256 _maxPay) external onlyOwner {
     maxTotalPayments = _maxPay;
+  }
+
+  /// @notice This changes metadata contract in the minter contract
+  function changeMetadataContract(address _metadataAddress) external onlyOwner {
+    metadataContract = IPunkAngelMetadata(_metadataAddress);
   }
 
   /// @notice This changes price in the minter contract
@@ -131,7 +136,7 @@ contract PunkAngelMinter is Ownable, ReentrancyGuard {
     }
   }
 
-  /// @notice This changes referral fee in the wrapper contract
+  /// @notice This changes referral fee in the minter contract
   function changeReferralFee(uint256 _referral) external onlyOwner {
     require(_referral <= 2000, "Cannot exceed 20%");
     referralFee = _referral;

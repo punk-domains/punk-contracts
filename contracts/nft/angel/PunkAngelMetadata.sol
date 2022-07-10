@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "base64-sol/base64.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "../../lib/strings.sol";
 
 /// @title Punk Angel domain metadata contract
 /// @author Tempe Techie
@@ -68,15 +69,14 @@ contract PunkAngelMetadata is Ownable {
     uint256 _tokenId
   ) external view returns(string memory) {
     string memory features = idToUniqueFeatures[_tokenId];
-    uint256 domainLength = bytes(_fullDomainName).length - 10; // 10 is length of .punkangel
+    uint256 domainLength = strings.len(strings.toSlice(_fullDomainName)) - 10; // 10 is length of .punkangel
 
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
         '{"name": "', _fullDomainName ,'", ',
         '"paid": "', Strings.toString(pricePaid[_tokenId]) ,'", ',
-        '"length": "', Strings.toString(domainLength) ,'", ',
-        '"attributes": [', _getTraits(features) ,'], ',
-        '"description": "A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains", ',
+        '"attributes": [{"trait_type": "length", "value": "', Strings.toString(domainLength) ,'"}, ', _getTraits(features) ,'], ',
+        '"description": "A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains/#/nft/angel", ',
         '"image": "', _getImage(features, _fullDomainName), '"}'))))
     );
   }
@@ -145,11 +145,11 @@ contract PunkAngelMetadata is Ownable {
     }
 
     return string(abi.encodePacked(
-      '{"trait_type": "Hair color", "value": "#', getSlice(13, 18, _features) ,'"}, ',
-      '{"trait_type": "Dress color", "value": "#', getSlice(25, 30, _features) ,'"}, ',
-      '{"trait_type": "Skin color", "value": "#', getSlice(19, 24, _features) ,'"}, ',
-      '{"trait_type": "Face item", "value": "', faceItem ,'"}, ',
-      '{"trait_type": "Expression", "value": "', expression ,'"}'
+      '{"trait_type": "hair color", "value": "#', getSlice(13, 18, _features) ,'"}, ',
+      '{"trait_type": "dress color", "value": "#', getSlice(25, 30, _features) ,'"}, ',
+      '{"trait_type": "skin color", "value": "#', getSlice(19, 24, _features) ,'"}, ',
+      '{"trait_type": "face item", "value": "', faceItem ,'"}, ',
+      '{"trait_type": "expression", "value": "', expression ,'"}'
     ));
   }
 
