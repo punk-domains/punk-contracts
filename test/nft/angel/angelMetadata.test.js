@@ -20,9 +20,10 @@ describe("Punk Angel Metadata", function () {
 
   it("should fetch and parse metadata", async function () {
     const tokenId = 1;
-    const domainName = "techie.punkangel";
+    const domainName = "techie";
+    const tld = ".punkangel";
 
-    const metadata = await metadataContract.getMetadata(domainName, tokenId);
+    const metadata = await metadataContract.getMetadata(domainName, tld, tokenId);
 
     console.log(metadata)
     
@@ -34,7 +35,7 @@ describe("Punk Angel Metadata", function () {
     console.log(mdResult.name);
     console.log(mdResult.attributes);
 
-    expect(mdResult.name).to.equal(domainName);
+    expect(mdResult.name).to.equal(domainName+tld);
     expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains/#/nft/angel"); 
 
     // SVG image:

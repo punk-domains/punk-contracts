@@ -65,19 +65,21 @@ contract PunkAngelMetadata is Ownable {
   }
 
   function getMetadata(
-    string calldata _fullDomainName, 
+    string calldata _domainName, 
+    string calldata _tld, 
     uint256 _tokenId
   ) external view returns(string memory) {
+    string memory fullDomainName = string(abi.encodePacked(_domainName, _tld));
     string memory features = idToUniqueFeatures[_tokenId];
-    uint256 domainLength = strings.len(strings.toSlice(_fullDomainName)) - 10; // 10 is length of .punkangel
+    uint256 domainLength = strings.len(strings.toSlice(_domainName));
 
     return string(
       abi.encodePacked("data:application/json;base64,",Base64.encode(bytes(abi.encodePacked(
-        '{"name": "', _fullDomainName ,'", ',
+        '{"name": "', fullDomainName ,'", ',
         '"paid": "', Strings.toString(pricePaid[_tokenId]) ,'", ',
         '"attributes": [{"trait_type": "length", "value": "', Strings.toString(domainLength) ,'"}, ', _getTraits(features) ,'], ',
         '"description": "A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains/#/nft/angel", ',
-        '"image": "', _getImage(features, _fullDomainName), '"}'))))
+        '"image": "', _getImage(features, fullDomainName), '"}'))))
     );
   }
 

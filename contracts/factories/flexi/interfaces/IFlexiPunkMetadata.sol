@@ -3,6 +3,6 @@ pragma solidity ^0.8.4;
 
 interface IFlexiPunkMetadata {
 
-  function getMetadata(string calldata _fullDomainName, uint256 _tokenId) external view returns(string memory);
+  function getMetadata(string calldata _domainName, string calldata _tld, uint256 _tokenId) external view returns(string memory);
 
 }
