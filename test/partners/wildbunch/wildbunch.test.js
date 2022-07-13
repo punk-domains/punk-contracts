@@ -21,7 +21,7 @@ describe("WildBunchDomainMinter (partner contract)", function () {
 
   const domainName = ".wildbunch";
   const domainSymbol = ".WILDBUNCH";
-  const domainPrice = ethers.utils.parseUnits("1", "ether");
+  const domainPrice = ethers.utils.parseUnits("0.1", "ether");
   const domainRoyalty = 2000; // royalty in bips (2000 bips is 20%)
 
   beforeEach(async function () {
@@ -137,7 +137,15 @@ describe("WildBunchDomainMinter (partner contract)", function () {
     const domainHolder2 = await tldContract.getDomainHolder("user2fail");
     expect(domainHolder2).to.equal(ethers.constants.AddressZero); // the owner is a zero address because domain was not minted
   
-  
+    // should fail if payment is too low
+    await expect(mintContract.connect(user1).mint(
+      "user1fail2", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      {
+        value: ethers.utils.parseUnits("0.01", "ether") // too low payment
+      }
+    )).to.be.revertedWith('Value below price');
   });
 
   it("should fail at minting a domain if contract is paused", async function () {
