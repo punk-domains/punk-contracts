@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IFlexiPunkTLD.sol";
 
 contract WildBunchDomainMinter is Ownable, ReentrancyGuard {
-  bool public paused = true;
+  bool public paused = false;
   IERC721 public immutable nftContract; // user must hold this NFT to be allowed to mint
   IFlexiPunkTLD public immutable tldContract; // TLD contract
 

@@ -30,8 +30,8 @@ describe("WildBunchDomainMinter (partner contract)", function () {
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
 
-    const FlexiPunkMetadata = await ethers.getContractFactory("FlexiPunkMetadata");
-    metadataContract = await FlexiPunkMetadata.deploy();
+    const WildBunchMetadata = await ethers.getContractFactory("WildBunchMetadata");
+    metadataContract = await WildBunchMetadata.deploy();
 
     const PunkTLDFactory = await ethers.getContractFactory("FlexiPunkTLDFactory");
     const factoryContract = await PunkTLDFactory.deploy(domainPrice, forbTldsContract.address, metadataContract.address);
@@ -93,9 +93,6 @@ describe("WildBunchDomainMinter (partner contract)", function () {
     const balanceDomainBefore = await tldContract.balanceOf(user1.address);
     expect(balanceDomainBefore).to.equal(0);
 
-    // unpause minting
-    await mintContract.togglePaused();
-
     const tx = await mintContract.connect(user1).mint(
       "user1", // domain name (without TLD)
       user1.address, // domain holder
@@ -146,6 +143,21 @@ describe("WildBunchDomainMinter (partner contract)", function () {
         value: ethers.utils.parseUnits("0.01", "ether") // too low payment
       }
     )).to.be.revertedWith('Value below price');
+
+    // check metadata
+    const metadata1 = await tldContract.tokenURI(1);
+    //console.log(metadata1);
+
+    const mdJson = Buffer.from(metadata1.substring(29), "base64");
+    const mdResult = JSON.parse(mdJson);
+
+    // metadata: 
+    //console.log(mdResult);
+    console.log(mdResult.name);
+    console.log(mdResult.attributes);
+
+    // SVG image:
+    console.log(mdResult.image);
   });
 
   it("should fail at minting a domain if contract is paused", async function () {
@@ -160,6 +172,9 @@ describe("WildBunchDomainMinter (partner contract)", function () {
 
     const balanceDomainBefore = await tldContract.balanceOf(user1.address);
     expect(balanceDomainBefore).to.equal(0);
+
+    // pause minting contract
+    await mintContract.togglePaused();
 
     // should fail at minting because contract is paused
     await expect(mintContract.connect(user1).mint(
