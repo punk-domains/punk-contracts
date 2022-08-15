@@ -61,7 +61,7 @@ contract PplMetadata {
     return string(
       abi.encodePacked(
         _getColorTraits([bgColor, colors[0], colors[1], colors[2]]),
-        '"description": ".ppl domain created by Joie from Lufroloc Dishes & powered by Punk Domains.", ',
+        '"description": "A collection of PEOPLE web3 domain (.ppl) NFTs created by Joie Degarlic: https://ppl.domains", ',
         '"image": "', _getImage(_fullDomainName, bgColor, [colors[0], colors[1], colors[2]]), '"}')
     );
   }
