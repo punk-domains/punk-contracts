@@ -25,7 +25,7 @@ describe("Punk Angel Metadata", function () {
 
     const metadata = await metadataContract.getMetadata(domainName, tld, tokenId);
 
-    console.log(metadata)
+    //console.log(metadata)
     
     const mdJson = Buffer.from(metadata.substring(29), "base64");
     const mdResult = JSON.parse(mdJson);
@@ -39,7 +39,7 @@ describe("Punk Angel Metadata", function () {
     expect(mdResult.description).to.equal("A collection of Punk Angel NFTs created by Punk Domains: https://punk.domains/#/nft/angel"); 
 
     // SVG image:
-    console.log(mdResult.image);
+    //console.log(mdResult.image);
   });
 
 });

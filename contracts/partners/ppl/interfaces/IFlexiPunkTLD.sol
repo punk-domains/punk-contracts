@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 interface IFlexiPunkTLD is IERC721 {
 
   function owner() external view returns(address);
+  function royaltyFeeReceiver() external view returns(address);
+  function royaltyFeeUpdater() external view returns(address);
 
   function mint(
     string memory _domainName,

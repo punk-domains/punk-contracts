@@ -19,7 +19,7 @@ describe(".ppl Metadata", function () {
 
     const metadata = await metadataContract.getMetadata(domainName, tld, tokenId);
 
-    console.log(metadata)
+    //console.log(metadata)
     
     const mdJson = Buffer.from(metadata.substring(29), "base64");
     const mdResult = JSON.parse(mdJson);
@@ -33,7 +33,7 @@ describe(".ppl Metadata", function () {
     expect(mdResult.description).to.equal(".ppl domain created by Joie from Lufroloc Dishes & powered by Punk Domains."); 
 
     // SVG image:
-    console.log(mdResult.image);
+    //console.log(mdResult.image);
   });
 
 });
