@@ -1,14 +1,13 @@
-// npx hardhat run scripts/partners/ppl/deployMinter.js --network polygonMumbai
+// npx hardhat run scripts/partners/ppl/deployMinter.js --network arbitrumOne
 // add minter address to:
 // 1) TLD contract as minter
 
 const contractNameFactory = "PplMinter";
-const tldAddress = "0x17C212067f11BDFCb975A77b3fff56Dff8d2cd57";
-const metadataAddress = "0x531B6122f896f6B62D9FCb17630a51DC4C96787F";
+const tldAddress = "0xbC9d19e5f97a572f428F7292DBf3dc182Cc05C82";
 
-const dishesNft1 = "0x78d086122af1422dcec88c612587436D07457C35";
-const dishesNft2 = "0xBba6B3327eDC39e6ac4047075C49c8708e552357";
-const dishesNft3 = "0x1F7b490104cF47B929bCa0fc7Db1B214862cA2e9";
+const dishesNft1 = "0x84D7c3e61d1Fb8A8379480201C71865CBaBe60a6";
+const dishesNft2 = "0x9b061999f31C58E7cB3D2EEDd7d3c745C347A3d4";
+const dishesNft3 = "0xed3df357E90B0CcaAc6737Dd6e7d743f67cD65F0";
 
 const paymentTokenDecimals = 18;
 

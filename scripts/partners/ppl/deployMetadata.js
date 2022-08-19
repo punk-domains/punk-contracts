@@ -1,4 +1,4 @@
-// npx hardhat run scripts/partners/ppl/deployMetadata.js --network polygonMumbai
+// npx hardhat run scripts/partners/ppl/deployMetadata.js --network arbitrumOne
 // TODO after deployment: 
 // 1) Add metadata address to the TLD contract through the changeMetadataAddress() function
 
