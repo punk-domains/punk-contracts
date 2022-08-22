@@ -30,7 +30,7 @@ describe(".ppl Metadata", function () {
     console.log(mdResult.attributes);
 
     expect(mdResult.name).to.equal(domainName+tld);
-    expect(mdResult.description).to.equal(".ppl domain created by Joie from Lufroloc Dishes & powered by Punk Domains."); 
+    expect(mdResult.description).to.equal("A collection of PEOPLE web3 domain (.ppl) NFTs created by Joie Degarlic: https://ppl.domains"); 
 
     // SVG image:
     //console.log(mdResult.image);
