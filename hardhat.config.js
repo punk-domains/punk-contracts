@@ -14,27 +14,13 @@ module.exports = {
       url: 'http://127.0.0.1:8545/',
       chainId: 31337
     },
-    mainnet: {
-      url: 'https://eth-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ETHEREUM,
-      chainId: 1,
+    arbitrumOne: {
+      //url: 'https://arb-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ARBITRUM,
+      url: "https://arb1.arbitrum.io/rpc",
+      chainId: 42161,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 10000000000, // 10 gwei
-    },
-    polygonMumbai: {
-      url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,
-      //url: 'https://matic-testnet-archive-rpc.bwarelabs.com', // https://matic-mumbai.chainstacklabs.com
-      chainId: 80001,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-      gas: "auto", // gas limit
-      gasPrice: 2000000000, // 2 gwei
-    },
-    polygon: {
-      url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_POLYGON,
-      chainId: 137,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-      gas: "auto", // gas limit
-      gasPrice: 45000000000, // 45 gwei
+      gasPrice: 1000000000, // 1 gwei
     },
     arbitrumTestnet: {
       url: 'https://rinkeby.arbitrum.io/rpc',
@@ -43,10 +29,37 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 1000000000, // 1 gwei
     },
-    arbitrumOne: {
-      //url: 'https://arb-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ARBITRUM,
-      url: "https://arb1.arbitrum.io/rpc",
-      chainId: 42161,
+    aurora: {
+      url: 'https://mainnet.aurora.dev',
+      chainId: 1313161554,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
+    },
+    auroraTestnet: {
+      url: 'https://testnet.aurora.dev',
+      chainId: 1313161555,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
+    },
+    bsc: { // BNB Smart Chain mainnet
+      url: 'https://bscrpc.com',
+      chainId: 56,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 5000000000, // 5 gwei
+    },
+    mainnet: { // Ethereum
+      url: 'https://eth-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ETHEREUM,
+      chainId: 1,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 10000000000, // 10 gwei
+    },
+    optimisticEthereum: {
+      url: 'https://opt-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_OPTIMISM,
+      chainId: 10,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
       gasPrice: 1000000000, // 1 gwei
@@ -58,12 +71,20 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 1000000000, // 1 gwei
     },
-    optimisticEthereum: {
-      url: 'https://opt-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_OPTIMISM,
-      chainId: 10,
+    polygon: {
+      url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_POLYGON,
+      chainId: 137,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 1000000000, // 1 gwei
+      gasPrice: 45000000000, // 45 gwei
+    },
+    polygonMumbai: {
+      url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,
+      //url: 'https://matic-testnet-archive-rpc.bwarelabs.com', // https://matic-mumbai.chainstacklabs.com
+      chainId: 80001,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 2000000000, // 2 gwei
     },
     sokol: { // Gnosis Chain testnet
       url: 'https://sokol.poa.network',
@@ -78,13 +99,6 @@ module.exports = {
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
       gasPrice: 20000000000, // 20 gwei
-    },
-    bsc: { // BNB Smart Chain mainnet
-      url: 'https://bscrpc.com',
-      chainId: 56,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
-      gas: "auto", // gas limit
-      gasPrice: 5000000000, // 5 gwei
     }
   },
 
@@ -99,7 +113,9 @@ module.exports = {
       arbitrumOne: process.env.ARBISCAN_API_KEY,
       bsc: process.env.BSC_API_KEY,
       sokol: "randomstring",
-      xdai: "randomstring"
+      xdai: "randomstring",
+      aurora: "randomstring",
+      auroraTestnet: "randomstring"
     }
   },
 

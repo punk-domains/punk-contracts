@@ -76,7 +76,7 @@ npx hardhat run scripts/deploy.js --network ropsten
 
 ### Verify contract on Etherscan/Polygonscan:
 
-Make sure to enter correct network names ([see here](https://hardhat.org/plugins/nomiclabs-hardhat-etherscan.html#multiple-api-keys-and-alternative-block-explorers)):
+Make sure to enter correct network names ([see here](https://hardhat.org/plugins/nomiclabs-hardhat-etherscan.html#multiple-api-keys-and-alternative-block-explorers) and [here](https://gist.github.com/tempe-techie/95a3ad4e81b46c895928a0524fc2b7ac)):
 
 ```bash
 etherscan: {
