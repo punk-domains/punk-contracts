@@ -148,3 +148,9 @@ slither .
 ```
 
 Docs: https://github.com/crytic/slither
+
+## Debugging
+
+### Error: ENOENT: no such file or directory
+
+Run `npx hardhat clean` and then `npx hardhat compile`.

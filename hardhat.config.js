@@ -104,18 +104,18 @@ module.exports = {
 
   etherscan: {
     apiKey: { // all possible key names here: https://gist.github.com/tempe-techie/95a3ad4e81b46c895928a0524fc2b7ac
-      mainnet: process.env.ETHERSCAN_API_KEY,
-      polygonMumbai: process.env.POLYGONSCAN_API_KEY,
-      polygon: process.env.POLYGONSCAN_API_KEY,
-      optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
-      optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
-      arbitrumTestnet: process.env.ARBISCAN_API_KEY,
       arbitrumOne: process.env.ARBISCAN_API_KEY,
+      arbitrumTestnet: process.env.ARBISCAN_API_KEY,
+      aurora: process.env.AURORASCAN_API_KEY,
+      auroraTestnet: process.env.AURORASCAN_API_KEY,
       bsc: process.env.BSC_API_KEY,
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
+      optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY, 
       sokol: "randomstring",
-      xdai: "randomstring",
-      aurora: "randomstring",
-      auroraTestnet: "randomstring"
+      xdai: "randomstring"
     }
   },
 
