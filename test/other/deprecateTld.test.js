@@ -81,9 +81,11 @@ describe("Deprecated TLDs contract test", function () {
       oldDomainPrice, // refund amount
       oldTldContract.address,
       newDomainName,
-      newTldContract.address,
-      [2, 4] // non-eligible token IDs
+      newTldContract.address
     );
+
+    // add non-eligible token IDs
+    await deprecateTldContract.addNonEligibleDomains([2, 4]);
 
     // give NFT approvals to the deprecateTldContract
     await oldTldContract.connect(signer).setApprovalForAll(deprecateTldContract.address, true);

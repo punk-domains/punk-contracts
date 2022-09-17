@@ -12,8 +12,8 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
   uint256 public refundAmount;
   address public immutable deprecatedTld;
   //mapping(string => bool) isNotRefundEligible; // mapping(domainName => bool)
-  mapping(uint256 => bool) isNotRefundEligible; // mapping(domainTokenId => bool)
-  mapping(string => address) altTld; // mapping(tldName => tldAddress)
+  mapping(uint256 => bool) public isNotRefundEligible; // mapping(domainTokenId => bool)
+  mapping(string => address) public altTld; // mapping(tldName => tldAddress)
 
   // EVENTS
   event RefundClaimed(address indexed user, string indexed domainName);
@@ -23,14 +23,11 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
     uint256 _refundAmount,
     address _deprecatedTld,
     string memory _altTldName,
-    address _altTldAddress,
-    uint256[] memory _nonEligibleTokenIds
+    address _altTldAddress
   ) {
     refundAmount = _refundAmount;
     deprecatedTld = _deprecatedTld;
     altTld[_altTldName] = _altTldAddress;
-
-    addNonEligibleDomains(_nonEligibleTokenIds);
   }
 
   // WRITE
