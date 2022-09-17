@@ -116,7 +116,7 @@ describe(partnerContractName + " (partner contract)", function () {
 
     // get signer's balance BEFORE
     const balanceSignerBefore = await provider.getBalance(signer.address);
-    console.log("Signer balance after transition: " + ethers.utils.formatEther(balanceSignerBefore) + " MATIC");
+    console.log("Signer balance before transition: " + ethers.utils.formatEther(balanceSignerBefore) + " MATIC");
 
     // Fail at transitioning if not the holder (user1)
     await expect(

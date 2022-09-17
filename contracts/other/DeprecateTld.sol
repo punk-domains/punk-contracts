@@ -11,7 +11,8 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
   bool public paused = true;
   uint256 public refundAmount;
   address public immutable deprecatedTld;
-  mapping(string => bool) isNotRefundEligible; // mapping(domainName => bool)
+  //mapping(string => bool) isNotRefundEligible; // mapping(domainName => bool)
+  mapping(uint256 => bool) isNotRefundEligible; // mapping(domainTokenId => bool)
   mapping(string => address) altTld; // mapping(tldName => tldAddress)
 
   // EVENTS
@@ -22,36 +23,40 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
     uint256 _refundAmount,
     address _deprecatedTld,
     string memory _altTldName,
-    address _altTldAddress
+    address _altTldAddress,
+    uint256[] memory _nonEligibleTokenIds
   ) {
     refundAmount = _refundAmount;
     deprecatedTld = _deprecatedTld;
     altTld[_altTldName] = _altTldAddress;
+
+    addNonEligibleDomains(_nonEligibleTokenIds);
   }
 
   // WRITE
   
   /// @notice Refund a deprecated domain (if eligible) and mint a new one
   function refund(
-    string memory _domainName,
+    string memory _oldDomainName,
     string memory _newDomainName,
     string memory _altTldName
   ) external nonReentrant returns(uint256 tokenId) {
     require(!paused, "Contract paused");
+    require(altTld[_altTldName] != address(0), "You cannot get a domain of this TLD as domain refund");
 
     IFlexiPunkTLD tldContract = IFlexiPunkTLD(deprecatedTld);
 
     // check if _msgSender() owns the domain name
-    require(_msgSender() == tldContract.getDomainHolder(_domainName), "Transition: Sender is not domain holder.");
+    require(_msgSender() == tldContract.getDomainHolder(_oldDomainName), "DeprecateTLD: Sender is not domain holder.");
 
     // get domain ID
-    (, uint256 _tokenId, , ) = tldContract.domains(_domainName);
+    (, uint256 _tokenId, , ) = tldContract.domains(_oldDomainName);
 
     // transfer domain from _msgSender() to this contract address
     tldContract.transferFrom(_msgSender(), address(this), _tokenId);
 
     // if eligible, send refund
-    if (!isNotRefundEligible[_domainName]) {
+    if (!isNotRefundEligible[_tokenId]) {
       (bool success, ) = _msgSender().call{value: refundAmount}("");
       require(success, "Failed to send refund to msg sender");
     }
@@ -60,13 +65,16 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
     IFlexiPunkTLD newTldContract = IFlexiPunkTLD(altTld[_altTldName]);
     tokenId = newTldContract.mint{value: newTldContract.price()}(_newDomainName, _msgSender(), address(0));
 
-    emit RefundClaimed(_msgSender(), _domainName);
+    emit RefundClaimed(_msgSender(), _oldDomainName);
   }
 
   // OWNER
 
-  /// @notice Add a domain name from non-eligible domains list
-  function addNonEligibleDomains(string[] calldata _notEligibleDomains) external onlyOwner {
+  /// @notice Add a domain token ID to the non-eligible domains list
+  function addNonEligibleDomains(
+    //string[] calldata _notEligibleDomains // domain names
+    uint256[] memory _notEligibleDomains // domain token IDs
+  ) public onlyOwner {
     for (uint256 i = 0; i < _notEligibleDomains.length;) {
       isNotRefundEligible[_notEligibleDomains[i]] = true;
 
@@ -74,8 +82,11 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
     }
   }  
   
-  /// @notice Remove a domain name from non-eligible domains list
-  function removeNonEligibleDomains(string[] calldata _notEligibleDomains) external onlyOwner {
+  /// @notice Remove a domain token ID from non-eligible domains list
+  function removeNonEligibleDomains(
+    //string[] calldata _notEligibleDomains // domain names
+    uint256[] calldata _notEligibleDomains // domain token IDs
+  ) external onlyOwner {
     for (uint256 i = 0; i < _notEligibleDomains.length;) {
       isNotRefundEligible[_notEligibleDomains[i]] = false;
 
@@ -113,10 +124,10 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
     paused = !paused;
   }
 
-  /// @notice Withdraw ETH from contract
+  /// @notice Withdraw native coins from contract
   function withdraw() external onlyOwner {
     (bool success, ) = owner().call{value: address(this).balance}("");
-    require(success, "Failed to withdraw ETH from contract");
+    require(success, "Failed to withdraw native coins from contract");
   }
 
   // RECEIVE & FALLBACK
