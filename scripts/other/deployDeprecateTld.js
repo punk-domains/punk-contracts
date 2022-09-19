@@ -1,9 +1,9 @@
 // npx hardhat run scripts/other/deployDeprecateTld.js --network sokol
 
 const contractNameFactory = "DeprecateTld";
-const oldTldAddress = "";
-const newTldAddress = "";
-const newTldName = ".";
+const oldTldAddress = "0x0744d775804BB81efD3fF630402988b2F7eB284B";
+const newTldAddress = "0x110Cc3f64CdF8ffAdC785dFA53906bCfF76b3846";
+const newTldName = ".testdao";
 const refundAmount = ethers.utils.parseEther("0.01");
 
 async function main() {

@@ -110,8 +110,10 @@ describe("Deprecated TLDs contract test", function () {
   it("refund", async function () {
     // FAIL: try refunding when contract is paused
     await expect(deprecateTldContract.connect(user1).refund(
-      "user1",
-      "user1",
+      "user1", // deprecate
+      "user1", // new
+      newDomainName,
+      "user1a", // new
       newDomainName
     )).to.be.revertedWith('Contract paused');
 
@@ -120,8 +122,10 @@ describe("Deprecated TLDs contract test", function () {
 
     // FAIL: try refunding when user does not have the old domain
     await expect(deprecateTldContract.connect(user1).refund(
-      "user1",
-      "user1",
+      "user1", // old
+      "user1", // new
+      newDomainName,
+      "user1a", // new
       newDomainName
     )).to.be.revertedWith('DeprecateTLD: Sender is not domain holder.');
 
@@ -173,16 +177,20 @@ describe("Deprecated TLDs contract test", function () {
 
     // FAIL: try refund for non-existent domain
     await expect(deprecateTldContract.connect(user1).refund(
-      "user11111111111",
-      "user1",
+      "user11111111111", // old
+      "user1", // new
+      newDomainName,
+      "user1a", // new
       newDomainName
     )).to.be.revertedWith('DeprecateTLD: Sender is not domain holder.');
 
     // FAIL: try refund and get a new domain which is not added to the selected new domains list
     await expect(deprecateTldContract.connect(user1).refund(
-      "user1",
-      "user1",
-      oldDomainName // this is not a new domain TLD name
+      "user1", // old
+      "user1", // new
+      oldDomainName, // this is not a new domain TLD name
+      "user1a", // new
+      newDomainName
     )).to.be.revertedWith('You cannot get a domain of this TLD as domain refund');
 
     // check user1 balance before the refund
@@ -191,8 +199,10 @@ describe("Deprecated TLDs contract test", function () {
 
     // SUCCESS: refund user who paid for a domain (refund eligible, receives money and new domain)
     await deprecateTldContract.connect(user1).refund(
-      "user1",
-      "user1",
+      "user1", // old
+      "user1", // new
+      newDomainName,
+      "user1a", // new
       newDomainName
     )
 
@@ -211,8 +221,10 @@ describe("Deprecated TLDs contract test", function () {
 
     // SUCCESS: refund user who did not pay for a domain (only receives a new domain, no money)
     await deprecateTldContract.connect(user2).refund(
-      "user2",
-      "user2",
+      "user2", // old
+      "user2", // new
+      newDomainName,
+      "user2a", // new
       newDomainName
     )
 
@@ -228,7 +240,9 @@ describe("Deprecated TLDs contract test", function () {
     // FAIL: try to get refund again for a domain that was already refunded
     await expect(deprecateTldContract.connect(user1).refund(
       "user1", // already refunded
-      "user1",
+      "user1", // new
+      newDomainName,
+      "user1a", // new
       newDomainName
     )).to.be.revertedWith('DeprecateTLD: Sender is not domain holder.');
   });

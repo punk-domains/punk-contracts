@@ -35,11 +35,14 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
   /// @notice Refund a deprecated domain (if eligible) and mint a new one
   function refund(
     string memory _oldDomainName,
-    string memory _newDomainName,
-    string memory _altTldName
-  ) external nonReentrant returns(uint256 tokenId) {
+    string memory _newDomainName1,
+    string memory _altTldName1,
+    string memory _newDomainName2,
+    string memory _altTldName2
+  ) external nonReentrant {
     require(!paused, "Contract paused");
-    require(altTld[_altTldName] != address(0), "You cannot get a domain of this TLD as domain refund");
+    require(altTld[_altTldName1] != address(0), "You cannot get a domain of this TLD as domain refund (1)");
+    require(altTld[_altTldName2] != address(0), "You cannot get a domain of this TLD as domain refund (2)");
 
     IFlexiPunkTLD tldContract = IFlexiPunkTLD(deprecatedTld);
 
@@ -58,9 +61,13 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
       require(success, "Failed to send refund to msg sender");
     }
 
-    // mint a new domain
-    IFlexiPunkTLD newTldContract = IFlexiPunkTLD(altTld[_altTldName]);
-    tokenId = newTldContract.mint{value: newTldContract.price()}(_newDomainName, _msgSender(), address(0));
+    // mint a new domain (1)
+    IFlexiPunkTLD newTldContract1 = IFlexiPunkTLD(altTld[_altTldName1]);
+    newTldContract1.mint{value: newTldContract1.price()}(_newDomainName1, _msgSender(), address(0));
+
+    // mint a new domain (2)
+    IFlexiPunkTLD newTldContract2 = IFlexiPunkTLD(altTld[_altTldName2]);
+    newTldContract2.mint{value: newTldContract2.price()}(_newDomainName2, _msgSender(), address(0));
 
     emit RefundClaimed(_msgSender(), _oldDomainName);
   }
