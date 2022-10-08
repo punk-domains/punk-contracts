@@ -93,6 +93,8 @@ Then run this command:
 npx hardhat verify --network mumbai <contract-address> "argument"
 ```
 
+Also make sure you have the `@nomiclabs/hardhat-etherscan` library `3.1.0` or above.
+
 ### Verify TLD contracts
 
 Verifying TLD contracts generated through the factory is a bit tricky, but there is a way around the issue. See `scripts/temp/deployTld.js` for instructions.

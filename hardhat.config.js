@@ -50,6 +50,13 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 5000000000, // 5 gwei
     },
+    flareCoston: { // Flare Coston Testnet
+      url: 'https://coston-api.flare.network/ext/bc/C/rpc',
+      chainId: 16,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 25000000000, // 25 gwei
+    },
     mainnet: { // Ethereum
       url: 'https://eth-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ETHEREUM,
       chainId: 1,
@@ -93,6 +100,13 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 20000000000, // 20 gwei
     },
+    songbird: { // Songbird Mainnet
+      url: 'https://songbird-api.flare.network/ext/C/rpc',
+      chainId: 19,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 25000000000, // 25 gwei
+    },
     xdai: { // Gnosis Chain mainnet
       url: 'https://rpc.gnosischain.com',
       chainId: 100,
@@ -109,14 +123,34 @@ module.exports = {
       aurora: process.env.AURORASCAN_API_KEY,
       auroraTestnet: process.env.AURORASCAN_API_KEY,
       bsc: process.env.BSC_API_KEY,
+      flareCoston: "randomstring",
       mainnet: process.env.ETHERSCAN_API_KEY,
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY, 
       sokol: "randomstring",
+      songbird: "randomstring",
       xdai: "randomstring"
-    }
+    },
+    customChains: [
+      {
+        network: "flareCoston",
+        chainId: 16,
+        urls: {
+          apiURL: "https://coston-explorer.flare.network/api",
+          browserURL: "https://coston-explorer.flare.network"
+        }
+      },
+      {
+        network: "songbird",
+        chainId: 19,
+        urls: {
+          apiURL: "https://songbird-explorer.flare.network//api",
+          browserURL: "https://songbird-explorer.flare.network/"
+        }
+      }
+    ]
   },
 
   solidity: {

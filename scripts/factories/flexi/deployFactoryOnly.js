@@ -18,6 +18,8 @@ async function main() {
     tldPrice = "75000"; // XDAI
   } else if (network.config.chainId === 56) {
     tldPrice = "250"; // BNB
+  } else if (network.config.chainId === 19) {
+    tldPrice = "2000000"; // SGB
   }
 
   const [deployer] = await ethers.getSigners();

@@ -4,9 +4,9 @@ This script is needed to verify contracts that are generated through contract fa
 How to use:
 - First deploy the Factory contract
 - Then in deployTld.js replace the owner and factory addresses with the ones you want
-- Then deploy the PunkTLD contract: npx hardhat run scripts/temp/deployFlexiTld.js --network optimisticKovan
+- Then deploy the PunkTLD contract: npx hardhat run scripts/temp/deployFlexiTld.js --network songbird
 - Go to arguments.js file and enter correct addresses (and other data if changed in deployTld.js)
-- Verify it (see command line for the Verify command). Something like: npx hardhat verify --network polygonMumbai --constructor-args scripts/arguments.js <deployed-contract-address>
+- Verify it (see command line for the Verify command). Something like: npx hardhat verify --network songbird --constructor-args scripts/temp/argumentsFlexiTld.js <contract-address>
 - After successful verification, every TLD contract created through the factory will show contract code. 
 - The PunkTLD contract that you deployed using this script can be ignored (factory does not know about it). It
 was only needed for the verification purposes.
