@@ -146,7 +146,7 @@ module.exports = {
         network: "songbird",
         chainId: 19,
         urls: {
-          apiURL: "https://songbird-explorer.flare.network//api",
+          apiURL: "https://songbird-explorer.flare.network/api",
           browserURL: "https://songbird-explorer.flare.network/"
         }
       }
