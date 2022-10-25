@@ -5,23 +5,21 @@ import "../../lib/strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./RenewablePunkTLD.sol";
-import "../../interfaces/IBasePunkTLDFactory.sol";
 import "../../interfaces/IPunkForbiddenTlds.sol";
 
 /// @title Punk Domains TLD Factory contract (Renewable domains)
 /// @author Tempe Techie
 /// @notice Factory contract dynamically generates new TLD contracts.
-contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuard {
+contract RenewablePunkTLDFactory is Ownable, ReentrancyGuard {
   using strings for string;
 
   string[] public tlds; // existing TLDs
-  mapping (string => address) public override tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
+  mapping (string => address) public tldNamesAddresses; // a mapping of TLDs (string => TLDaddress)
 
   address public forbiddenTlds; // address of the contract that stores the list of forbidden TLDs
   address public metadataAddress; // default FlexiPunkMetadata address
   
   uint256 public price; // price for creating a new TLD
-  uint256 public royalty = 0; // royalty for Punk Domains when new domain is minted 
   bool public buyingEnabled = false; // buying TLDs enabled (true/false)
   uint256 public nameMaxLength = 40; // the maximum length of a TLD name
 
@@ -39,7 +37,7 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
   }
 
   // READ
-  function getTldsArray() public override view returns(string[] memory) {
+  function getTldsArray() public view returns(string[] memory) {
     return tlds;
   }
 
@@ -64,9 +62,8 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
     string memory _name,
     string memory _symbol,
     address _tldOwner,
-    uint256 _domainPrice,
     bool _buyingEnabled
-  ) external payable override nonReentrant returns(address) {
+  ) external payable nonReentrant returns(address) {
     require(buyingEnabled == true, "Buying TLDs disabled");
     require(msg.value >= price, "Value below price");
 
@@ -77,7 +74,6 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
       _name, 
       _symbol, 
       _tldOwner, 
-      _domainPrice, 
       _buyingEnabled
     );
 
@@ -88,7 +84,6 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
     string memory _nameRaw,
     string memory _symbol,
     address _tldOwner,
-    uint256 _domainPrice,
     bool _buyingEnabled
   ) internal returns(address) {
     string memory _name = strings.lower(_nameRaw);
@@ -137,11 +132,6 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
     price = _price;
     emit ChangeTldPrice(_msgSender(), _price);
   }
-  
-  /// @notice Factory contract owner can change royalty fee for future contracts.
-  function changeRoyalty(uint256 _royalty) external onlyOwner {
-    royalty = _royalty;
-  }
 
   /// @notice Factory owner can create a new TLD for a specified address for free
   /// @param _name Enter TLD name starting with a dot and make sure letters are in lowercase form.
@@ -150,7 +140,6 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
     string memory _name,
     string memory _symbol,
     address _tldOwner,
-    uint256 _domainPrice,
     bool _buyingEnabled
   ) external onlyOwner returns(address) {
 
@@ -158,7 +147,6 @@ contract RenewablePunkTLDFactory is IBasePunkTLDFactory, Ownable, ReentrancyGuar
       _name, 
       _symbol, 
       _tldOwner, 
-      _domainPrice, 
       _buyingEnabled
     );
 

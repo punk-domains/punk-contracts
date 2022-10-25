@@ -125,8 +125,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   /// @return token ID
   function mint(
     string memory _domainName,
-    address _domainHolder,
-    address _referrer
+    address _domainHolder
   ) external nonReentrant returns(uint256) {
     require(buyingEnabled || _msgSender() == owner(), "Buying domains disabled");
     require(_msgSender() == owner() || _msgSender() == minter, "Only owner and minter can mint domains");
