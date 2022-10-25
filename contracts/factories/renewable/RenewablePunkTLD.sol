@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "../flexi/interfaces/IFlexiPunkMetadata.sol";
+import "./interfaces/IRenewablePunkMetadata.sol";
 import "../../lib/strings.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -32,14 +32,13 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   bool public minterFrozen = false; // minter address frozen forever
   bool public renewerFrozen = false; // renewer address frozen forever
 
-  uint256 public totalSupply;
   uint256 public idCounter = 1; // up only
-
   uint256 public nameMaxLength = 140; // max length of a domain name
+  uint256 public totalSupply;
   
-  mapping (string => Domain) public domains; // mapping (domain name => Domain struct)
-  mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (address => string) public defaultNames; // user's default domain
+  mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
+  mapping (string => Domain) public domains; // mapping (domain name => Domain struct)
 
   event DataChanged(address indexed user);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
@@ -66,18 +65,33 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   // Domain getters - you can also get all Domain data by calling the auto-generated domains(domainName) method
   function getDomainHolder(string calldata _domainName) public view returns(address) {
-    return domains[strings.lower(_domainName)].holder;
+    string memory dName = strings.lower(_domainName);
+
+    if (block.timestamp > domains[dName].expiry) {
+      return address(0);
+    }
+
+    return domains[dName].holder;
   }
 
   function getDomainData(string calldata _domainName) public view returns(string memory) {
-    return domains[strings.lower(_domainName)].data; // should be a JSON object
+    string memory dName = strings.lower(_domainName);
+
+    if (block.timestamp > domains[dName].expiry) {
+      return "";
+    }
+    
+    return domains[dName].data; // should be a JSON object
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-    return IFlexiPunkMetadata(metadataAddress).getMetadata(
-      domains[domainIdsNames[_tokenId]].name, 
+    string memory dName = domains[domainIdsNames[_tokenId]].name;
+    // TODO: if expired, return metadata that says that this domain has expired
+    return IRenewablePunkMetadata(metadataAddress).getMetadata(
+      dName, 
       name(), 
-      _tokenId
+      _tokenId,
+      domains[dName].expiry
     );
   }
 
@@ -103,6 +117,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   /// @notice Default domain is the domain name that reverse resolver returns for a given address.
   function editDefaultDomain(string calldata _domainName) external {
     string memory dName = strings.lower(_domainName);
+    require(block.timestamp < domains[dName].expiry, "This domain has expired");
     require(domains[dName].holder == _msgSender(), "You do not own the selected domain");
     defaultNames[_msgSender()] = dName;
     emit DefaultDomainChanged(_msgSender(), dName);
@@ -113,6 +128,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   /// @param _data Custom data needs to be in a JSON object format.
   function editData(string calldata _domainName, string calldata _data) external {
     string memory dName = strings.lower(_domainName);
+    require(block.timestamp < domains[dName].expiry, "This domain has expired");
     require(domains[dName].holder == _msgSender(), "Only domain holder can edit their data");
     domains[dName].data = _data;
     emit DataChanged(_msgSender());
@@ -128,7 +144,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     address _domainHolder
   ) external nonReentrant returns(uint256) {
     require(buyingEnabled || _msgSender() == owner(), "Buying domains disabled");
-    require(_msgSender() == owner() || _msgSender() == minter, "Only owner and minter can mint domains");
+    require(_msgSender() == owner() || _msgSender() == minter, "Only owner or minter can mint domains");
 
     // TODO: 
     // if domain already minted, but expired, transfer it to the new owner
@@ -238,7 +254,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
 
     // if domain is expired, prevent the transfer
-    require(block.timestamp < domains[domainIdsNames[tokenId]].expiry, "This domain has expired.");
+    require(block.timestamp < domains[domainIdsNames[tokenId]].expiry, "This domain has expired");
 
     if (from != address(0)) { // run on every transfer but not on mint
       domains[domainIdsNames[tokenId]].holder = to; // change holder address in Domain struct
