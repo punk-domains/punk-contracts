@@ -86,7 +86,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
     string memory dName = domains[domainIdsNames[_tokenId]].name;
-    // TODO: if expired, return metadata that says that this domain has expired
+    
     return IRenewablePunkMetadata(metadataAddress).getMetadata(
       dName, 
       name(), 
@@ -141,31 +141,45 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   /// @return token ID
   function mint(
     string memory _domainName,
-    address _domainHolder
+    address _domainHolder,
+    uint256 _expiry
   ) external nonReentrant returns(uint256) {
     require(buyingEnabled || _msgSender() == owner(), "Buying domains disabled");
     require(_msgSender() == owner() || _msgSender() == minter, "Only owner or minter can mint domains");
 
-    // TODO: 
-    // if domain already minted, but expired, transfer it to the new owner
-      // transfer code (check ERC-721 transfer function)
-      // make sure to include the transfer event
-      // delete custom data
-      // add new owner to struct
-      // if default domain name is not set for that holder, set it now
-      // if previous owner had this domain name as default, unset it as default
-    // else
-    return _mintDomain(_domainName, _domainHolder, "");
+    // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
+    string memory _domainNameLower = strings.lower(_domainName);
+
+    if (
+      (domains[_domainNameLower].holder != address(0)) // if existing domain
+      && 
+      (block.timestamp > domains[_domainNameLower].expiry) // and expired
+    ) {
+      // burn the expired domain and delete custom data
+      uint256 tokenId = domains[_domainNameLower].tokenId;
+
+      // if old owner had this domain set as default domain, unset it
+      if (keccak256(bytes(defaultNames[domains[_domainNameLower].holder])) == keccak256(bytes(_domainNameLower))) {
+        delete defaultNames[domains[_domainNameLower].holder];
+      }
+
+      delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
+      delete domains[_domainNameLower]; // delete string => Domain struct mapping
+
+      _burn(tokenId); // burn the token
+      --totalSupply;
+      emit DomainBurned(_msgSender(), _domainNameLower);
+    }
+
+    return _mintDomain(_domainNameLower, _domainHolder, _expiry, "");
   }
 
   function _mintDomain(
-    string memory _domainNameRaw, 
+    string memory _domainName, 
     address _domainHolder,
+    uint256 _expiry,
     string memory _data
   ) internal returns(uint256) {
-    // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
-    string memory _domainName = strings.lower(_domainNameRaw);
-
     require(strings.len(strings.toSlice(_domainName)) > 0, "Domain name empty");
     require(bytes(_domainName).length < nameMaxLength, "Domain name is too long");
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0, "There should be no dots in the name");
@@ -181,6 +195,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     newDomain.tokenId = idCounter;
     newDomain.holder = _domainHolder;
     newDomain.data = _data;
+    newDomain.expiry = _expiry;
 
     // add to both mappings
     domains[_domainName] = newDomain;
@@ -253,13 +268,11 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   ///@dev Hook that is called before any token transfer. This includes minting and burning.
   function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
 
-    // if domain is expired, prevent the transfer
-    require(block.timestamp < domains[domainIdsNames[tokenId]].expiry, "This domain has expired");
-
-    if (from != address(0)) { // run on every transfer but not on mint
+    if (from != address(0) || to != address(0)) { // run on every transfer but not on mint or burn
+      require(block.timestamp < domains[domainIdsNames[tokenId]].expiry, "This domain has expired"); // if domain is expired, prevent the transfer
       domains[domainIdsNames[tokenId]].holder = to; // change holder address in Domain struct
       
-      if (bytes(defaultNames[to]).length == 0 && to != address(0)) {
+      if (bytes(defaultNames[to]).length == 0) {
         defaultNames[to] = domains[domainIdsNames[tokenId]].name; // if default domain name is not set for that holder, set it now
       }
 
