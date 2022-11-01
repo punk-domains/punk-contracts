@@ -84,6 +84,11 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     return domains[dName].data; // should be a JSON object
   }
 
+  function getDomainExpiry(string calldata _domainName) public view returns(uint256) {
+    string memory dName = strings.lower(_domainName);
+    return domains[dName].expiry; // expiration timestamp (seconds since unix epoch)
+  }
+
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
     string memory dName = domains[domainIdsNames[_tokenId]].name;
     
@@ -138,14 +143,16 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   /// @notice Mint a new domain name as NFT (no dots and spaces allowed).
   /// @param _domainName Enter domain name without TLD and make sure letters are in lowercase form.
+  /// @param _domainHolder Enter the domain receiver's address
+  /// @param _expiry Expiration date in seconds since the unix epoch
   /// @return token ID
   function mint(
     string memory _domainName,
     address _domainHolder,
     uint256 _expiry
   ) external nonReentrant returns(uint256) {
-    require(buyingEnabled || _msgSender() == owner(), "Buying domains disabled");
-    require(_msgSender() == owner() || _msgSender() == minter, "Only owner or minter can mint domains");
+    require(buyingEnabled, "Buying domains disabled");
+    require(_msgSender() == minter, "Only minter can mint domains");
 
     // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
     string memory _domainNameLower = strings.lower(_domainName);
@@ -215,7 +222,17 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   // RENEWER
 
-    // TODO: renew a domain that has not expired yet
+  /// @notice Renew a domain name that has not expired yet
+  /// @param _domainName Enter domain name without TLD and make sure letters are in lowercase form.
+  /// @param _expiry ... TODO: add seconds or set a new expiry date?
+  function renew(
+    string memory _domainName,
+    uint256 _expiry // expiry or addSeconds?
+  ) external nonReentrant {
+    require(_msgSender() == renewer, "Only renewer can renew domains");
+
+    // TODO
+  }
 
   // OWNER
 
