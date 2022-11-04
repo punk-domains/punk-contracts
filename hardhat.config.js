@@ -22,6 +22,13 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 1000000000, // 1 gwei
     },
+    arbitrumGoerli: {
+      url: 'https://goerli-rollup.arbitrum.io/rpc',
+      chainId: 421613,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
+    },
     arbitrumTestnet: {
       url: 'https://rinkeby.arbitrum.io/rpc',
       chainId: 421611,
@@ -79,11 +86,12 @@ module.exports = {
       gasPrice: 1000000000, // 1 gwei
     },
     polygon: {
-      url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_POLYGON,
+      //url: 'https://polygon-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_POLYGON,
+      url: 'https://1rpc.io/matic',
       chainId: 137,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 45000000000, // 45 gwei
+      gasPrice: 200000000000, // 100 gwei
     },
     polygonMumbai: {
       url: 'https://polygon-mumbai.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_MUMBAI,
@@ -120,6 +128,7 @@ module.exports = {
     apiKey: { // all possible key names here: https://gist.github.com/tempe-techie/95a3ad4e81b46c895928a0524fc2b7ac
       arbitrumOne: process.env.ARBISCAN_API_KEY,
       arbitrumTestnet: process.env.ARBISCAN_API_KEY,
+      arbitrumGoerli: process.env.ARBISCAN_API_KEY,
       aurora: process.env.AURORASCAN_API_KEY,
       auroraTestnet: process.env.AURORASCAN_API_KEY,
       bsc: process.env.BSC_API_KEY,
@@ -134,6 +143,14 @@ module.exports = {
       xdai: "randomstring"
     },
     customChains: [
+      {
+        network: "arbitrumGoerli",
+        chainId: 421613,
+        urls: {
+          apiURL: "https://api-goerli.arbiscan.io/api",
+          browserURL: "https://goerli.arbiscan.io"
+        }
+      },
       {
         network: "flareCoston",
         chainId: 16,

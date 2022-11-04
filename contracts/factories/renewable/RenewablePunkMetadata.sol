@@ -4,10 +4,10 @@ pragma solidity ^0.8.4;
 import "base64-sol/base64.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title Punk Domains TLD Metadata contract (Flexi)
+/// @title Punk Domains TLD Metadata contract (Renewable)
 /// @author Tempe Techie
 /// @notice Contract that stores metadata for TLD contracts.
-contract FlexiPunkMetadata {
+contract RenewablePunkMetadata {
   mapping (address => string) public descriptions; // TLD-specific descriptions, mapping(tldAddress => description)
   mapping (address => string) public brands; // TLD-specific brand names, mapping(tldAddress => brandName)
 
