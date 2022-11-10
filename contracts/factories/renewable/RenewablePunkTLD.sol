@@ -232,7 +232,8 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     string memory _domainName,
     uint256 _addExpirySeconds
   ) external nonReentrant returns(uint256) {
-    require(_msgSender() == renewer, "Only renewer can renew domains");
+    require(_msgSender() == renewer, "Only renewer can renew domains.");
+    require(domains[_domainName].holder != address(0), "Domain does not exist yet.");
 
     string memory dName = strings.lower(_domainName);
 
