@@ -19,15 +19,15 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     uint256 tokenId;
     address holder;
     string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."], "url": "https://punk.domains"}
-    uint256 expiry; // the domain expiration timestamp (needs to be renewed before this date)
+    uint256 expiry; // the domain expiration timestamp (needs to be renewed before this date, otherwise domain expires)
   }
 
   address public immutable factoryAddress; // RenewablePunkTLDFactory address
   address public metadataAddress; // RenewablePunkMetadata address
-  address public minter; // address which is allowed to mint domains even if minting is paused
+  address public minter; // address which is allowed to mint domains
   address public renewer; // address which is allowed to renew domains
 
-  bool public buyingEnabled = false; // buying domains enabled (means that minting is "paused")
+  bool public buyingEnabled = false; // is buying domains enabled? (if false, it means that minting is "paused")
   bool public metadataFrozen = false; // metadata address frozen forever
   bool public minterFrozen = false; // minter address frozen forever
   bool public renewerFrozen = false; // renewer address frozen forever
@@ -36,7 +36,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   uint256 public nameMaxLength = 140; // max length of a domain name
   uint256 public totalSupply;
   
-  mapping (address => string) public defaultNames; // user's default domain
+  mapping (address => string) public defaultNames; // user's default domain (address => default domain name)
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (string => Domain) public domains; // mapping (domain name => Domain struct)
 
@@ -45,7 +45,9 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   event DomainBurned(address indexed user, string fullDomainName);
   event DomainBuyingToggle(address indexed user, bool domainBuyingToggle);
   event DomainCreated(address indexed user, address indexed owner, string fullDomainName);
-  event MintingDisabledForever(address user);
+  event MetadataFreeze(address user);
+  event MinterFreeze(address user);
+  event RenewerFreeze(address user);
 
   constructor(
     string memory _name,
@@ -157,6 +159,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
     string memory _domainNameLower = strings.lower(_domainName);
 
+    // if domain already exists, but is expired, burn it before minting it again
     if (
       (domains[_domainNameLower].holder != address(0)) // if existing domain
       && 
@@ -224,14 +227,20 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   /// @notice Renew a domain name that has not expired yet
   /// @param _domainName Enter domain name without TLD and make sure letters are in lowercase form.
-  /// @param _expiry ... TODO: add seconds or set a new expiry date?
+  /// @param _addExpirySeconds Add seconds to the existing expiry timestamp
   function renew(
     string memory _domainName,
-    uint256 _expiry // expiry or addSeconds?
-  ) external nonReentrant {
+    uint256 _addExpirySeconds
+  ) external nonReentrant returns(uint256) {
     require(_msgSender() == renewer, "Only renewer can renew domains");
 
-    // TODO
+    string memory dName = strings.lower(_domainName);
+
+    require(block.timestamp < domains[dName].expiry, "Cannot renew an expired domain.");
+
+    domains[dName].expiry += _addExpirySeconds; // add expiry seconds
+
+    return domains[dName].expiry; // return new expiry date
   }
 
   // OWNER
@@ -262,16 +271,19 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   /// @notice Freeze metadata address. Only TLD contract owner can call this function.
   function freezeMetadata() external onlyOwner {
     metadataFrozen = true; // this action is irreversible
+    emit MetadataFreeze(_msgSender());
   }
 
   /// @notice Freeze the minter address. Only TLD contract owner can call this function.
   function freezeMinter() external onlyOwner {
     minterFrozen = true; // this action is irreversible
+    emit MinterFreeze(_msgSender());
   }
 
   /// @notice Freeze the renewer address. Only TLD contract owner can call this function.
   function freezeRenewer() external onlyOwner {
     renewerFrozen = true; // this action is irreversible
+    emit RenewerFreeze(_msgSender());
   }
 
   /// @notice Only TLD contract owner can call this function.
