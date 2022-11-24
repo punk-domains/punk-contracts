@@ -1,8 +1,8 @@
-// npx hardhat run scripts/factories/flexi/callMethods.js --network songbird
+// npx hardhat run scripts/factories/flexi/callMethods.js --network opera
 
 const forbiddenAddress = "0xC6c17896fa051083324f2aD0Ed4555dC46D96E7f";
 const factoryAddress = "0xeA2f99fE93E5D07F61334C5Eb9c54c5D5C957a6a";
-const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
+const tldAddress = "";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -22,34 +22,35 @@ async function main() {
 
   const tldInterface = new ethers.utils.Interface([
     "function tokenURI(uint256) external view returns(string memory)",
-    "function mint(string memory,address,address) external payable override returns(uint256)"
+    "function mint(string memory,address,address) external payable returns(uint256)"
   ]);
 
   const forbiddenContract = new ethers.Contract(forbiddenAddress, forbiddenInterface, deployer);
   const factoryContract = new ethers.Contract(factoryAddress, factoryInterface, deployer);
-  const tldContract = new ethers.Contract(tldAddress, tldInterface, deployer);
+  //const tldContract = new ethers.Contract(tldAddress, tldInterface, deployer);
 
   //const minterBefore = await contract.minter();
   //console.log("Minter before: " + minterBefore);
 
   // ADD FACTORY ADDRESS TO THE FORBIDDEN CONTRACT
-  // await forbiddenContract.addFactoryAddress(factoryAddress);
+  //await forbiddenContract.addFactoryAddress(factoryAddress);
 
-  // const factoryAdded = await forbiddenContract.factoryAddresses(factoryAddress);
-  // console.log("factoryAdded:");
-  // console.log(factoryAdded);
+  //const factoryAdded = await forbiddenContract.factoryAddresses(factoryAddress);
+  //console.log("factoryAdded:");
+  //console.log(factoryAdded);
 
   //await minterContract.togglePaused();
   //await minterContract.transferOwnership(newOwnerAddress);
 
   // MINT A NEW TLD
-  const tldName = ".sgb";
+  const tldName = ".fantom";
+  const tldSymbol = ".FANTOM";
   const domainPrice = ethers.utils.parseUnits("0", "ether");
 
   /*
   await factoryContract.ownerCreateTld(
     tldName, // TLD name
-    ".SGB", // symbol
+    tldSymbol, // symbol
     deployer.address, // TLD owner
     domainPrice, // domain price
     false // buying enabled
@@ -72,9 +73,9 @@ async function main() {
   );
   */
 
-  const metadata = await tldContract.tokenURI(1);
-  console.log("metadata:");
-  console.log(metadata);
+  //const metadata = await tldContract.tokenURI(1);
+  //console.log("metadata:");
+  //console.log(metadata);
 
   console.log("Method calls completed");
 }

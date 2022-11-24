@@ -79,11 +79,11 @@ module.exports = {
       gasPrice: 10000000000, // 10 gwei
     },
     opera: { // Fantom mainnet
-      url: "https://rpcapi.fantom.network", //'https://rpc.ftm.tools',
+      url: 'https://rpc.ftm.tools', // "https://rpcapi.fantom.network", 
       chainId: 250,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 5000000000, // 5 gwei
+      gasPrice: 70000000000, // 70 gwei
     },
     optimisticEthereum: {
       url: 'https://opt-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_OPTIMISM,
