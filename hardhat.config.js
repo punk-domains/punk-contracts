@@ -65,11 +65,11 @@ module.exports = {
       gasPrice: 25000000000, // 25 gwei
     },
     ftmTestnet: { // Fantom testnet
-      url: 'https://rpc.testnet.fantom.network',
+      url: "https://rpc.ankr.com/fantom_testnet", //'https://rpc.testnet.fantom.network',
       chainId: 4002,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 1000000000, // 1 gwei
+      gasPrice: 2000000000, // 1 gwei
     },
     mainnet: { // Ethereum
       url: 'https://eth-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ETHEREUM,

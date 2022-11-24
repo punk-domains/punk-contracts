@@ -7,7 +7,7 @@ async function main() {
   const forbAddress = "<enter-forbidden-tlds-contract-address>";
   const metaAddress = "<enter-metadata-address>";
 
-  let tldPrice = "0.01"; // in ETH or MATIC on testnets
+  let tldPrice = "0.01"; // price on testnets
 
   // mainnet prices
   if (network.config.chainId === 1 || network.config.chainId === 10 || network.config.chainId === 42161) {
@@ -20,6 +20,8 @@ async function main() {
     tldPrice = "250"; // BNB
   } else if (network.config.chainId === 19) {
     tldPrice = "2000000"; // SGB
+  } else if (network.config.chainId === 250) {
+    tldPrice = "270000"; // FTM
   }
 
   const [deployer] = await ethers.getSigners();

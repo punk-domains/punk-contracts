@@ -13,6 +13,9 @@ was only needed for the verification purposes.
 */
 
 const contractName1 = "FlexiPunkTLD";
+const tldOwner = "<enter-owner-address>";
+const factoryAddress = "<enter-factory-address>";
+  const metadataAddress = "<enter-metadata-address>";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -26,12 +29,10 @@ async function main() {
   
   const tldName = ".test";
   const tldSymbol = "TEST";
-  const tldOwner = "<enter-owner-address>";
+  
   const tldPrice = ethers.utils.parseUnits("0.1", "ether");
   const buyingEnabled = false;
   const royalty = 0;
-  const factoryAddress = "<enter-factory-address>";
-  const metadataAddress = "<enter-metadata-address>";
 
   const instance1 = await contract1.deploy(
     tldName, tldSymbol, tldOwner, tldPrice, buyingEnabled, royalty, factoryAddress, metadataAddress
