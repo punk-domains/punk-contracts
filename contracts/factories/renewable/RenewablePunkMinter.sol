@@ -61,7 +61,7 @@ contract RenewablePunkMinter is Ownable, ReentrancyGuard {
     address _domainHolder,
     address _referrer
   ) external nonReentrant payable returns(uint256 tokenId) {
-    require(!paused || _msgSender() == owner(), "Minting paused");
+    require(!paused, "Minting paused");
 
     // find price
     uint256 domainLength = strings.len(strings.toSlice(_domainName));
@@ -163,24 +163,29 @@ contract RenewablePunkMinter is Ownable, ReentrancyGuard {
     );
   }
 
-  /// @notice Recover any ERC-20 token mistakenly sent to this contract address
-  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
-    IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
-  }
-
-  /// @notice Recover any ERC-721 token mistakenly sent to this contract address
-  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
-    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
-  }
-
   /// @notice Pause or unpause the contract
   function togglePaused() external onlyOwner {
     paused = !paused;
   }
 
+  // TLD OWNER
+
+  /// @notice Recover any ERC-20 token mistakenly sent to this contract address
+  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external {
+    require(_msgSender() == tldContract.owner(), "Only TLD owner can do recovery.");
+    IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
+  }
+
+  /// @notice Recover any ERC-721 token mistakenly sent to this contract address
+  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external {
+    require(_msgSender() == tldContract.owner(), "Only TLD owner can do recovery.");
+    IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+  }
+
   /// @notice Recover any ETH mistakenly sent to this contract address
-  function withdraw() external onlyOwner {
-    (bool success, ) = owner().call{value: address(this).balance}("");
+  function withdraw() external {
+    require(_msgSender() == tldContract.owner(), "Only TLD owner can do recovery.");
+    (bool success, ) = payable(tldContract.owner()).call{value: address(this).balance}("");
     require(success, "Failed to withdraw ETH from contract");
   }
 

@@ -64,12 +64,26 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 25000000000, // 25 gwei
     },
+    ftmTestnet: { // Fantom testnet
+      url: 'https://rpc.testnet.fantom.network',
+      chainId: 4002,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
+    },
     mainnet: { // Ethereum
       url: 'https://eth-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_ETHEREUM,
       chainId: 1,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
       gasPrice: 10000000000, // 10 gwei
+    },
+    opera: { // Fantom mainnet
+      url: "https://rpcapi.fantom.network", //'https://rpc.ftm.tools',
+      chainId: 250,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 5000000000, // 5 gwei
     },
     optimisticEthereum: {
       url: 'https://opt-mainnet.g.alchemy.com/v2/' + process.env.ALCHEMY_API_KEY_OPTIMISM,
@@ -134,6 +148,8 @@ module.exports = {
       bsc: process.env.BSC_API_KEY,
       flareCoston: "randomstring",
       mainnet: process.env.ETHERSCAN_API_KEY,
+      ftmTestnet: process.env.FTMSCAN_API_KEY,
+      opera: process.env.FTMSCAN_API_KEY,
       optimisticEthereum: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,

@@ -128,19 +128,24 @@ contract RenewablePunkRenewer is Ownable, ReentrancyGuard {
     return tldContract.renew(_domainName, renewLength);
   }
 
+  // TLD OWNER
+
   /// @notice Recover any ERC-20 token mistakenly sent to this contract address
-  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external onlyOwner {
+  function recoverERC20(address tokenAddress_, uint256 tokenAmount_, address recipient_) external {
+    require(_msgSender() == tldContract.owner(), "Only TLD owner can do recovery.");
     IERC20(tokenAddress_).transfer(recipient_, tokenAmount_);
   }
 
   /// @notice Recover any ERC-721 token mistakenly sent to this contract address
-  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
+  function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external {
+    require(_msgSender() == tldContract.owner(), "Only TLD owner can do recovery.");
     IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
 
   /// @notice Recover any ETH mistakenly sent to this contract address
-  function withdraw() external onlyOwner {
-    (bool success, ) = owner().call{value: address(this).balance}("");
+  function withdraw() external {
+    require(_msgSender() == tldContract.owner(), "Only TLD owner can do recovery.");
+    (bool success, ) = payable(tldContract.owner()).call{value: address(this).balance}("");
     require(success, "Failed to withdraw ETH from contract");
   }
 
