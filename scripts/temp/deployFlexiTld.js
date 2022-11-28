@@ -13,9 +13,9 @@ was only needed for the verification purposes.
 */
 
 const contractName1 = "FlexiPunkTLD";
-const tldOwner = "<enter-owner-address>";
+const tldOwner = "0xb29050965A5AC70ab487aa47546cdCBc97dAE45D";
 const factoryAddress = "<enter-factory-address>";
-  const metadataAddress = "<enter-metadata-address>";
+const metadataAddress = "<enter-metadata-address>";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
