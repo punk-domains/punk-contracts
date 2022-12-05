@@ -22,15 +22,15 @@ interface IFlexiPunkTLD is IERC721 {
 }
 
 // minter contract
-contract ShrohmMinter is Ownable, ReentrancyGuard {
-  address public immutable nftAddress;
-  address public smolAddress;
+contract PoolMinter is Ownable, ReentrancyGuard {
+  address public treasuryAddress;
+  address public brokerAddress;
 
   bool public paused = true;
 
   uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
-  uint256 public royaltyFee = 2_000; // share of each domain purchase (in bips) that goes to Punk Domains
-  uint256 public smolFee = 1_500; // share of each domain purchase (in bips) that goes to Smol Domains
+  uint256 public royaltyFee = 1_340; // share of each domain purchase (in bips) that goes to Punk Domains
+  uint256 public brokerFee = 660; // share of each domain purchase (in bips) that goes to the broker
   uint256 public constant MAX_BPS = 10_000;
 
   uint256 public price1char; // 1 char domain price
@@ -43,8 +43,8 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
 
   // CONSTRUCTOR
   constructor(
-    address _nftContract,
-    address _smolAddress,
+    address _treasuryAddress,
+    address _brokerAddress,
     address _tldAddress,
     uint256 _price1char,
     uint256 _price2char,
@@ -52,9 +52,8 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
     uint256 _price4char,
     uint256 _price5char
   ) {
-    nftAddress = _nftContract;
-    smolAddress = _smolAddress;
-
+    treasuryAddress = _treasuryAddress;
+    brokerAddress = _brokerAddress;
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     price1char = _price1char;
@@ -62,17 +61,6 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
     price3char = _price3char;
     price4char = _price4char;
     price5char = _price5char;
-  }
-
-  // READ
-
-  /// @notice Returns true or false if address is eligible to mint a domain
-  function canUserMint(address _user) public view returns(bool) {
-    if (IERC721(nftAddress).balanceOf(_user) > 0) {
-      return true;
-    }
-
-    return false;
   }
 
   // WRITE
@@ -83,7 +71,6 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
     address _referrer
   ) external nonReentrant payable returns(uint256 tokenId) {
     require(!paused, "Minting paused");
-    require(canUserMint(_msgSender()), "Not eligible for minting");
 
     // find price
     uint256 domainLength = strings.len(strings.toSlice(_domainName));
@@ -110,11 +97,11 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
       require(sentRoyaltyFee, "Failed to send royalty fee");
     }
 
-    // send smol fee
-    if (smolFee > 0 && smolAddress != address(0)) {
-      uint256 smolPayment = (selectedPrice * smolFee) / MAX_BPS;
-      (bool sentSmolFee, ) = payable(smolAddress).call{value: smolPayment}("");
-      require(sentSmolFee, "Failed to send smol fee");
+    // send broker fee
+    if (brokerFee > 0 && brokerAddress != address(0)) {
+      uint256 brokerPayment = (selectedPrice * brokerFee) / MAX_BPS;
+      (bool sentBrokerFee, ) = payable(brokerAddress).call{value: brokerPayment}("");
+      require(sentBrokerFee, "Failed to send broker fee");
     }
 
     // send referral fee
@@ -124,9 +111,9 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
       require(sentReferralFee, "Failed to send referral fee");
     }
 
-    // send the rest to TLD owner
-    (bool sent, ) = payable(tldContract.owner()).call{value: address(this).balance}("");
-    require(sent, "Failed to send domain payment to TLD owner");
+    // send the rest to the treasury
+    (bool sent, ) = payable(treasuryAddress).call{value: address(this).balance}("");
+    require(sent, "Failed to send domain payment to the treasury");
 
     // mint a domain
     tokenId = tldContract.mint{value: 0}(_domainName, _domainHolder, address(0));
@@ -155,6 +142,11 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
   function changeReferralFee(uint256 _referralFee) external onlyOwner {
     require(_referralFee <= 2000, "Cannot exceed 20%");
     referralFee = _referralFee;
+  }
+
+  /// @notice This changes the treasury address in the minter contract
+  function changeTreasuryAddress(address _treasuryAddress) external onlyOwner {
+    treasuryAddress = _treasuryAddress;
   }
 
   function ownerFreeMint(
@@ -194,17 +186,17 @@ contract ShrohmMinter is Ownable, ReentrancyGuard {
     royaltyFee = _royaltyFee;
   }
 
-  /// @notice This changes the Smol Domains address in the minter contract
-  function changeSmolAddress(address _smolAddress) external {
-    require(_msgSender() == smolAddress, "Sender is not Smol Domains");
-    smolAddress = _smolAddress;
+  /// @notice This changes the Broker address in the minter contract
+  function changeBrokerAddress(address _brokerAddress) external {
+    require(_msgSender() == brokerAddress, "Sender is not the broker");
+    brokerAddress = _brokerAddress;
   }
 
-  /// @notice This changes the Smol Domains fee in the minter contract
-  function changeSmolFee(uint256 _smolFee) external {
-    require(_smolFee <= 2000, "Cannot exceed 20%");
-    require(_msgSender() == smolAddress, "Sender is not Smol Domains");
-    smolFee = _smolFee;
+  /// @notice This changes the Broker fee in the minter contract
+  function changeBrokerFee(uint256 _brokerFee) external {
+    require(_brokerFee <= 2000, "Cannot exceed 20%");
+    require(_msgSender() == brokerAddress, "Sender is not the broker");
+    brokerFee = _brokerFee;
   }
 
   // RECEIVE & FALLBACK
