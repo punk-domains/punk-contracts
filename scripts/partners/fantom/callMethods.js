@@ -2,7 +2,7 @@
 
 const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
 const minterAddress = "0x7aa8597134eAb3259F4D7d08a09ff69EDf73DdFf";
-const metadataAddress = "0xF51F7a532a2AaDFE8E2320bf5BA8275503bB3789";
+const metadataAddress = "0xf1dB5D19fF3f8b7034F58E11060FBED6F61254f8";
 const pgfAddress = "0x690b1E05A43f32fcfcd966A2C0b5Cd713B728dbE";
 
 async function main() {
@@ -13,8 +13,10 @@ async function main() {
 
   const tldInterface = new ethers.utils.Interface([
     //"function togglePaused() external",
+    "function metadataAddress() external view returns(address)",
     "function minter() external view returns(address)",
     "function changeMinter(address _minter) external",
+    "function changeMetadataAddress(address) external",
     "function transferOwnership(address newOwner) external"
   ]);
 
@@ -35,17 +37,27 @@ async function main() {
   const metadataContract = new ethers.Contract(metadataAddress, metadataInterface, deployer);
   const minterContract = new ethers.Contract(minterAddress, minterInterface, deployer);
 
-  // CHANGE MINTER
+  // CHANGE MINTER ADDRESS
 
-  const minterBefore = await tldContract.minter();
-  console.log("Minter before: " + minterBefore);
+  //const minterBefore = await tldContract.minter();
+  //console.log("Minter before: " + minterBefore);
 
   //await tldContract.changeMinter(minterAddress);
   //await minterContract.togglePaused();
   //await minterContract.transferOwnership(newOwnerAddress);
 
-  const minterAfter = await tldContract.minter();
-  console.log("Minter after: " + minterAfter);
+  //const minterAfter = await tldContract.minter();
+  //console.log("Minter after: " + minterAfter);
+
+  // CHANGE METADATA ADDRESS
+
+  const metadataBefore = await tldContract.metadataAddress();
+  console.log("Metadata before: " + metadataBefore);
+
+  //await tldContract.changeMetadataAddress(metadataAddress);
+
+  const metadataAfter = await tldContract.metadataAddress();
+  console.log("Metadata after: " + metadataAfter);
 
   // CHANGE METADATA IMAGE BRAND AND DESCRIPTION
   //await metadataContract.changeBrand(tldAddress, "FantomNames.org");
