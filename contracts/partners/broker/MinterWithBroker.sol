@@ -183,7 +183,7 @@ contract MinterWithBroker is Ownable, ReentrancyGuard {
 
   /// @notice This changes royalty fee in the minter contract
   function changeRoyaltyFee(uint256 _royaltyFee) external {
-    require(_royaltyFee <= 4000, "Cannot exceed 40%");
+    require(_royaltyFee <= 6000, "Cannot exceed 60%");
     require(_msgSender() == tldContract.royaltyFeeUpdater(), "Sender is not Royalty Fee Updater");
     royaltyFee = _royaltyFee;
   }
@@ -196,7 +196,7 @@ contract MinterWithBroker is Ownable, ReentrancyGuard {
 
   /// @notice This changes the Broker fee in the minter contract
   function changeBrokerFee(uint256 _brokerFee) external {
-    require(_brokerFee <= 2000, "Cannot exceed 20%");
+    require(_brokerFee <= 3000, "Cannot exceed 30%");
     require(_msgSender() == brokerAddress, "Sender is not the broker");
     brokerFee = _brokerFee;
   }

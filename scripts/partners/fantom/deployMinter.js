@@ -3,6 +3,9 @@
 // 1) TLD contract as minter
 
 const contractNameFactory = "FantomMinter";
+
+const brokerAddress = "";
+const pgfAddress = "0x690b1E05A43f32fcfcd966A2C0b5Cd713B728dbE";
 const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
 
 const paymentTokenDecimals = 18;
@@ -22,14 +25,14 @@ async function main() {
   // deploy contract
   const contract = await ethers.getContractFactory(contractNameFactory);
   const instance = await contract.deploy(
-    tldAddress,
+    brokerAddress, pgfAddress, tldAddress, 
     price1char, price2char, price3char, price4char, price5char
   );
   
   console.log("Contract address:", instance.address);
 
   console.log("Wait a minute and then run this command to verify contract on the block explorer:");
-  console.log("npx hardhat verify --network " + network.name + " " + instance.address + " " + tldAddress + ' "' + price1char + '"' + ' "' + price2char + '"' + ' "' + price3char + '"' + ' "' + price4char + '"' + ' "' + price5char + '"');
+  console.log("npx hardhat verify --network " + network.name + " " + instance.address + " " + brokerAddress + " " + pgfAddress + " " + tldAddress + ' "' + price1char + '" "' + price2char + '" "' + price3char + '" "' + price4char + '" "' + price5char + '"');
 }
 
 main()

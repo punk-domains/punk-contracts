@@ -1,9 +1,9 @@
 // npx hardhat run scripts/partners/fantom/callMethods.js --network opera
 
 const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
-const minterAddress = "0x1D882E64bb7f4D49e67018d81254236A2A6465a3";
+const minterAddress = "0x7aa8597134eAb3259F4D7d08a09ff69EDf73DdFf";
 const metadataAddress = "0xF51F7a532a2AaDFE8E2320bf5BA8275503bB3789";
-const royaltyFeeReceiver = "0x690b1E05A43f32fcfcd966A2C0b5Cd713B728dbE";
+const pgfAddress = "0x690b1E05A43f32fcfcd966A2C0b5Cd713B728dbE";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -37,15 +37,15 @@ async function main() {
 
   // CHANGE MINTER
 
-  //const minterBefore = await tldContract.minter();
-  //console.log("Minter before: " + minterBefore);
+  const minterBefore = await tldContract.minter();
+  console.log("Minter before: " + minterBefore);
 
   //await tldContract.changeMinter(minterAddress);
   //await minterContract.togglePaused();
   //await minterContract.transferOwnership(newOwnerAddress);
 
-  //const minterAfter = await tldContract.minter();
-  //console.log("Minter after: " + minterAfter);
+  const minterAfter = await tldContract.minter();
+  console.log("Minter after: " + minterAfter);
 
   // CHANGE METADATA IMAGE BRAND AND DESCRIPTION
   //await metadataContract.changeBrand(tldAddress, "FantomNames.org");
@@ -57,18 +57,18 @@ async function main() {
   );
   */
 
-  // CHANGE ROYATLY FEE RECEIVER
+  // CHANGE ROYALTY FEE RECEIVER
   /*
-  const royaltyFeeReceiverBefore = await minterContract.royaltyFeeReceiver();
+  const royaltyFeeReceiverBefore = await tldContract.royaltyFeeReceiver();
   console.log("RoyaltyFeeReceiver before: " + royaltyFeeReceiverBefore);
 
-  await minterContract.changeRoyaltyFeeReceiver(royaltyFeeReceiver);
+  await tldContract.changeRoyaltyFeeReceiver(royaltyFeeReceiver);
 
-  const royaltyFeeReceiverAfter = await minterContract.royaltyFeeReceiver();
+  const royaltyFeeReceiverAfter = await tldContract.royaltyFeeReceiver();
   console.log("RoyaltyFeeReceiver after: " + royaltyFeeReceiverAfter);
   */
 
-  // CHANGE ROYATLY FEE
+  // CHANGE ROYALTY FEE
   /*
   const royaltyFeeBefore = await minterContract.royaltyFee();
   console.log("RoyaltyFee before: " + royaltyFeeBefore);

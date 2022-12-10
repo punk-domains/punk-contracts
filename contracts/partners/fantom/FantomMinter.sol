@@ -10,8 +10,6 @@ import "../../lib/strings.sol";
 interface IFlexiPunkTLD is IERC721 {
 
   function owner() external view returns(address);
-  function royaltyFeeReceiver() external view returns(address);
-  function royaltyFeeUpdater() external view returns(address);
 
   function mint(
     string memory _domainName,
@@ -21,14 +19,16 @@ interface IFlexiPunkTLD is IERC721 {
 
 }
 
-// minter contract
+// fantom minter contract
 contract FantomMinter is Ownable, ReentrancyGuard {
+  address public brokerAddress;
+  address public pgfAddress;
+
   bool public paused = true;
 
-  address public royaltyFeeReceiver;
-
   uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
-  uint256 public royaltyFee = 0; // share of each domain purchase (in bips) that goes to royalty fee receiver
+  uint256 public pgfDonation = 5_000; // share of each domain purchase (in bips) that goes to Punk Domains
+  uint256 public brokerFee = 2_000; // share of each domain purchase (in bips) that goes to the broker
   uint256 public constant MAX_BPS = 10_000;
 
   uint256 public price1char; // 1 char domain price
@@ -37,11 +37,12 @@ contract FantomMinter is Ownable, ReentrancyGuard {
   uint256 public price4char; // 4 chars domain price
   uint256 public price5char; // 5+ chars domain price
 
-  // TLD contract
-  IFlexiPunkTLD public immutable tldContract; // TLD contract
+  IFlexiPunkTLD public immutable tldContract;
 
   // CONSTRUCTOR
   constructor(
+    address _brokerAddress,
+    address _pgfAddress,
     address _tldAddress,
     uint256 _price1char,
     uint256 _price2char,
@@ -49,6 +50,8 @@ contract FantomMinter is Ownable, ReentrancyGuard {
     uint256 _price4char,
     uint256 _price5char
   ) {
+    brokerAddress = _brokerAddress;
+    pgfAddress = _pgfAddress;
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     price1char = _price1char;
@@ -60,13 +63,12 @@ contract FantomMinter is Ownable, ReentrancyGuard {
 
   // WRITE
 
-  /// @notice payment token approval transaction needs to be made before minting
   function mint(
     string memory _domainName,
     address _domainHolder,
     address _referrer
   ) external nonReentrant payable returns(uint256 tokenId) {
-    require(!paused || _msgSender() == owner(), "Minting paused");
+    require(!paused, "Minting paused");
 
     // find price
     uint256 domainLength = strings.len(strings.toSlice(_domainName));
@@ -86,20 +88,25 @@ contract FantomMinter is Ownable, ReentrancyGuard {
 
     require(msg.value >= selectedPrice, "Value below price");
 
+    // send pgf donation
+    if (pgfDonation > 0) {
+      uint256 pgfPayment = (selectedPrice * pgfDonation) / MAX_BPS;
+      (bool sentPgfPayment, ) = payable(pgfAddress).call{value: pgfPayment}("");
+      require(sentPgfPayment, "Failed to send PGF donation");
+    }
+
+    // send broker fee
+    if (brokerFee > 0 && brokerAddress != address(0)) {
+      uint256 brokerPayment = (selectedPrice * brokerFee) / MAX_BPS;
+      (bool sentBrokerFee, ) = payable(brokerAddress).call{value: brokerPayment}("");
+      require(sentBrokerFee, "Failed to send broker fee");
+    }
+
     // send referral fee
     if (referralFee > 0 && _referrer != address(0)) {
       uint256 referralPayment = (selectedPrice * referralFee) / MAX_BPS;
       (bool sentReferralFee, ) = payable(_referrer).call{value: referralPayment}("");
       require(sentReferralFee, "Failed to send referral fee");
-
-      selectedPrice -= referralPayment;
-    }
-
-    // send royalty fee
-    if (royaltyFee > 0 && royaltyFeeReceiver != address(0)) {
-      uint256 royaltyPayment = (selectedPrice * royaltyFee) / MAX_BPS;
-      (bool sentRoyaltyFee, ) = payable(royaltyFeeReceiver).call{value: royaltyPayment}("");
-      require(sentRoyaltyFee, "Failed to send royalty fee");
     }
 
     // send the rest to TLD owner
@@ -111,6 +118,22 @@ contract FantomMinter is Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
+  /// @notice This changes the Broker address in the minter contract
+  function changeBrokerAddress(address _brokerAddress) external onlyOwner {
+    brokerAddress = _brokerAddress;
+  }
+
+  /// @notice This changes the Broker fee in the minter contract
+  function changeBrokerFee(uint256 _brokerFee) external onlyOwner {
+    brokerFee = _brokerFee;
+  }
+
+  /// @notice This changes the PGF donation in the minter contract
+  function changePgfDonation(uint256 _pgfDonation) external onlyOwner {
+    pgfDonation = _pgfDonation;
+  }
+
 
   /// @notice This changes price in the minter contract
   function changePrice(uint256 _price, uint256 _chars) external onlyOwner {
@@ -130,15 +153,9 @@ contract FantomMinter is Ownable, ReentrancyGuard {
   }
 
   /// @notice This changes referral fee in the minter contract
-  function changeReferralFee(uint256 _referral) external onlyOwner {
-    require(_referral <= 9000, "Cannot exceed 90%");
-    referralFee = _referral;
-  }
-
-  /// @notice This changes royalty fee in the minter contract
-  function changeRoyaltyFee(uint256 _royalty) external onlyOwner {
-    require(_royalty <= 9000, "Cannot exceed 90%");
-    royaltyFee = _royalty;
+  function changeReferralFee(uint256 _referralFee) external onlyOwner {
+    require(_referralFee <= 2000, "Cannot exceed 20%");
+    referralFee = _referralFee;
   }
 
   function ownerFreeMint(
@@ -159,17 +176,11 @@ contract FantomMinter is Ownable, ReentrancyGuard {
     IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
   }
 
-  /// @notice This changes royalty fee receiver address.
-  function changeRoyaltyFeeReceiver(address _newReceiver) external onlyOwner {
-    royaltyFeeReceiver = _newReceiver;
-  }
-
-  /// @notice Pause or unpause the contract
   function togglePaused() external onlyOwner {
     paused = !paused;
   }
 
-  /// @notice Recover any ETH mistakenly sent to this contract address
+  // withdraw ETH from contract
   function withdraw() external onlyOwner {
     (bool success, ) = owner().call{value: address(this).balance}("");
     require(success, "Failed to withdraw ETH from contract");

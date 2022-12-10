@@ -12,7 +12,7 @@ import "../../lib/strings.sol";
 contract SatrapMetadata is Ownable {
   using Strings for uint256;
 
-  string public description;
+  string public description = "Satraps usernames and identity. Powered by Songbird Domains and the Punk Domains protocol.";
 
   // EVENTS
   event DescriptionChanged(address indexed user, string description);
