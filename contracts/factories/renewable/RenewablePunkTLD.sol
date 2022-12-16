@@ -19,7 +19,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     uint256 tokenId;
     address holder;
     string data; // stringified JSON object, example: {"description": "Some text", "twitter": "@techie1239", "friends": ["0x123..."], "url": "https://punk.domains"}
-    uint256 expiry; // the domain expiration timestamp (needs to be renewed before this date, otherwise domain expires)
+    uint256 expiry; // the domain expiration timestamp in seconds (needs to be renewed before this date, otherwise domain expires)
   }
 
   address public immutable factoryAddress; // RenewablePunkTLDFactory address
@@ -112,6 +112,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
     delete domains[dName]; // delete string => Domain struct mapping
 
+    // if domain is set as default domain for that user, un-set it as default domain
     if (keccak256(bytes(defaultNames[_msgSender()])) == keccak256(bytes(dName))) {
       delete defaultNames[_msgSender()];
     }
@@ -297,16 +298,17 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   ///@dev Hook that is called before any token transfer. This includes minting and burning.
   function _beforeTokenTransfer(address from,address to,uint256 tokenId) internal override virtual {
-
-    if (from != address(0) || to != address(0)) { // run on every transfer but not on mint or burn
+    if (from != address(0) && to != address(0)) { 
+      // if not mint or burn, do the following actions:
       require(block.timestamp < domains[domainIdsNames[tokenId]].expiry, "This domain has expired"); // if domain is expired, prevent the transfer
+      
       domains[domainIdsNames[tokenId]].holder = to; // change holder address in Domain struct
       
       if (bytes(defaultNames[to]).length == 0) {
         defaultNames[to] = domains[domainIdsNames[tokenId]].name; // if default domain name is not set for that holder, set it now
       }
 
-      if (strings.equals(strings.toSlice(domains[domainIdsNames[tokenId]].name), strings.toSlice(defaultNames[from]))) {
+      if (keccak256(bytes(domains[domainIdsNames[tokenId]].name)) == keccak256(bytes(defaultNames[from]))) {
         delete defaultNames[from]; // if previous owner had this domain name as default, unset it as default
       }
     }

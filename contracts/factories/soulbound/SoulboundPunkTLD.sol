@@ -94,6 +94,7 @@ contract SoulboundPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     delete domainIdsNames[tokenId]; // delete tokenId => domainName mapping
     delete domains[dName]; // delete string => Domain struct mapping
 
+    // if domain is set as default domain for that user, un-set it as default domain
     if (keccak256(bytes(defaultNames[_msgSender()])) == keccak256(bytes(dName))) {
       delete defaultNames[_msgSender()];
     }

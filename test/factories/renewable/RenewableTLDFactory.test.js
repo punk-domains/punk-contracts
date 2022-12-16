@@ -80,7 +80,7 @@ describe("RenewablePunkTLDFactory", function () {
     expect(firstTldAddress.startsWith("0x")).to.be.true;
   });
 
-  it("should fail to create a new valid TLD if Buying TLDs disabled", async function () {
+  it("should fail to create a new valid TLD if buying TLDs disabled", async function () {
     const price = await contract.price();
     expect(price).to.equal(tldPrice);
 
