@@ -10,6 +10,8 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
   let contract;
   let factoryContract;
   let signer;
+  let minter;
+  let renewer;
   let anotherUser;
   let metadataContract1;
   let metadataContract2;
@@ -20,7 +22,7 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
   const now = Math.round(new Date().getTime() / 1000); // timestamp in seconds
 
   beforeEach(async function () {
-    [signer, anotherUser] = await ethers.getSigners();
+    [signer, anotherUser, minter, renewer] = await ethers.getSigners();
 
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     const forbTldsContract = await PunkForbiddenTlds.deploy();
@@ -56,7 +58,7 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
     expect(buyingEnabledAfter).to.be.true; 
 
     // make owner a minter
-    await contract.changeMinter(signer.address);
+    await contract.changeMinterAddress(signer.address);
 
     const newDomainName = "techie";
 
@@ -84,7 +86,7 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
     expect(buyingEnabled).to.be.false;
 
     // make owner also a minter
-    await contract.changeMinter(signer.address);
+    await contract.changeMinterAddress(signer.address);
 
     const newDomainName = "techie";
 
@@ -94,94 +96,8 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
       expiryDate(now, 60) // expiry date 60 min in the future
     )).to.be.revertedWith('Buying domains disabled'); // should fail, no matter if user is owner and minter
   });
-  
-  /*
-  xit("should fail to create a new valid domain if buying is disabled forever", async function () {
-    await contract.toggleBuyingDomains(); // enable buying domains
 
-    // buying domains should be enabled
-    const buyingEnabled = await contract.buyingEnabled();
-    expect(buyingEnabled).to.be.true;
-
-    const newDomainName = "techie";
-
-    await contract.connect(anotherUser).mint(
-      newDomainName, // domain name (without TLD)
-      anotherUser.address, // domain holder
-      ethers.constants.AddressZero, // referrer
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )
-
-    // disable buying forever
-    await contract.disableBuyingForever();
-
-    // fail at minting new domains
-    await expect(contract.mint(
-      "test1domain", // domain name (without TLD)
-      anotherUser.address, // domain holder
-      ethers.constants.AddressZero, // referrer
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.be.revertedWith('Domain minting disabled forever');
-    
-    await expect(contract.connect(anotherUser).mint(
-      "test2domain", // domain name (without TLD)
-      anotherUser.address, // domain holder
-      ethers.constants.AddressZero, // referrer
-      {
-        value: domainPrice // pay  for the domain
-      }
-    )).to.be.revertedWith('Domain minting disabled forever');
-  });
-
-  xit("should change the price of a domain", async function () {
-    const priceBefore = await contract.price();
-    expect(priceBefore).to.equal(domainPrice); 
-
-    const newPrice = ethers.utils.parseUnits("2", "ether");
-    
-    await contract.changePrice(newPrice);
-
-    const priceAfter = await contract.price();
-    expect(priceAfter).to.equal(newPrice); 
-
-    // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changePrice(domainPrice)).to.be.revertedWith('Ownable: caller is not the owner');
-  });
-
-  xit("should change the referral fee", async function () {
-    const referralBefore = await contract.referral();
-    expect(referralBefore).to.equal(1000); // 10% by default
-
-    const newReferral = 500; // 500 bips or 5%
-    
-    await contract.changeReferralFee(newReferral);
-
-    const referralAfter = await contract.referral();
-    expect(referralAfter).to.equal(newReferral); 
-
-    // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changeReferralFee(200)).to.be.revertedWith('Ownable: caller is not the owner');
-  });
-
-  xit("should prevent setting referral fee to 50% or higher", async function () {
-    const referralBefore = await contract.referral();
-    expect(referralBefore).to.equal(1000); // 10% by default
-
-    // if referral fee is set to 50%, the tx should fail
-    await expect(contract.changeReferralFee(5000)).to.be.revertedWith('Referral fee cannot be 50% or higher');
-    
-    // if referral fee is set to higher than 50%, the tx should fail
-    await expect(contract.changeReferralFee(8000)).to.be.revertedWith('Referral fee cannot be 50% or higher');
-    
-    const referralAfter = await contract.referral();
-    expect(referralAfter).to.equal(1000); // should remain the same as before
-  });
-
-  xit("should toggle buying domains", async function () {
+  it("should toggle buying domains", async function () {
     const buyingEnabledBefore = await contract.buyingEnabled();
     expect(buyingEnabledBefore).to.be.false; 
     
@@ -194,7 +110,7 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
     await expect(contract.connect(anotherUser).toggleBuyingDomains()).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  xit("should change max length for a domain name", async function () {
+  it("should change max length for a domain name", async function () {
     const nameMaxLengthBefore = await contract.nameMaxLength();
     expect(nameMaxLengthBefore).to.equal(140);
 
@@ -209,22 +125,7 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
     await expect(contract.connect(anotherUser).changeNameMaxLength(70)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  xit("should change the royalty amount", async function () {
-    const royaltyBefore = await contract.royalty();
-    expect(royaltyBefore).to.equal(0);
-
-    const newRoyalty = 10;
-    
-    await contract.changeRoyalty(newRoyalty);
-
-    const royaltyAfter = await contract.royalty();
-    expect(royaltyAfter).to.equal(10);
-
-    // if user is not owner, the tx should revert
-    await expect(contract.connect(anotherUser).changeRoyalty(20)).to.be.revertedWith('Sender is not royalty fee updater');
-  });
-
-  xit("should change metadata contract address and then freeze it", async function () {
+  it("should change metadata contract address and then freeze it", async function () {
     const mtdAddrBefore = await contract.metadataAddress();
     expect(mtdAddrBefore).to.equal(metadataContract1.address);
     
@@ -238,8 +139,44 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
     
     await contract.freezeMetadata();
 
-    await expect(contract.changeMetadataAddress(metadataContract1.address)).to.be.revertedWith('Cannot change metadata address anymore');
+    await expect(contract.changeMetadataAddress(metadataContract1.address)).to.be.revertedWith('Cannot change the metadata address anymore');
   });
-  */
+
+  it("should change minter contract address and then freeze it", async function () {
+    const addrBefore = await contract.minterAddress();
+    expect(addrBefore).to.equal(ethers.constants.AddressZero);
+    
+    await contract.changeMinterAddress(minter.address);
+
+    const addrAfter = await contract.minterAddress();
+    expect(addrAfter).to.equal(minter.address);
+
+    // if user is not owner, the tx should revert
+    await expect(contract.connect(anotherUser).changeMinterAddress(ethers.constants.AddressZero)).to.be.revertedWith('Ownable: caller is not the owner');
+    
+    await contract.freezeMinter();
+
+    await expect(contract.changeMinterAddress(ethers.constants.AddressZero)).to.be.revertedWith('Cannot change the minter address anymore');
+  });
+
+  it("should change renewer contract address and then freeze it", async function () {
+    const addrBefore = await contract.renewerAddress();
+    expect(addrBefore).to.equal(ethers.constants.AddressZero);
+    
+    await contract.changeRenewerAddress(renewer.address);
+
+    const addrAfter = await contract.renewerAddress();
+    expect(addrAfter).to.equal(renewer.address);
+
+    // if user is not owner, the tx should revert
+    await expect(contract.connect(anotherUser).changeRenewerAddress(ethers.constants.AddressZero)).to.be.revertedWith('Ownable: caller is not the owner');
+    
+    await contract.freezeRenewer();
+
+    await expect(contract.changeRenewerAddress(ethers.constants.AddressZero)).to.be.revertedWith('Cannot change the renewer address anymore');
+  });
+
+  // set minter (set after freeze)
+  // set renewer (set after freeze)
 
 });

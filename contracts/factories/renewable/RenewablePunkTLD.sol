@@ -24,8 +24,8 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   address public immutable factoryAddress; // RenewablePunkTLDFactory address
   address public metadataAddress; // RenewablePunkMetadata address
-  address public minter; // address which is allowed to mint domains
-  address public renewer; // address which is allowed to renew domains
+  address public minterAddress; // address which is allowed to mint domains
+  address public renewerAddress; // address which is allowed to renew domains
 
   bool public buyingEnabled = false; // is buying domains enabled? (if false, it means that minting is "paused")
   bool public metadataFrozen = false; // metadata address frozen forever
@@ -155,7 +155,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     uint256 _expiry
   ) external nonReentrant returns(uint256) {
     require(buyingEnabled, "Buying domains disabled");
-    require(_msgSender() == minter, "Only minter can mint domains");
+    require(_msgSender() == minterAddress, "Only minter can mint domains");
 
     // convert domain name to lowercase (only works for ascii, clients should enforce ascii domains only)
     string memory _domainNameLower = strings.lower(_domainName);
@@ -233,7 +233,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     string memory _domainName,
     uint256 _addExpirySeconds
   ) external nonReentrant returns(uint256) {
-    require(_msgSender() == renewer, "Only renewer can renew domains.");
+    require(_msgSender() == renewerAddress, "Only renewer can renew domains.");
     require(domains[_domainName].holder != address(0), "Domain does not exist yet.");
 
     string memory dName = strings.lower(_domainName);
@@ -249,14 +249,14 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
 
   /// @notice Only TLD contract owner can call this function. Flexi&Renewable-specific function.
   function changeMetadataAddress(address _metadataAddress) external onlyOwner {
-    require(!metadataFrozen, "Cannot change metadata address anymore");
+    require(!metadataFrozen, "Cannot change the metadata address anymore");
     metadataAddress = _metadataAddress;
   }
 
   /// @notice Only TLD contract owner can call this function. Flexi&Renewable-specific function.
-  function changeMinter(address _minter) external onlyOwner {
+  function changeMinterAddress(address _minter) external onlyOwner {
     require(!minterFrozen, "Cannot change the minter address anymore");
-    minter = _minter;
+    minterAddress = _minter;
   }
 
   /// @notice Only TLD contract owner can call this function.
@@ -265,9 +265,9 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   }
 
   /// @notice Only TLD contract owner can call this function. Renewable-specific function.
-  function changeRenewer(address _renewer) external onlyOwner {
+  function changeRenewerAddress(address _renewer) external onlyOwner {
     require(!renewerFrozen, "Cannot change the renewer address anymore");
-    renewer = _renewer;
+    renewerAddress = _renewer;
   }
 
   /// @notice Freeze metadata address. Only TLD contract owner can call this function.
