@@ -119,7 +119,21 @@ npx hardhat flatten <path-to-contract> >> flattened/<flat-contract-name>.sol
 
 You may also need to give all contracts in the flattened file the same Solidity version. And you may need to delete all SPDX lines except the very first one.
 
-### Mythrill
+### Mythril
+
+Use Docker:
+
+```bash
+sudo docker pull mythril/myth
+```
+
+Go to the `flattened` folder and run this command:
+
+```bash
+sudo docker run -v $(pwd):/tmp mythril/myth -v4 analyze /tmp/<flat-contract-name>.sol
+```
+
+Or, if you don't use Docker, use this command alone:
 
 ```bash
 myth -v4 analyze flattened/PunkForbiddenTlds.sol

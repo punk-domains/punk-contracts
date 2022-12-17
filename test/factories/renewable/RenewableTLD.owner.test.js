@@ -176,7 +176,4 @@ describe("RenewablePunkTLD (onlyOwner)", function () {
     await expect(contract.changeRenewerAddress(ethers.constants.AddressZero)).to.be.revertedWith('Cannot change the renewer address anymore');
   });
 
-  // set minter (set after freeze)
-  // set renewer (set after freeze)
-
 });
