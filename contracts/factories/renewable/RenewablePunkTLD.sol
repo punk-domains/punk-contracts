@@ -147,12 +147,12 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   /// @notice Mint a new domain name as NFT (no dots and spaces allowed).
   /// @param _domainName Enter domain name without TLD and make sure letters are in lowercase form.
   /// @param _domainHolder Enter the domain receiver's address
-  /// @param _expiry Expiration date in seconds since the unix epoch
+  /// @param _registrationLength Registration length in seconds (gets added to the current block timestamp)
   /// @return token ID
   function mint(
     string memory _domainName,
     address _domainHolder,
-    uint256 _expiry
+    uint256 _registrationLength
   ) external nonReentrant returns(uint256) {
     require(buyingEnabled, "Buying domains disabled");
     require(_msgSender() == minterAddress, "Only minter can mint domains");
@@ -182,13 +182,13 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
       emit DomainBurned(_msgSender(), _domainNameLower);
     }
 
-    return _mintDomain(_domainNameLower, _domainHolder, _expiry, "");
+    return _mintDomain(_domainNameLower, _domainHolder, _registrationLength, "");
   }
 
   function _mintDomain(
     string memory _domainName, 
     address _domainHolder,
-    uint256 _expiry,
+    uint256 _registrationLength,
     string memory _data
   ) internal returns(uint256) {
     require(strings.len(strings.toSlice(_domainName)) > 0, "Domain name empty");
@@ -206,7 +206,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     newDomain.tokenId = idCounter;
     newDomain.holder = _domainHolder;
     newDomain.data = _data;
-    newDomain.expiry = _expiry;
+    newDomain.expiry = block.timestamp + _registrationLength;
 
     // add to both mappings
     domains[_domainName] = newDomain;

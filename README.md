@@ -130,13 +130,13 @@ sudo docker pull mythril/myth
 Go to the `flattened` folder and run this command:
 
 ```bash
-sudo docker run -v $(pwd):/tmp mythril/myth -v4 analyze /tmp/<flat-contract-name>.sol
+sudo docker run -v $(pwd):/tmp mythril/myth -v4 analyze /tmp/<flat-contract-name>.sol --max-depth 10
 ```
 
 Or, if you don't use Docker, use this command alone:
 
 ```bash
-myth -v4 analyze flattened/PunkForbiddenTlds.sol
+myth -v4 analyze flattened/PunkForbiddenTlds.sol --max-depth 10
 ```
 
 Flags:

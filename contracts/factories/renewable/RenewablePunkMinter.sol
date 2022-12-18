@@ -9,7 +9,7 @@ import "../../lib/strings.sol";
 
 interface IRenewablePunkTLD {
   function owner() external returns(address);
-  function mint(string memory _domainName,address _domainHolder,uint256 _expiry) external returns(uint256);
+  function mint(string memory _domainName,address _domainHolder,uint256 _registrationLength) external returns(uint256);
 }
 
 // example minter contract for renewable punk domains
@@ -105,7 +105,7 @@ contract RenewablePunkMinter is Ownable, ReentrancyGuard {
     tokenId = tldContract.mint(
       _domainName, 
       _domainHolder, 
-      block.timestamp + registrationLength // expiry date
+      registrationLength // registration length in seconds (gets added to the current block timestamp)
     );
   }
 
@@ -159,7 +159,7 @@ contract RenewablePunkMinter is Ownable, ReentrancyGuard {
     tokenId = tldContract.mint(
       _domainName, 
       _domainHolder, 
-      block.timestamp + registrationLength
+      registrationLength
     );
   }
 
