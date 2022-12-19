@@ -4,8 +4,8 @@
 
 const contractNameFactory = "FantomMinter";
 
-const brokerAddress = "";
-const pgfAddress = "0x690b1E05A43f32fcfcd966A2C0b5Cd713B728dbE";
+const brokerAddress = "0x5d0af5a949d65bc9e8c2f8be252f7d0f76816a00";
+const pgfAddress = "0xb21b972B2aA69a01C6f7e6C19717126C7cD7559F";
 const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
 
 const paymentTokenDecimals = 18;

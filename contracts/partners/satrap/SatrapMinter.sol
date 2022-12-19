@@ -24,7 +24,11 @@ interface IFlexiPunkTLD is IERC721 {
 // minter contract
 contract SatrapMinter is Ownable, ReentrancyGuard {
   address public immutable nftAddress;
+  address[] public partnerNfts; // NFT collections that can mint domains and receive a discount for minting
+
   bool public paused = true;
+
+  uint256 public discountBps = 6_000; // discount for selected NFT collections (see discountEligible mapping)
 
   uint256 public referralFee = 1_000; // share of each domain purchase (in bips) that goes to the referrer
   uint256 public royaltyFee = 3_500; // share of each domain purchase (in bips) that goes to Punk Domains
@@ -61,13 +65,33 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
 
   // READ
 
+  /// @notice Returns true or false if address is eligible for a discount
+  function canGetDiscount(address _user) public view returns(bool getDiscount) {
+    IERC721 nftContract;
+    for (uint256 i = 0; i < partnerNfts.length; i++) {
+      nftContract = IERC721(partnerNfts[i]);
+
+      if (nftContract.balanceOf(_user) > 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /// @notice Returns true or false if address is eligible to mint a domain
   function canUserMint(address _user) public view returns(bool) {
     if (IERC721(nftAddress).balanceOf(_user) > 0) {
       return true;
+    } else if (canGetDiscount(_user)) {
+      return true;
     }
 
     return false;
+  }
+
+  function getPartnerNftsArray() public view returns(address[] memory) {
+    return partnerNfts;
   }
 
   // WRITE
@@ -96,6 +120,11 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
       selectedPrice = price5char;
     }
 
+    // check if eligible for discount
+    if (canGetDiscount(_msgSender())) {
+      selectedPrice -= (selectedPrice * discountBps) / MAX_BPS; // apply the discount
+    }
+
     require(msg.value >= selectedPrice, "Value below price");
 
     // send royalty fee
@@ -121,6 +150,16 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
+  /// @notice Owner can add a partner NFT address
+  function addPartnerNftAddress(address _nftAddress) external onlyOwner {
+    partnerNfts.push(_nftAddress);
+  }
+
+  /// @notice Change discount BPS (basis points, for example 10% is 1000 bps)
+  function changeDiscountBps(uint256 _discountBps) external onlyOwner {
+    discountBps = _discountBps;
+  }
 
   /// @notice This changes price in the minter contract
   function changePrice(uint256 _price, uint256 _chars) external onlyOwner {
@@ -161,6 +200,12 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
   /// @notice Recover any ERC-721 token mistakenly sent to this contract address
   function recoverERC721(address tokenAddress_, uint256 tokenId_, address recipient_) external onlyOwner {
     IERC721(tokenAddress_).transferFrom(address(this), recipient_, tokenId_);
+  }
+
+  /// @notice Owner can remove partner NFT address
+  function removePartnerNftAddress(uint _nftIndex) external onlyOwner {
+    partnerNfts[_nftIndex] = partnerNfts[partnerNfts.length - 1];
+    partnerNfts.pop();
   }
 
   function togglePaused() external onlyOwner {

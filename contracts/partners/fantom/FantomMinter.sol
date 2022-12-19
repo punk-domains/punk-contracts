@@ -129,6 +129,11 @@ contract FantomMinter is Ownable, ReentrancyGuard {
     brokerFee = _brokerFee;
   }
 
+  /// @notice This changes the PGF donation address in the minter contract
+  function changePgfAddress(address _pgfAddress) external onlyOwner {
+    pgfAddress = _pgfAddress;
+  }
+
   /// @notice This changes the PGF donation in the minter contract
   function changePgfDonation(uint256 _pgfDonation) external onlyOwner {
     pgfDonation = _pgfDonation;

@@ -1,9 +1,9 @@
 // npx hardhat run scripts/partners/fantom/callMethods.js --network opera
 
 const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
-const minterAddress = "0x7aa8597134eAb3259F4D7d08a09ff69EDf73DdFf";
+const minterAddress = "0x7Df67B2ef4eEDf49Fc53Bb6E94e90e9546FC6c6B";
 const metadataAddress = "0xf1dB5D19fF3f8b7034F58E11060FBED6F61254f8";
-const pgfAddress = "0x690b1E05A43f32fcfcd966A2C0b5Cd713B728dbE";
+const pgfAddress = "0xb21b972B2aA69a01C6f7e6C19717126C7cD7559F";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -39,25 +39,25 @@ async function main() {
 
   // CHANGE MINTER ADDRESS
 
-  //const minterBefore = await tldContract.minter();
-  //console.log("Minter before: " + minterBefore);
+  const minterBefore = await tldContract.minter();
+  console.log("Minter before: " + minterBefore);
 
   //await tldContract.changeMinter(minterAddress);
   //await minterContract.togglePaused();
   //await minterContract.transferOwnership(newOwnerAddress);
 
-  //const minterAfter = await tldContract.minter();
-  //console.log("Minter after: " + minterAfter);
+  const minterAfter = await tldContract.minter();
+  console.log("Minter after: " + minterAfter);
 
   // CHANGE METADATA ADDRESS
 
-  const metadataBefore = await tldContract.metadataAddress();
-  console.log("Metadata before: " + metadataBefore);
+  //const metadataBefore = await tldContract.metadataAddress();
+  //console.log("Metadata before: " + metadataBefore);
 
   //await tldContract.changeMetadataAddress(metadataAddress);
 
-  const metadataAfter = await tldContract.metadataAddress();
-  console.log("Metadata after: " + metadataAfter);
+  //const metadataAfter = await tldContract.metadataAddress();
+  //console.log("Metadata after: " + metadataAfter);
 
   // CHANGE METADATA IMAGE BRAND AND DESCRIPTION
   //await metadataContract.changeBrand(tldAddress, "FantomNames.org");

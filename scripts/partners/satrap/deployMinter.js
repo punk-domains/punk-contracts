@@ -1,18 +1,18 @@
-// npx hardhat run scripts/partners/satrap/deployMinter.js --network arbitrumOne
+// npx hardhat run scripts/partners/satrap/deployMinter.js --network songbird
 // add minter address to:
 // 1) TLD contract as minter
 
 const contractNameFactory = "SatrapMinter";
-const nftAddress = "";
-const tldAddress = "";
+const nftAddress = "0x927463265eDE6a52604D179d7110B7B2fc057a3f";
+const tldAddress = "0xeFBE0b46649B7A0F1e1D49CCa98aD9CF6bcFB096";
 
 const paymentTokenDecimals = 18;
 
-const price1char = ethers.utils.parseUnits("9999", paymentTokenDecimals);
-const price2char = ethers.utils.parseUnits("6999", paymentTokenDecimals);
-const price3char = ethers.utils.parseUnits("3999", paymentTokenDecimals);
-const price4char = ethers.utils.parseUnits("1999", paymentTokenDecimals);
-const price5char = ethers.utils.parseUnits("999", paymentTokenDecimals);
+const price1char = ethers.utils.parseUnits("50000", paymentTokenDecimals);
+const price2char = ethers.utils.parseUnits("20000", paymentTokenDecimals);
+const price3char = ethers.utils.parseUnits("8000", paymentTokenDecimals);
+const price4char = ethers.utils.parseUnits("2500", paymentTokenDecimals);
+const price5char = ethers.utils.parseUnits("1000", paymentTokenDecimals);
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -23,7 +23,7 @@ async function main() {
   // deploy contract
   const contract = await ethers.getContractFactory(contractNameFactory);
   const instance = await contract.deploy(
-    nftAddress, smolAddress, tldAddress,
+    nftAddress, tldAddress,
     price1char, price2char, price3char, price4char, price5char
   );
   
