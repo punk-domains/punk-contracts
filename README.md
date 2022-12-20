@@ -99,6 +99,17 @@ Also make sure you have the `@nomiclabs/hardhat-etherscan` library `3.1.0` or ab
 
 Verifying TLD contracts generated through the factory is a bit tricky, but there is a way around the issue. See `scripts/temp/deployTld.js` for instructions.
 
+#### Manually verify TLD contract on Etherscan
+
+1. Flatten the code (`npx hardhat flatten <path-to-contract>.sol >> <flat-contract-name>.sol`).
+2. Delete all instances of SPDX Licences except one.
+3. Go to Etherscan and select single file verification.
+4. Turn on optimizations.
+5. Select 0.8.4 for compiler (do not delete other pragma solidity lines in the file, even if they are for a different Solidity version).
+6. Generate the ABI-encoded constructor arguments using this online tool: https://abi.hashex.org/. Make sure you generate all arguments 
+needed in the TLD **constructor**, including the Factory address.
+7. Submit for verification and hope for the best :)
+
 ## Audit tools
 
 ### Flatten the contracts
