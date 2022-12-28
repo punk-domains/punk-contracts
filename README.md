@@ -26,6 +26,8 @@ ARBISCAN_API_KEY=enter-key-here
 
 ### Compile
 
+Make sure you use Node.js v19.
+
 ```bash
 npx hardhat compile
 ```
