@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../lib/strings.sol";
 
@@ -40,6 +40,8 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
   uint256 public price4char; // 4 chars domain price
   uint256 public price5char; // 5+ chars domain price
 
+  mapping (uint256 => bool) public hasClaimedFree; // a mapping (Satrap NFT token ID => true/false) that checks if Satrap NFT holder has already claimed their free domain
+
   IFlexiPunkTLD public immutable tldContract;
 
   // CONSTRUCTOR
@@ -64,6 +66,20 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
   }
 
   // READ
+  function canClaimFreeDomain(address _user) public view returns(bool) {
+    IERC721Enumerable nftContract = IERC721Enumerable(nftAddress);
+    uint256 balance = nftContract.balanceOf(_user);
+
+    for (uint256 i = 0; i < balance; i++) {
+      bool hasClaimed = hasClaimedFree[nftContract.tokenOfOwnerByIndex(_user, i)];
+
+      if (!hasClaimed) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   /// @notice Returns true or false if address is eligible for a discount
   function canGetDiscount(address _user) public view returns(bool getDiscount) {
@@ -147,6 +163,29 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
 
     // mint a domain
     tokenId = tldContract.mint{value: 0}(_domainName, _domainHolder, address(0));
+  }
+
+  function satrapFreeMint(
+    string memory _domainName,
+    address _domainHolder
+  ) external nonReentrant returns(uint256 tokenId) {
+    require(!paused, "Minting paused");
+    
+    IERC721Enumerable nftContract = IERC721Enumerable(nftAddress);
+    uint256 balance = nftContract.balanceOf(_msgSender());
+
+    // check if msgSender() owns a Satrap NFT and loop through all their NFTs
+    for (uint256 i = 0; i < balance; i++) {
+      uint256 satrapId = nftContract.tokenOfOwnerByIndex(_msgSender(), i);
+      bool hasClaimed = hasClaimedFree[satrapId];
+
+      // if a Satrap NFT has not yet claimed a domain, claim/mint it now
+      if (!hasClaimed) {
+        hasClaimedFree[satrapId] = true; // mark as claimed
+        tokenId = tldContract.mint{value: 0}(_domainName, _domainHolder, address(0)); // mint a domain
+        break;
+      }
+    }
   }
 
   // OWNER
