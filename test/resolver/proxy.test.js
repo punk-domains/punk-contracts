@@ -39,6 +39,10 @@ describe("Punk Resolver Proxy", function () {
     const PunkResolverV1 = await ethers.getContractFactory("PunkResolverV1");
     contract = await upgrades.deployProxy(PunkResolverV1); // alternative: upgrades.deployProxy(CounterV1, {initializer: 'initialize'});
 
+    // deploy V2
+    const PunkResolverV2 = await ethers.getContractFactory("PunkResolverV2");
+    contract = await upgrades.upgradeProxy(contract.address, PunkResolverV2);
+
     // deploy Frobidden TLDs contract
     const PunkForbiddenTlds = await ethers.getContractFactory("PunkForbiddenTlds");
     forbTldsContract = await PunkForbiddenTlds.deploy();
@@ -480,5 +484,62 @@ describe("Punk Resolver Proxy", function () {
 
     const factoryAddressAfter2 = await contract.getTldFactoryAddress(tldName1);
     expect(factoryAddressAfter2).to.equal(ethers.constants.AddressZero);
+  });
+
+  it('allows user to set a custom default domain', async function () {
+    // check default domain via Resolver before
+    const defaultDomainViaResolverBefore = await contract.getDefaultDomain(user1.address, tldName1);
+    expect(defaultDomainViaResolverBefore).to.equal("");
+
+    // add factory address to the resolver contract
+    await contract.addFactoryAddress(factoryContract1.address);
+
+    // create domain name
+    const domainName1 = "user1a";
+
+    await tldContract1.mint(
+      domainName1, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice1 // pay  for the domain
+      }
+    );
+  
+    // create another domain name
+    const domainName2 = "user1b";
+
+    await tldContract1.mint(
+      domainName2, // domain name (without TLD)
+      user1.address, // domain owner
+      ethers.constants.AddressZero, // no referrer
+      {
+        value: domainPrice1 // pay  for the domain
+      }
+    )
+
+    // check default domain via Resolver after
+    const defaultDomainViaResolverAfter = await contract.getDefaultDomain(user1.address, tldName1);
+    expect(defaultDomainViaResolverAfter).to.equal(domainName1);
+
+    // check the first default domain via Resolver before
+    const defaultFirstDomainViaResolverBefore = await contract.getFirstDefaultDomain(user1.address);
+    expect(defaultFirstDomainViaResolverBefore).to.equal(domainName1+".wagmi");
+
+    // user sets a different domain to be the default domain in the Resolver contract
+    await contract.connect(user1).setCustomDefaultDomain(domainName2, ".wagmi");
+
+    // check the first default domain via Resolver after
+    const defaultFirstDomainViaResolverAfter = await contract.getFirstDefaultDomain(user1.address);
+    expect(defaultFirstDomainViaResolverAfter).to.equal(domainName2+".wagmi");
+
+    await expect(contract.connect(user1).setCustomDefaultDomain("admin", ".wagmi")).to.be.revertedWith('You do not own this domain.');;
+  
+    // un-set/remove a custom default domain
+    await contract.connect(user1).setCustomDefaultDomain("", "");
+
+    // check the first default domain via Resolver after
+    const defaultFirstDomainViaResolverAfter2 = await contract.getFirstDefaultDomain(user1.address);
+    expect(defaultFirstDomainViaResolverAfter2).to.equal(domainName1+".wagmi");
   });
 });

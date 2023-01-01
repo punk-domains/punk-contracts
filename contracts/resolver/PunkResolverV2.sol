@@ -25,17 +25,12 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
   event FactoryAddressAdded(address user, address fAddr);
   event DeprecatedTldAdded(address user, address tAddr);
   event DeprecatedTldRemoved(address user, address tAddr);
-
-  // initializer (only for V1!)
-  function initialize() public initializer {
-    __Context_init_unchained();
-    __Ownable_init_unchained();
-  }
+  event CustomDefaultDomainSet(address user, string dName, string dTld);
 
   // READ
 
   // reverse resolver: get user's default name for a given TLD
-  function getDefaultDomain(address _addr, string calldata _tld) public view returns(string memory) {
+  function getDefaultDomain(address _addr, string memory _tld) public view returns(string memory) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
@@ -82,7 +77,7 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
   }
 
   /// @notice domain resolver
-  function getDomainHolder(string calldata _domainName, string calldata _tld) public view returns(address) {
+  function getDomainHolder(string memory _domainName, string memory _tld) public view returns(address) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
@@ -98,7 +93,7 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
   }
   
   /// @notice fetch domain data for a given domain
-  function getDomainData(string calldata _domainName, string calldata _tld) public view returns(string memory) {
+  function getDomainData(string memory _domainName, string memory _tld) public view returns(string memory) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
@@ -114,7 +109,7 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
   }
 
   /// @notice fetch domain metadata for a given domain (tokenURI)
-  function getDomainTokenUri(string calldata _domainName, string calldata _tld) public view returns(string memory) {
+  function getDomainTokenUri(string memory _domainName, string memory _tld) public view returns(string memory) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tld);
@@ -136,13 +131,16 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
 
   /// @notice reverse resolver: get single user's default name, the first that comes (all TLDs)
   function getFirstDefaultDomain(address _addr) public view returns(string memory) {
-    // TODO
-    // - check if user has set a custom default domain in this contract (see mapping, both strings must not be empty)
-    // - if yes, check if that domain really belongs to the user
-    // - if yes, check that the TLD is not deprecated
-    // - if yes (meaning that TLD is not deprecated), return the full domain name
-    // - else, run the code below
+    // check if user has set a custom default domain in this contract
+    string[2] memory domainParts = customDefaultDomain[_addr];
 
+    if (bytes(domainParts[0]).length > 0 && bytes(domainParts[1]).length > 0) {
+      if (getDomainHolder(domainParts[0], domainParts[1]) == _addr) {
+        return string(abi.encodePacked(domainParts[0], domainParts[1]));
+      }
+    }
+
+    // if no custom default domain or if it's not valid, find another default domain
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       string[] memory tldNames = IBasePunkTLDFactory(factories[i]).getTldsArray();
@@ -167,7 +165,7 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
   }
 
   /// @notice get the address of a given TLD name
-  function getTldAddress(string calldata _tldName) public view returns(address) {
+  function getTldAddress(string memory _tldName) public view returns(address) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tldName);
@@ -185,7 +183,7 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
   }
 
   /// @notice get the address of the factory contract through which a given TLD was created
-  function getTldFactoryAddress(string calldata _tldName) public view returns(address) {
+  function getTldFactoryAddress(string memory _tldName) public view returns(address) {
     uint256 fLength = factories.length;
     for (uint256 i = 0; i < fLength;) {
       address tldAddr = IBasePunkTLDFactory(factories[i]).tldNamesAddresses(_tldName);
@@ -254,9 +252,16 @@ contract PunkResolverV2 is Initializable, OwnableUpgradeable {
 
   // V2
   function setCustomDefaultDomain(string memory _domainName, string memory _tld) external {
-    // TODO: check if valid tld
-    // TODO: check if user really owns this domain
+    if (bytes(_domainName).length > 0 && bytes(_tld).length > 0) {
+      // set a custom default domain
+      require(getDomainHolder(_domainName, _tld) == _msgSender(), "You do not own this domain.");
 
-    customDefaultDomain[_msgSender()] = [_domainName, _tld];
+      customDefaultDomain[_msgSender()] = [_domainName, _tld];
+      emit CustomDefaultDomainSet(_msgSender(), _domainName, _tld);
+    } else {
+      // remove the current custom domain
+      delete customDefaultDomain[_msgSender()];
+      emit CustomDefaultDomainSet(_msgSender(), "", "");
+    }
   }
 }
