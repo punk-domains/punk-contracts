@@ -25,14 +25,16 @@ interface IFlexiPunkTLD is IERC721 {
 // - no minting restrictions (anyone can mint)
 // - tiered pricing
 // - broker fee
-contract MinterWithBroker is Ownable, ReentrancyGuard {
+contract FlareMinter is Ownable, ReentrancyGuard {
   address public brokerAddress;
+  address public devAddress;
 
   bool public paused = true;
 
   uint256 public referralFee; // share of each domain purchase (in bips) that goes to the referrer
   uint256 public royaltyFee; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public brokerFee; // share of each domain purchase (in bips) that goes to the broker
+  uint256 public devFee; // share of each domain purchase (in bips) that goes to the developer
   uint256 public constant MAX_BPS = 10_000;
 
   uint256 public price1char; // 1 char domain price
@@ -46,10 +48,12 @@ contract MinterWithBroker is Ownable, ReentrancyGuard {
   // CONSTRUCTOR
   constructor(
     address _brokerAddress,
+    address _devAddress,
     address _tldAddress,
     uint256 _referralFee,
     uint256 _royaltyFee,
     uint256 _brokerFee,
+    uint256 _devFee,
     uint256 _price1char,
     uint256 _price2char,
     uint256 _price3char,
@@ -57,11 +61,13 @@ contract MinterWithBroker is Ownable, ReentrancyGuard {
     uint256 _price5char
   ) {
     brokerAddress = _brokerAddress;
+    devAddress = _devAddress;
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     referralFee = _referralFee;
     royaltyFee = _royaltyFee;
     brokerFee = _brokerFee;
+    devFee = _devFee;
 
     price1char = _price1char;
     price2char = _price2char;
@@ -109,6 +115,13 @@ contract MinterWithBroker is Ownable, ReentrancyGuard {
       uint256 brokerPayment = (selectedPrice * brokerFee) / MAX_BPS;
       (bool sentBrokerFee, ) = payable(brokerAddress).call{value: brokerPayment}("");
       require(sentBrokerFee, "Failed to send broker fee");
+    }
+
+    // send developer fee
+    if (devFee > 0 && devAddress != address(0)) {
+      uint256 devPayment = (selectedPrice * devFee) / MAX_BPS;
+      (bool sentDevFee, ) = payable(devAddress).call{value:devPayment}("");
+      require(sentDevFee, "Failed to send developer fee");
     }
 
     // send referral fee
@@ -199,6 +212,19 @@ contract MinterWithBroker is Ownable, ReentrancyGuard {
     require(_brokerFee <= 3000, "Cannot exceed 30%");
     require(_msgSender() == brokerAddress, "Sender is not the broker");
     brokerFee = _brokerFee;
+  }
+
+  /// @notice This changes the Developer address in the minter contract
+  function changeDevAddress(address _devAddress) external {
+    require(_msgSender() == devAddress, "Sender is not the developer");
+    devAddress = _devAddress;
+  }
+
+  /// @notice This changes the Developer fee in the minter contract
+  function changeDevFee(uint256 _devFee) external {
+    require(_devFee <= 3000, "Cannot exceed 30%");
+    require(_msgSender() == devAddress, "Sender is not the developer");
+    devFee = _devFee;
   }
 
   // RECEIVE & FALLBACK
