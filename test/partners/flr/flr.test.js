@@ -19,18 +19,16 @@ function calculateGasCosts(testName, receipt) {
 describe(".flr minting contract", function () {
   let tldContract;
   const tldName = ".flr";
-  const tldSymbol = ".flr";
+  const tldSymbol = ".FLR";
   const tldPrice = 0;
   const tldRoyalty = 0;
-  const tldReferral = 0;
 
   const paymentTokenDecimals = 18; // ETH (18 decimals)
 
   let mintContract;
   const referralFee = 1000;
-  const royaltyFee = 3000;
-  const brokerFee = 3000;
-  const devFee = 3000
+  const brokerFee = 5000;
+  const devFee = 1500;
   const price1char = ethers.utils.parseUnits("1", paymentTokenDecimals); // $10k
   const price2char = ethers.utils.parseUnits("0.5", paymentTokenDecimals);
   const price3char = ethers.utils.parseUnits("0.1", paymentTokenDecimals);
@@ -41,6 +39,8 @@ describe(".flr minting contract", function () {
   let user1;
   let user2;
   let owner;
+  let broker;
+  let developer;
 
   beforeEach(async function () {
     [signer, user1, user2, owner, broker, developer] = await ethers.getSigners();
@@ -64,7 +64,7 @@ describe(".flr minting contract", function () {
       tldSymbol,
       signer.address, // TLD owner
       tldPrice,
-      false, // buying enabled
+      false,
       tldRoyalty,
       factoryContract.address,
       flexiMetadataContract.address
@@ -75,7 +75,7 @@ describe(".flr minting contract", function () {
     mintContract = await minterCode.deploy(
       broker.address, developer.address,
       tldContract.address, // TLD address
-      referralFee, royaltyFee, brokerFee, devFee,
+      referralFee, brokerFee, devFee,
       price1char, price2char, price3char, price4char, price5char // prices
     );
 
@@ -170,9 +170,6 @@ describe(".flr minting contract", function () {
     const mdResult2 = JSON.parse(mdJson2);
 
     expect(mdResult2.name).to.equal("user1second.flr");
-    //console.log(mdResult1.image);
-
-    // should FAIL at minting a domain with 4 chars if you only pay for 5
 
     // should fail if domain is 4 chars, but payment is for 5 chars (too low)
     await expect(mintContract.connect(user1).mint(
@@ -251,24 +248,6 @@ describe(".flr minting contract", function () {
 
     // if user is not owner, the tx should revert
     await expect(mintContract.connect(user1).changeReferralFee(666)).to.be.revertedWith('Ownable: caller is not the owner');
-  });
-
-  it("should change royalty fee (only royalty fee updater)", async function () {
-    const feeBefore = await mintContract.royaltyFee();
-    expect(feeBefore).to.equal(3000);
-
-    const newFee = 1500;
-
-    await mintContract.connect(signer).changeRoyaltyFee(newFee);
-
-    const feeAfter = await mintContract.royaltyFee();
-    expect(feeAfter).to.equal(newFee);
-
-    // cannot exceed 40%
-    await expect(mintContract.connect(signer).changeRoyaltyFee(6100)).to.be.revertedWith('Cannot exceed 60%');
-
-    // if user is not royalty fee updater, the tx should revert
-    await expect(mintContract.connect(user1).changeRoyaltyFee(666)).to.be.revertedWith('Sender is not Royalty Fee Updater');
   });
 
   it("should recover ERC-20 tokens mistakenly sent to contract address", async function () {

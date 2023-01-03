@@ -10,8 +10,6 @@ import "../../lib/strings.sol";
 interface IFlexiPunkTLD is IERC721 {
 
   function owner() external view returns(address);
-  function royaltyFeeReceiver() external view returns(address);
-  function royaltyFeeUpdater() external view returns(address);
 
   function mint(
     string memory _domainName,
@@ -32,7 +30,6 @@ contract FlareMinter is Ownable, ReentrancyGuard {
   bool public paused = true;
 
   uint256 public referralFee; // share of each domain purchase (in bips) that goes to the referrer
-  uint256 public royaltyFee; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public brokerFee; // share of each domain purchase (in bips) that goes to the broker
   uint256 public devFee; // share of each domain purchase (in bips) that goes to the developer
   uint256 public constant MAX_BPS = 10_000;
@@ -51,7 +48,6 @@ contract FlareMinter is Ownable, ReentrancyGuard {
     address _devAddress,
     address _tldAddress,
     uint256 _referralFee,
-    uint256 _royaltyFee,
     uint256 _brokerFee,
     uint256 _devFee,
     uint256 _price1char,
@@ -65,7 +61,6 @@ contract FlareMinter is Ownable, ReentrancyGuard {
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     referralFee = _referralFee;
-    royaltyFee = _royaltyFee;
     brokerFee = _brokerFee;
     devFee = _devFee;
 
@@ -103,11 +98,22 @@ contract FlareMinter is Ownable, ReentrancyGuard {
 
     require(msg.value >= selectedPrice, "Value below price");
 
-    // send royalty fee
-    if (royaltyFee > 0) {
-      uint256 royaltyPayment = (selectedPrice * royaltyFee) / MAX_BPS;
-      (bool sentRoyaltyFee, ) = payable(tldContract.royaltyFeeReceiver()).call{value: royaltyPayment}("");
-      require(sentRoyaltyFee, "Failed to send royalty fee");
+    // send referral fee
+    if (referralFee > 0 && _referrer != address(0)) {
+      uint256 referralPayment = (selectedPrice * referralFee) / MAX_BPS;
+      (bool sentReferralFee, ) = payable(_referrer).call{value: referralPayment}("");
+      require(sentReferralFee, "Failed to send referral fee");
+
+      selectedPrice -= referralPayment;
+    }
+
+    // send developer fee
+    if (devFee > 0 && devAddress != address(0)) {
+      uint256 devPayment = (selectedPrice * devFee) / MAX_BPS;
+      (bool sentDevFee, ) = payable(devAddress).call{value: devPayment}("");
+      require(sentDevFee, "Failed to send developer fee");
+
+      selectedPrice -= devPayment;
     }
 
     // send broker fee
@@ -115,20 +121,6 @@ contract FlareMinter is Ownable, ReentrancyGuard {
       uint256 brokerPayment = (selectedPrice * brokerFee) / MAX_BPS;
       (bool sentBrokerFee, ) = payable(brokerAddress).call{value: brokerPayment}("");
       require(sentBrokerFee, "Failed to send broker fee");
-    }
-
-    // send developer fee
-    if (devFee > 0 && devAddress != address(0)) {
-      uint256 devPayment = (selectedPrice * devFee) / MAX_BPS;
-      (bool sentDevFee, ) = payable(devAddress).call{value:devPayment}("");
-      require(sentDevFee, "Failed to send developer fee");
-    }
-
-    // send referral fee
-    if (referralFee > 0 && _referrer != address(0)) {
-      uint256 referralPayment = (selectedPrice * referralFee) / MAX_BPS;
-      (bool sentReferralFee, ) = payable(_referrer).call{value: referralPayment}("");
-      require(sentReferralFee, "Failed to send referral fee");
     }
 
     // send the rest to TLD owner
@@ -140,6 +132,18 @@ contract FlareMinter is Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
+  /// @notice This changes the Broker fee in the minter contract
+  function changeBrokerFee(uint256 _brokerFee) external onlyOwner {
+    require(_brokerFee <= 6000, "Cannot exceed 60%");
+    brokerFee = _brokerFee;
+  }
+
+  /// @notice This changes the Developer fee in the minter contract
+  function changeDevFee(uint256 _devFee) external onlyOwner {
+    require(_devFee <= 3000, "Cannot exceed 30%");
+    devFee = _devFee;
+  }
 
   /// @notice This changes price in the minter contract
   function changePrice(uint256 _price, uint256 _chars) external onlyOwner {
@@ -194,35 +198,16 @@ contract FlareMinter is Ownable, ReentrancyGuard {
 
   // OTHER WRITE METHODS
 
-  /// @notice This changes royalty fee in the minter contract
-  function changeRoyaltyFee(uint256 _royaltyFee) external {
-    require(_royaltyFee <= 6000, "Cannot exceed 60%");
-    require(_msgSender() == tldContract.royaltyFeeUpdater(), "Sender is not Royalty Fee Updater");
-    royaltyFee = _royaltyFee;
-  }
-
   /// @notice This changes the Broker address in the minter contract
   function changeBrokerAddress(address _brokerAddress) external {
     require(_msgSender() == brokerAddress, "Sender is not the broker");
     brokerAddress = _brokerAddress;
   }
 
-  /// @notice This changes the Broker fee in the minter contract
-  function changeBrokerFee(uint256 _brokerFee) external onlyOwner {
-    require(_brokerFee <= 3000, "Cannot exceed 30%");
-    brokerFee = _brokerFee;
-  }
-
   /// @notice This changes the Developer address in the minter contract
   function changeDevAddress(address _devAddress) external {
     require(_msgSender() == devAddress, "Sender is not the developer");
     devAddress = _devAddress;
-  }
-
-  /// @notice This changes the Developer fee in the minter contract
-  function changeDevFee(uint256 _devFee) external onlyOwner {
-    require(_devFee <= 3000, "Cannot exceed 30%");
-    devFee = _devFee;
   }
 
   // RECEIVE & FALLBACK
