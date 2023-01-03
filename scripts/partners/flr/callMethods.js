@@ -1,4 +1,4 @@
-// npx hardhat run scripts/partners/broker/callMethods.js --network optimisticEthereum
+// npx hardhat run scripts/partners/flr/callMethods.js --network flareCoston
 
 const tldAddress = "";
 const minterAddress = "";
