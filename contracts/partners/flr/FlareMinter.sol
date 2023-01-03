@@ -208,9 +208,8 @@ contract FlareMinter is Ownable, ReentrancyGuard {
   }
 
   /// @notice This changes the Broker fee in the minter contract
-  function changeBrokerFee(uint256 _brokerFee) external {
+  function changeBrokerFee(uint256 _brokerFee) external onlyOwner {
     require(_brokerFee <= 3000, "Cannot exceed 30%");
-    require(_msgSender() == brokerAddress, "Sender is not the broker");
     brokerFee = _brokerFee;
   }
 
@@ -221,9 +220,8 @@ contract FlareMinter is Ownable, ReentrancyGuard {
   }
 
   /// @notice This changes the Developer fee in the minter contract
-  function changeDevFee(uint256 _devFee) external {
+  function changeDevFee(uint256 _devFee) external onlyOwner {
     require(_devFee <= 3000, "Cannot exceed 30%");
-    require(_msgSender() == devAddress, "Sender is not the developer");
     devFee = _devFee;
   }
 
