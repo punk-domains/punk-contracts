@@ -95,17 +95,6 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
     return false;
   }
 
-  /// @notice Returns true or false if address is eligible to mint a domain
-  function canUserMint(address _user) public view returns(bool) {
-    if (IERC721(nftAddress).balanceOf(_user) > 0) {
-      return true;
-    } else if (canGetDiscount(_user)) {
-      return true;
-    }
-
-    return false;
-  }
-
   function getPartnerNftsArray() public view returns(address[] memory) {
     return partnerNfts;
   }
@@ -118,7 +107,6 @@ contract SatrapMinter is Ownable, ReentrancyGuard {
     address _referrer
   ) external nonReentrant payable returns(uint256 tokenId) {
     require(!paused, "Minting paused");
-    require(canUserMint(_msgSender()), "Not eligible for minting");
 
     // find price
     uint256 domainLength = strings.len(strings.toSlice(_domainName));

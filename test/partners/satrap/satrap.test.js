@@ -89,20 +89,7 @@ describe(".satrap", function () {
     expect(_tldSymbol).to.equal(tldSymbol);
   });
 
-  it("checks if users can mint or get discount", async function () {
-    // mint
-    const mintEligible1 = await mintContract.canUserMint(user1.address);
-    expect(mintEligible1).to.be.true;
-
-    const mintEligible2 = await mintContract.canUserMint(user2.address);
-    expect(mintEligible2).to.be.true;
-
-    const mintEligible3 = await mintContract.canUserMint(user3.address);
-    expect(mintEligible3).to.be.true;
-
-    const mintEligible4 = await mintContract.canUserMint(user4.address);
-    expect(mintEligible4).to.be.false;
-
+  it("checks if users can get discount", async function () {
     // discount
     const discountEligible1 = await mintContract.canGetDiscount(user1.address);
     expect(discountEligible1).to.be.true;
