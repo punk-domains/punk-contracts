@@ -2,17 +2,16 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../interfaces/IBasePunkTLDFactory.sol";
-import "../interfaces/IBasePunkTLD.sol";
-import "../lib/strings.sol";
+import "../../interfaces/IBasePunkTLDFactory.sol";
+import "../../interfaces/IBasePunkTLD.sol";
+import "../../lib/strings.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
 /// @title Punk Domains Resolver v2
 /// @author Tempe Techie
 /// @notice This contract resolves all punk domains and TLDs on the particular blockchain where it is deployed
-contract PunkResolverV2 is Initializable, OwnableUpgradeable {
+contract PunkResolverV2 is OwnableUpgradeable {
   using strings for string;
 
   mapping (address => bool) public isTldDeprecated; // deprecate an address, not TLD name

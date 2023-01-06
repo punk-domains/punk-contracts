@@ -76,7 +76,7 @@ module.exports = {
       chainId: 1,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 10000000000, // 10 gwei
+      gasPrice: 45000000000, // 10 gwei
     },
     opera: { // Fantom mainnet
       url: 'https://rpc.ftm.tools', // "https://rpcapi.fantom.network", 
@@ -120,7 +120,7 @@ module.exports = {
       chainId: 77,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
-      gasPrice: 20000000000, // 20 gwei
+      gasPrice: 40000000000, // 20 gwei
     },
     songbird: { // Songbird Mainnet
       url: 'https://songbird-api.flare.network/ext/C/rpc',

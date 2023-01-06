@@ -1,5 +1,5 @@
-// npx hardhat run scripts/resolver/2_upgrade_with_gnosis_safe.js --network xdai
-// see instructions here: https://github.com/tempe-techie/upgradable-contracts#b-upgrades-with-gnosis-safe 
+// npx hardhat run scripts/resolver/2_upgrade_with_eoa.js --network songbird
+// see instructions here: https://github.com/tempe-techie/upgradable-contracts
 
 const previousVersionContractName = "PunkResolverV1";
 const newVersionContractName = "PunkResolverV2";
@@ -42,8 +42,12 @@ async function main() {
 
   // deploy the new implementation
   const contract = await ethers.getContractFactory(newVersionContractName);
-  const impAddress = await upgrades.prepareUpgrade(proxyAddress, contract); // note: prepareUpgrade instead of upgradeProxy!
-  //await instance.deployed();
+  const instance = await upgrades.upgradeProxy(proxyAddress, contract);
+  await instance.deployed();
+
+  console.log("Proxy address:", instance.address);
+
+  const impAddress = await hre.upgrades.erc1967.getImplementationAddress(instance.address);
 
   console.log("Implementation address:", impAddress);
 
