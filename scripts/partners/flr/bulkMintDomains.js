@@ -5,7 +5,10 @@ const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
 const recipient = "0xb29050965a5ac70ab487aa47546cdcbc97dae45d";
 
 const domains = [
-  'community', 'ashw', 'alphaoracle', 'witterftso', 'benry', 'flrfinance', 
+  'punk', 'punkdomains', 'domains', 'domain', 'tempe', 'songbird', 'flrdomains', 'flaredomains', 'sgbdomains', 
+  'songbirddomains', 'sgb', 'tekr', 'clavi', 'satrap', 'merkle', 'satraps', 'johnson', 'hugo', 'hugophilion', 'af', 'aflabs', 
+  'aforacle', 'cicy', 'dominic', 'bukher', 'timbukher', 'gabe', 'evolve', 'evolveftso', 'xtoadz', 'stoadz', 'kingsman', 'pirate', 
+  'aftso', 'alex', 'ftsoit', 'flareoracle', 'oracleswap', 'community', 'ashw', 'alphaoracle', 'witterftso', 'benry', 'flrfinance', 
   'bifrost', 'flaredienst', 'evi1m3', 'j0sko', 'josh', 'luka', 'max', 'maxluck', 'tom', 'vanessa', 'ants', 'flintstone', 'tim', 
   'neil', 'ftsoau', 'flaremetrics', 'flarebuilders', 'builders', 'an', 'chayy', 'daniel', 'eninspace', 'giorgionetg', 'jonnern', 
   'sanorfaker', 'sini', 'baqba', 'bless', 'chard', 'intheknow', 'minho', 'nita', 'wyatt', 'flareman', 'feelz', 'anthony', 'toaddict', 
