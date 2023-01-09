@@ -1,4 +1,4 @@
-// npx hardhat run scripts/resolver/2_upgrade_with_gnosis_safe.js --network xdai
+// npx hardhat run scripts/resolver/2_upgrade_with_gnosis_safe.js --network flare
 // see instructions here: https://github.com/tempe-techie/upgradable-contracts#b-upgrades-with-gnosis-safe 
 
 const previousVersionContractName = "PunkResolverV1";
@@ -9,6 +9,8 @@ if (network.config.chainId === 1) {
   proxyAddress = "0x7e8aB50697C7Abe63Bdab6B155C2FB8D285458cB"; // Ethereum
 } else if (network.config.chainId === 10) {
   proxyAddress = "0xF20fc12a4955c9d47194B8fEd591Fe01777D2b06"; // Optimism
+} else if (network.config.chainId === 14) {
+  proxyAddress = "0x1D882E64bb7f4D49e67018d81254236A2A6465a3"; // Flare
 } else if (network.config.chainId === 19) {
   proxyAddress = "0x7e8aB50697C7Abe63Bdab6B155C2FB8D285458cB"; // Songbird
 } else if (network.config.chainId === 56) {

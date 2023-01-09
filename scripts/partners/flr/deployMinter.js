@@ -1,12 +1,12 @@
-// npx hardhat run scripts/partners/flr/deployMinter.js --network flareCoston
+// npx hardhat run scripts/partners/flr/deployMinter.js --network flare
 // add minter address to:
 // 1) TLD contract as minter
 
 const contractNameFactory = "FlareMinter";
 
-const brokerAddress = "";
+const brokerAddress = "0xc4Dbc181bc27b01B6269FB7Fb3c1250C9B922633";
 const devAddress = "0x96A4715280c3Dac3F3093d51aA278aA5eb60ffDE"; // johnson
-const tldAddress = "";
+const tldAddress = "0xBDACF94dDCAB51c39c2dD50BffEe60Bb8021949a";
 
 const referralFee = 1000;
 const devFee = 1500;
@@ -14,11 +14,11 @@ const brokerFee = 5000;
 
 const paymentTokenDecimals = 18;
 
-let price1char = ethers.utils.parseUnits("299", paymentTokenDecimals);
-let price2char = ethers.utils.parseUnits("199", paymentTokenDecimals);
-let price3char = ethers.utils.parseUnits("149", paymentTokenDecimals);
+let price1char = ethers.utils.parseUnits("10000", paymentTokenDecimals);
+let price2char = ethers.utils.parseUnits("4000", paymentTokenDecimals);
+let price3char = ethers.utils.parseUnits("599", paymentTokenDecimals);
 let price4char = ethers.utils.parseUnits("99", paymentTokenDecimals);
-let price5char = ethers.utils.parseUnits("49", paymentTokenDecimals);
+let price5char = ethers.utils.parseUnits("19", paymentTokenDecimals);
 
 if (network.config.chainId === 16) {
   // Coston testnet

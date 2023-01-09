@@ -57,6 +57,13 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 5000000000, // 5 gwei
     },
+    flare: { // Flare mainnet
+      url: 'https://flare-api.flare.network/ext/C/rpc',
+      chainId: 14,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 25000000000, // 25 gwei
+    },
     flareCoston: { // Flare Coston Testnet
       url: 'https://coston-api.flare.network/ext/bc/C/rpc',
       chainId: 16,
@@ -146,6 +153,7 @@ module.exports = {
       aurora: process.env.AURORASCAN_API_KEY,
       auroraTestnet: process.env.AURORASCAN_API_KEY,
       bsc: process.env.BSC_API_KEY,
+      flare: "randomstring",
       flareCoston: "randomstring",
       mainnet: process.env.ETHERSCAN_API_KEY,
       ftmTestnet: process.env.FTMSCAN_API_KEY,
@@ -165,6 +173,14 @@ module.exports = {
         urls: {
           apiURL: "https://api-goerli.arbiscan.io/api",
           browserURL: "https://goerli.arbiscan.io"
+        }
+      },
+      {
+        network: "flare",
+        chainId: 14,
+        urls: {
+          apiURL: "https://flare-explorer.flare.network/api",
+          browserURL: "https://flare-explorer.flare.network"
         }
       },
       {
