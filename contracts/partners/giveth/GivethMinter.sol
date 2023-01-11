@@ -22,15 +22,15 @@ interface IFlexiPunkTLD is IERC721 {
 // generic punk minter contract
 // - no minting restrictions (anyone can mint)
 // - tiered pricing
-// - broker fee
+// - public good funding matching pool
 contract GivethMinter is Ownable, ReentrancyGuard {
-  address public brokerAddress;
+  address public poolAddress;
   address public devAddress;
 
   bool public paused = true;
 
   uint256 public referralFee; // share of each domain purchase (in bips) that goes to the referrer
-  uint256 public brokerFee; // share of each domain purchase (in bips) that goes to the broker
+  uint256 public tax; // share of each domain purchase (in bips) that goes to the Giveth Matching Pool
   uint256 public devFee; // share of each domain purchase (in bips) that goes to the developer
   uint256 public constant MAX_BPS = 10_000;
 
@@ -44,25 +44,23 @@ contract GivethMinter is Ownable, ReentrancyGuard {
 
   // CONSTRUCTOR
   constructor(
-    address _brokerAddress,
+    address _poolAddress,
     address _devAddress,
     address _tldAddress,
     uint256 _referralFee,
-    uint256 _brokerFee,
-    uint256 _devFee,
+    uint256 _tax,
     uint256 _price1char,
     uint256 _price2char,
     uint256 _price3char,
     uint256 _price4char,
     uint256 _price5char
   ) {
-    brokerAddress = _brokerAddress;
+    poolAddress = _poolAddress;
     devAddress = _devAddress;
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     referralFee = _referralFee;
-    brokerFee = _brokerFee;
-    devFee = _devFee;
+    tax = _tax;
 
     price1char = _price1char;
     price2char = _price2char;
@@ -107,20 +105,22 @@ contract GivethMinter is Ownable, ReentrancyGuard {
       selectedPrice -= referralPayment;
     }
 
+    // send tax
+    if (tax > 0 && poolAddress != address(0)) {
+      uint256 taxPayment = (selectedPrice * tax) / MAX_BPS;
+      (bool sentTax, ) = payable(poolAddress).call{value: taxPayment}("");
+      require(sentTax, "Failed to send tax");
+
+      selectedPrice -= taxPayment;
+    }
+
     // send developer fee
     if (devFee > 0 && devAddress != address(0)) {
-      uint256 devPayment = (selectedPrice * devFee) / MAX_BPS;
+      uint256 devPayment = selectedPrice / 2;
       (bool sentDevFee, ) = payable(devAddress).call{value: devPayment}("");
       require(sentDevFee, "Failed to send developer fee");
 
       selectedPrice -= devPayment;
-    }
-
-    // send broker fee
-    if (brokerFee > 0 && brokerAddress != address(0)) {
-      uint256 brokerPayment = (selectedPrice * brokerFee) / MAX_BPS;
-      (bool sentBrokerFee, ) = payable(brokerAddress).call{value: brokerPayment}("");
-      require(sentBrokerFee, "Failed to send broker fee");
     }
 
     // send the rest to TLD owner
@@ -133,16 +133,10 @@ contract GivethMinter is Ownable, ReentrancyGuard {
 
   // OWNER
 
-  /// @notice This changes the Broker fee in the minter contract
-  function changeBrokerFee(uint256 _brokerFee) external onlyOwner {
-    require(_brokerFee <= 6000, "Cannot exceed 60%");
-    brokerFee = _brokerFee;
-  }
-
-  /// @notice This changes the Developer fee in the minter contract
-  function changeDevFee(uint256 _devFee) external onlyOwner {
-    require(_devFee <= 3000, "Cannot exceed 30%");
-    devFee = _devFee;
+  /// @notice This changes the tax in the minter contract
+  function changeTaxRate(uint256 _tax) external onlyOwner {
+    require(_tax <= 8000, "Cannot exceed 80%");
+    tax = _tax;
   }
 
   /// @notice This changes price in the minter contract
@@ -198,10 +192,10 @@ contract GivethMinter is Ownable, ReentrancyGuard {
 
   // OTHER WRITE METHODS
 
-  /// @notice This changes the Broker address in the minter contract
-  function changeBrokerAddress(address _brokerAddress) external {
-    require(_msgSender() == brokerAddress, "Sender is not the broker");
-    brokerAddress = _brokerAddress;
+  /// @notice This changes the pool address in the minter contract
+  function changePoolAddress(address _poolAddress) external {
+    require(_msgSender() == poolAddress, "Sender is not the pool address owner");
+    poolAddress = _poolAddress;
   }
 
   /// @notice This changes the Developer address in the minter contract
