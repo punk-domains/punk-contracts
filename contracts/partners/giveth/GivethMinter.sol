@@ -24,14 +24,13 @@ interface IFlexiPunkTLD is IERC721 {
 // - tiered pricing
 // - public good funding matching pool
 contract GivethMinter is Ownable, ReentrancyGuard {
-  address public poolAddress;
+  address public pgfAddress;
   address public devAddress;
 
   bool public paused = true;
 
   uint256 public referralFee; // share of each domain purchase (in bips) that goes to the referrer
-  uint256 public tax; // share of each domain purchase (in bips) that goes to the Giveth Matching Pool
-  uint256 public devFee; // share of each domain purchase (in bips) that goes to the developer
+  uint256 public pgfFee; // share of each domain purchase (in bips) that goes to the Giveth Matching Pool
   uint256 public constant MAX_BPS = 10_000;
 
   uint256 public price1char; // 1 char domain price
@@ -44,23 +43,23 @@ contract GivethMinter is Ownable, ReentrancyGuard {
 
   // CONSTRUCTOR
   constructor(
-    address _poolAddress,
+    address _pgfAddress,
     address _devAddress,
     address _tldAddress,
     uint256 _referralFee,
-    uint256 _tax,
+    uint256 _pgfFee,
     uint256 _price1char,
     uint256 _price2char,
     uint256 _price3char,
     uint256 _price4char,
     uint256 _price5char
   ) {
-    poolAddress = _poolAddress;
+    pgfAddress = _pgfAddress;
     devAddress = _devAddress;
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     referralFee = _referralFee;
-    tax = _tax;
+    pgfFee = _pgfFee;
 
     price1char = _price1char;
     price2char = _price2char;
@@ -105,22 +104,20 @@ contract GivethMinter is Ownable, ReentrancyGuard {
       selectedPrice -= referralPayment;
     }
 
-    // send tax
-    if (tax > 0 && poolAddress != address(0)) {
-      uint256 taxPayment = (selectedPrice * tax) / MAX_BPS;
-      (bool sentTax, ) = payable(poolAddress).call{value: taxPayment}("");
-      require(sentTax, "Failed to send tax");
+    // send pgfFee
+    if (pgfFee > 0 && pgfAddress != address(0)) {
+      uint256 pgfFeePayment = (selectedPrice * pgfFee) / MAX_BPS;
+      (bool sentPgfFee, ) = payable(pgfAddress).call{value: pgfFeePayment}("");
+      require(sentPgfFee, "Failed to send pgfFee");
 
-      selectedPrice -= taxPayment;
+      selectedPrice -= pgfFeePayment;
     }
 
     // send developer fee
-    if (devFee > 0 && devAddress != address(0)) {
+    if (devAddress != address(0)) {
       uint256 devPayment = selectedPrice / 2;
       (bool sentDevFee, ) = payable(devAddress).call{value: devPayment}("");
       require(sentDevFee, "Failed to send developer fee");
-
-      selectedPrice -= devPayment;
     }
 
     // send the rest to TLD owner
@@ -133,10 +130,10 @@ contract GivethMinter is Ownable, ReentrancyGuard {
 
   // OWNER
 
-  /// @notice This changes the tax in the minter contract
-  function changeTaxRate(uint256 _tax) external onlyOwner {
-    require(_tax <= 8000, "Cannot exceed 80%");
-    tax = _tax;
+  /// @notice This changes the pgfFee in the minter contract
+  function changePgfFee(uint256 _pgfFee) external onlyOwner {
+    require(_pgfFee <= 8000, "Cannot exceed 80%");
+    pgfFee = _pgfFee;
   }
 
   /// @notice This changes price in the minter contract
@@ -193,9 +190,9 @@ contract GivethMinter is Ownable, ReentrancyGuard {
   // OTHER WRITE METHODS
 
   /// @notice This changes the pool address in the minter contract
-  function changePoolAddress(address _poolAddress) external {
-    require(_msgSender() == poolAddress, "Sender is not the pool address owner");
-    poolAddress = _poolAddress;
+  function changePgfAddress(address _pgfAddress) external {
+    require(_msgSender() == pgfAddress, "Sender is not the pool address owner");
+    pgfAddress = _pgfAddress;
   }
 
   /// @notice This changes the Developer address in the minter contract
