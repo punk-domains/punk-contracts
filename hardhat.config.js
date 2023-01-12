@@ -137,7 +137,7 @@ module.exports = {
       gasPrice: 25000000000, // 25 gwei
     },
     xdai: { // Gnosis Chain mainnet
-      url: 'https://rpc.gnosischain.com',
+      url: 'https://rpc.gnosis.gateway.fm',
       chainId: 100,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
@@ -164,7 +164,7 @@ module.exports = {
       polygonMumbai: process.env.POLYGONSCAN_API_KEY, 
       sokol: "randomstring",
       songbird: "randomstring",
-      xdai: "randomstring"
+      xdai: process.env.GNOSISSCAN_API_KEY
     },
     customChains: [
       {
@@ -198,7 +198,18 @@ module.exports = {
           apiURL: "https://songbird-explorer.flare.network/api",
           browserURL: "https://songbird-explorer.flare.network/"
         }
+      },
+      // Comment out the xdai object below to verify on Blockscout. Uncomment to verify on Gnosis Scan.
+      /*
+      {
+        network: "xdai",
+        chainId: 100,
+        urls: {
+          apiURL: "https://api.gnosisscan.io/api",
+          browserURL: "https://gnosisscan.io"
+        }
       }
+      */
     ]
   },
 
