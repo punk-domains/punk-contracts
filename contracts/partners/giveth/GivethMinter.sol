@@ -136,6 +136,11 @@ contract GivethMinter is Ownable, ReentrancyGuard {
     pgfFee = _pgfFee;
   }
 
+  /// @notice This changes the pgfAddress in the minter contract
+  function changePgfAddress(address _pgfAddress) external onlyOwner {
+    pgfAddress = _pgfAddress;
+  }
+
   /// @notice This changes price in the minter contract
   function changePrice(uint256 _price, uint256 _chars) external onlyOwner {
     require(_price > 0, "Cannot be zero");
@@ -188,12 +193,6 @@ contract GivethMinter is Ownable, ReentrancyGuard {
   }
 
   // OTHER WRITE METHODS
-
-  /// @notice This changes the pool address in the minter contract
-  function changePgfAddress(address _pgfAddress) external {
-    require(_msgSender() == pgfAddress, "Sender is not the pool address owner");
-    pgfAddress = _pgfAddress;
-  }
 
   /// @notice This changes the Developer address in the minter contract
   function changeDevAddress(address _devAddress) external {

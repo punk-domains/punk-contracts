@@ -1,5 +1,5 @@
 // Run tests:
-// npx hardhat test test/partners/flr/flr.test.js 
+// npx hardhat test test/partners/giveth/giveth.test.js 
 
 const { expect } = require("chai");
 
