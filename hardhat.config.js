@@ -137,7 +137,7 @@ module.exports = {
       gasPrice: 25000000000, // 25 gwei
     },
     xdai: { // Gnosis Chain mainnet
-      url: 'https://rpc.gnosis.gateway.fm',
+      url: 'https://gnosischain-rpc.gateway.pokt.network',
       chainId: 100,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       gas: "auto", // gas limit
