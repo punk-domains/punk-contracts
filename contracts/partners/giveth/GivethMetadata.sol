@@ -10,8 +10,8 @@ import "../../lib/strings.sol";
 /// @author Tempe Techie
 /// @notice Contract that stores metadata for a TLD
 contract GivethMetadata is Ownable {
-  string public description = "Giveth Names";
-  string public brand = "Giveth Names are web3 usernames brought to you by Giveth and Punk Domains. Proceeds from minting new .giveth names go into the Giveth Mathcing Pool.";
+  string public description = "Giveth Names are web3 usernames brought to you by Giveth and Punk Domains. Proceeds from minting new .giveth names go into the Giveth Mathcing Pool.";
+  string public brand = "Giveth Names";
 
   // EVENTS
   event DescriptionChanged(address indexed user, string description);
