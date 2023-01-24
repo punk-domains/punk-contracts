@@ -1,4 +1,4 @@
-// npx hardhat run scripts/partners/broker/callMethods.js --network optimisticEthereum
+// npx hardhat run scripts/partners/broker/callMethods.js --network polygonMumbai
 
 const tldAddress = "";
 const minterAddress = "";
@@ -12,7 +12,6 @@ async function main() {
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
   const tldInterface = new ethers.utils.Interface([
-    //"function togglePaused() external",
     "function minter() external view returns(address)",
     "function changeMinter(address _minter) external",
     "function transferOwnership(address newOwner) external"
@@ -24,11 +23,14 @@ async function main() {
   ]);
 
   const minterInterface = new ethers.utils.Interface([
+    "function paused() external view returns(bool)",
     "function royaltyFeeReceiver() external view returns(address)",
     "function ownerFreeMint(string memory, address) external returns(uint256 tokenId)",
     "function changeRoyaltyFeeReceiver(address _newReceiver) external",
     "function royaltyFee() view external returns(uint256)",
-    "function changeRoyaltyFee(uint256 _royalty) external"
+    "function changeRoyaltyFee(uint256 _royalty) external",
+    "function togglePaused() external",
+    "function changePrice(uint256 _price, uint256 _chars) external"
   ]);
 
   const tldContract = new ethers.Contract(tldAddress, tldInterface, deployer);
@@ -41,11 +43,21 @@ async function main() {
   //console.log("Minter before: " + minterBefore);
 
   //await tldContract.changeMinter(minterAddress);
-  //await minterContract.togglePaused();
+  
   //await minterContract.transferOwnership(newOwnerAddress);
 
   //const minterAfter = await tldContract.minter();
   //console.log("Minter after: " + minterAfter);
+
+  // TOGGLE PAUSED (MINTER)
+
+  //const minterPausedBefore = await minterContract.paused();
+  //console.log("Minter paused before: " + minterPausedBefore);
+
+  //await minterContract.togglePaused();
+
+  //const minterPausedAfter = await minterContract.paused();
+  //console.log("Minter paused after: " + minterPausedAfter);
 
   // CHANGE METADATA IMAGE BRAND AND DESCRIPTION
   //await metadataContract.changeBrand(tldAddress, "FantomNames.org");
@@ -56,6 +68,19 @@ async function main() {
     "The first web3 domain provider on Songbird. Mint your very own .sgb domain on https://songbird.domains/"
   );
   */
+
+  // CHANGE PRICE
+  
+  //const royaltyFeeBefore = await minterContract.royaltyFee();
+  //console.log("RoyaltyFee before: " + royaltyFeeBefore);
+
+  //const newPrice = ethers.utils.parseUnits("0.1", 18);
+  //const chars = 1;
+  //await minterContract.changePrice(newPrice, chars);
+
+  //const royaltyFeeAfter = await minterContract.royaltyFee();
+  //console.log("RoyaltyFee after: " + royaltyFeeAfter);
+  
 
   // CHANGE ROYALTY FEE RECEIVER
   /*
