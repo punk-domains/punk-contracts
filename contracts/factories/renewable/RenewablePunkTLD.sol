@@ -192,7 +192,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     string memory _data
   ) internal returns(uint256) {
     require(strings.len(strings.toSlice(_domainName)) > 0, "Domain name empty");
-    require(bytes(_domainName).length < nameMaxLength, "Domain name is too long");
+    require(bytes(_domainName).length <= nameMaxLength, "Domain name is too long");
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(".")) == 0, "There should be no dots in the name");
     require(strings.count(strings.toSlice(_domainName), strings.toSlice(" ")) == 0, "There should be no spaces in the name");
     require(domains[_domainName].holder == address(0), "Domain with this name already exists");
