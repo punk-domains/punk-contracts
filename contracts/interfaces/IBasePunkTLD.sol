@@ -15,7 +15,7 @@ interface IBasePunkTLD is IERC721 {
   event DomainCreated(address indexed user, address indexed owner, string fullDomainName);
   event DomainBurned(address indexed user, string fullDomainName);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
-  event DataChanged(address indexed user);
+  event DataChanged(address indexed user, string indexed domain); // note that domain may be missing on events from older contracts
   event TldPriceChanged(address indexed user, uint256 tldPrice);
   event ReferralFeeChanged(address indexed user, uint256 referralFee);
   event TldRoyaltyChanged(address indexed user, uint256 tldRoyalty);

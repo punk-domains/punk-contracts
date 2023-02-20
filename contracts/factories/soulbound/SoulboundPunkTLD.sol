@@ -119,7 +119,7 @@ contract SoulboundPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     string memory dName = strings.lower(_domainName);
     require(domains[dName].holder == _msgSender(), "Only domain holder can edit their data");
     domains[dName].data = _data;
-    emit DataChanged(_msgSender());
+    emit DataChanged(_msgSender(), _domainName);
   }
 
   /// @notice Mint a new domain name as NFT (no dots and spaces allowed).

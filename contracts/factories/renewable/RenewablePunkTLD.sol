@@ -40,7 +40,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
   mapping (uint256 => string) public domainIdsNames; // mapping (tokenId => domain name)
   mapping (string => Domain) public domains; // mapping (domain name => Domain struct)
 
-  event DataChanged(address indexed user);
+  event DataChanged(address indexed user, string indexed domain);
   event DefaultDomainChanged(address indexed user, string defaultDomain);
   event DomainBurned(address indexed user, string fullDomainName);
   event DomainBuyingToggle(address indexed user, bool domainBuyingToggle);
@@ -139,7 +139,7 @@ contract RenewablePunkTLD is ERC721, Ownable, ReentrancyGuard {
     require(block.timestamp < domains[dName].expiry, "This domain has expired");
     require(domains[dName].holder == _msgSender(), "Only domain holder can edit their data");
     domains[dName].data = _data;
-    emit DataChanged(_msgSender());
+    emit DataChanged(_msgSender(), _domainName);
   }
 
   // MINTER
