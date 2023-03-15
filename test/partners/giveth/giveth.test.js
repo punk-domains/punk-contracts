@@ -1,5 +1,5 @@
 // Run tests:
-// npx hardhat test test/partners/giveth/giveth.test.js 
+// npx hardhat test test/partners/giveth/giveth.test.js
 
 const { expect } = require("chai");
 
@@ -27,7 +27,9 @@ describe(".giveth minting contract", function () {
 
   let mintContract;
   const referralFee = 1000;
-  const tax = 8000;
+  const pgf = 8000;
+  const discount = 5000;
+
   const price1char = ethers.utils.parseUnits("1", paymentTokenDecimals); // $10k
   const price2char = ethers.utils.parseUnits("0.5", paymentTokenDecimals);
   const price3char = ethers.utils.parseUnits("0.1", paymentTokenDecimals);
@@ -74,7 +76,7 @@ describe(".giveth minting contract", function () {
     mintContract = await minterCode.deploy(
       pool.address, developer.address,
       tldContract.address, // TLD address
-      referralFee, tax,
+      referralFee, pgf,
       price1char, price2char, price3char, price4char, price5char // prices
     );
 
@@ -99,6 +101,7 @@ describe(".giveth minting contract", function () {
       "123456", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
+      false, // not NFT holder
       {
         value: price5char // pay for the domain
       }
@@ -121,6 +124,7 @@ describe(".giveth minting contract", function () {
       "user1", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
+      false, // not NFT holder
       {
         value: price5char // pay for the domain
       }
@@ -154,6 +158,7 @@ describe(".giveth minting contract", function () {
       "user1second", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
+      false, // not NFT holder
       {
         value: price5char // pay for the domain
       }
@@ -175,6 +180,7 @@ describe(".giveth minting contract", function () {
       "user", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
+      false, // not NFT holder
       {
         value: price5char // pay for the domain
       }
@@ -188,6 +194,7 @@ describe(".giveth minting contract", function () {
       "user", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
+      false, // not NFT holder
       {
         value: price4char // pay for the domain
       }
@@ -201,6 +208,7 @@ describe(".giveth minting contract", function () {
       "use", // domain name (without TLD)
       user1.address, // domain holder
       ethers.constants.AddressZero, // no referrer in this case
+      false, // not NFT holder
       {
         value: price3char // pay for the domain
       }
@@ -208,6 +216,42 @@ describe(".giveth minting contract", function () {
 
     const balanceDomainAfter5 = await tldContract.balanceOf(user1.address);
     expect(balanceDomainAfter5).to.equal(4);
+  });
+
+  it("should mint a 5+ char domain with discount", async function () {
+    // unpause the minter
+    await mintContract.connect(owner).togglePaused();
+
+    // how many domains user1 has before minting
+    const balanceDomainBefore = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainBefore).to.equal(0);
+
+    // get discount bps from the minter contract
+    const discountBps = await mintContract.discountBps();
+
+    // calculate the price with discount
+    const price5charDiscount = price5char.mul(discountBps).div(10000);
+
+    // Mint a domain
+    const tx = await mintContract.connect(user1).mint(
+      "user1discount", // domain name (without TLD)
+      user1.address, // domain holder
+      ethers.constants.AddressZero, // no referrer in this case
+      true, // NFT holder (gets 50% discount)
+      {
+        value: price5charDiscount // pay for the domain
+      }
+    );
+
+    const receipt = await tx.wait();
+
+    calculateGasCosts("Mint with discount", receipt);
+
+    const balanceDomainAfter = await tldContract.balanceOf(user1.address);
+    expect(balanceDomainAfter).to.equal(1);
+
+    const domainHolder = await tldContract.getDomainHolder("user1discount");
+    expect(domainHolder).to.equal(user1.address);
   });
 
   it("should change domain price (only owner)", async function () {

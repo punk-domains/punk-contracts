@@ -122,6 +122,13 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
     },
+    sepolia: { // Sepolia testnet
+      url: 'https://rpc2.sepolia.org',
+      chainId: 11155111,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 1000000000, // 1 gwei
+    },
     sokol: { // Gnosis Chain testnet
       url: 'https://sokol.poa.network',
       chainId: 77,
@@ -162,6 +169,7 @@ module.exports = {
       optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY, 
+      sepolia: process.env.ETHERSCAN_API_KEY,
       sokol: "randomstring",
       songbird: "randomstring",
       xdai: process.env.GNOSISSCAN_API_KEY
@@ -200,7 +208,6 @@ module.exports = {
         }
       },
       // Comment out the xdai object below to verify on Blockscout. Uncomment to verify on Gnosis Scan.
-      /*
       {
         network: "xdai",
         chainId: 100,
@@ -209,7 +216,6 @@ module.exports = {
           browserURL: "https://gnosisscan.io"
         }
       }
-      */
     ]
   },
 

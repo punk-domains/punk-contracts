@@ -29,6 +29,7 @@ contract GivethMinter is Ownable, ReentrancyGuard {
 
   bool public paused = true;
 
+  uint256 public discountBps = 5000; // 50% discount for Giveth Givers NFT holders
   uint256 public referralFee; // share of each domain purchase (in bips) that goes to the referrer
   uint256 public pgfFee; // share of each domain purchase (in bips) that goes to the Giveth Matching Pool
   uint256 public constant MAX_BPS = 10_000;
@@ -73,7 +74,8 @@ contract GivethMinter is Ownable, ReentrancyGuard {
   function mint(
     string memory _domainName,
     address _domainHolder,
-    address _referrer
+    address _referrer,
+    bool _isNftHolder
   ) external nonReentrant payable returns(uint256 tokenId) {
     require(!paused, "Minting paused");
 
@@ -91,6 +93,10 @@ contract GivethMinter is Ownable, ReentrancyGuard {
       selectedPrice = price4char;
     } else {
       selectedPrice = price5char;
+    }
+
+    if (_isNftHolder) {
+      selectedPrice = (selectedPrice * (MAX_BPS - discountBps)) / MAX_BPS;
     }
 
     require(msg.value >= selectedPrice, "Value below price");
@@ -129,6 +135,12 @@ contract GivethMinter is Ownable, ReentrancyGuard {
   }
 
   // OWNER
+
+  /// @notice This changes the discountBps in the minter contract
+  function changeDiscountBps(uint256 _discountBps) external onlyOwner {
+    require(_discountBps <= 8000, "Cannot exceed 80%");
+    discountBps = _discountBps;
+  }
 
   /// @notice This changes the pgfFee in the minter contract
   function changePgfFee(uint256 _pgfFee) external onlyOwner {
