@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/IFlexiPunkTLD.sol";
 
-contract DeprecateTld is Ownable, ReentrancyGuard {
+contract DeprecateTldTwo is Ownable, ReentrancyGuard {
   bool public paused = true;
   uint256 public refundAmount;
   address public immutable deprecatedTld;
@@ -47,7 +47,7 @@ contract DeprecateTld is Ownable, ReentrancyGuard {
     IFlexiPunkTLD tldContract = IFlexiPunkTLD(deprecatedTld);
 
     // check if _msgSender() owns the domain name
-    require(_msgSender() == tldContract.getDomainHolder(_oldDomainName), "DeprecateTLD: Sender is not domain holder.");
+    require(_msgSender() == tldContract.getDomainHolder(_oldDomainName), "DeprecateTldTwo: Sender is not domain holder.");
 
     // get domain ID
     (, uint256 _tokenId, , ) = tldContract.domains(_oldDomainName);

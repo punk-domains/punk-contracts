@@ -1,10 +1,10 @@
-// npx hardhat run scripts/other/deployDeprecateTld.js --network sokol
+// npx hardhat run scripts/other/deployDeprecateTldOne.js --network polygon
 
-const contractNameFactory = "DeprecateTld";
-const oldTldAddress = "0x0744d775804BB81efD3fF630402988b2F7eB284B";
-const newTldAddress = "0x110Cc3f64CdF8ffAdC785dFA53906bCfF76b3846";
-const newTldName = ".testdao";
-const refundAmount = ethers.utils.parseEther("0.01");
+const contractNameFactory = "DeprecateTldOne";
+const oldTldAddress = "0xa450bc33d0940d25fB0961c592fb440Fa63ABE03";
+const newTldAddress = "0x70Ac07C50131b7bb2c8Bd9466D8d2add30B7759f";
+const newTldName = ".poly";
+const refundAmount = ethers.utils.parseEther("14");
 
 async function main() {
   const [deployer] = await ethers.getSigners();

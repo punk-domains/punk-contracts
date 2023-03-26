@@ -1,4 +1,4 @@
-// npx hardhat test test/other/deprecateTld.test.js
+// npx hardhat test test/other/DeprecateTldOne.test.js
 const { expect } = require("chai");
 
 function calculateGasCosts(testName, receipt) {
@@ -76,8 +76,8 @@ describe("Deprecated TLDs contract test", function () {
       metadataContract.address
     );
 
-    const DeprecateTld = await ethers.getContractFactory("DeprecateTld");
-    deprecateTldContract = await DeprecateTld.deploy(
+    const DeprecateTldOne = await ethers.getContractFactory("DeprecateTldOne");
+    deprecateTldContract = await DeprecateTldOne.deploy(
       oldDomainPrice, // refund amount
       oldTldContract.address,
       newDomainName,
@@ -112,8 +112,6 @@ describe("Deprecated TLDs contract test", function () {
     await expect(deprecateTldContract.connect(user1).refund(
       "user1", // deprecate
       "user1", // new
-      newDomainName,
-      "user1a", // new
       newDomainName
     )).to.be.revertedWith('Contract paused');
 
@@ -124,10 +122,8 @@ describe("Deprecated TLDs contract test", function () {
     await expect(deprecateTldContract.connect(user1).refund(
       "user1", // old
       "user1", // new
-      newDomainName,
-      "user1a", // new
       newDomainName
-    )).to.be.revertedWith('DeprecateTLD: Sender is not domain holder.');
+    )).to.be.revertedWith('DeprecateTldOne: Sender is not domain holder.');
 
     // mint old domains for users
     await oldTldContract.mint( // #1
@@ -179,18 +175,14 @@ describe("Deprecated TLDs contract test", function () {
     await expect(deprecateTldContract.connect(user1).refund(
       "user11111111111", // old
       "user1", // new
-      newDomainName,
-      "user1a", // new
       newDomainName
-    )).to.be.revertedWith('DeprecateTLD: Sender is not domain holder.');
+    )).to.be.revertedWith('DeprecateTldOne: Sender is not domain holder.');
 
     // FAIL: try refund and get a new domain which is not added to the selected new domains list
     await expect(deprecateTldContract.connect(user1).refund(
       "user1", // old
       "user1", // new
-      oldDomainName, // this is not a new domain TLD name
-      "user1a", // new
-      newDomainName
+      oldDomainName // this is not a new domain TLD name
     )).to.be.revertedWith('You cannot get a domain of this TLD as domain refund');
 
     // check user1 balance before the refund
@@ -201,8 +193,6 @@ describe("Deprecated TLDs contract test", function () {
     await deprecateTldContract.connect(user1).refund(
       "user1", // old
       "user1", // new
-      newDomainName,
-      "user1a", // new
       newDomainName
     )
 
@@ -223,8 +213,6 @@ describe("Deprecated TLDs contract test", function () {
     await deprecateTldContract.connect(user2).refund(
       "user2", // old
       "user2", // new
-      newDomainName,
-      "user2a", // new
       newDomainName
     )
 
@@ -241,10 +229,8 @@ describe("Deprecated TLDs contract test", function () {
     await expect(deprecateTldContract.connect(user1).refund(
       "user1", // already refunded
       "user1", // new
-      newDomainName,
-      "user1a", // new
       newDomainName
-    )).to.be.revertedWith('DeprecateTLD: Sender is not domain holder.');
+    )).to.be.revertedWith('DeprecateTldOne: Sender is not domain holder.');
   });
 
 });
