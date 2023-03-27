@@ -122,6 +122,20 @@ module.exports = {
       gas: "auto", // gas limit
       gasPrice: 2000000000, // 2 gwei
     },
+    polygonZkEvm: {
+      url: 'https://zkevm-rpc.com',
+      chainId: 1101,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 20000000000, // 20 gwei
+    },
+    polygonZkEvmTestnet: {
+      url: 'https://rpc.public.zkevm-test.net',
+      chainId: 1442,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
+      gas: "auto", // gas limit
+      gasPrice: 20000000000, // 20 gwei
+    },
     sepolia: { // Sepolia testnet
       url: 'https://rpc2.sepolia.org',
       chainId: 11155111,
@@ -169,6 +183,8 @@ module.exports = {
       optimisticKovan: process.env.OPTIMISTIC_ETHERSCAN_API_KEY,
       polygon: process.env.POLYGONSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY, 
+      polygonZkEvm: process.env.POLYGONSCAN_ZKEVM_API_KEY, 
+      polygonZkEvmTestnet: process.env.POLYGONSCAN_ZKEVM_API_KEY, 
       sepolia: process.env.ETHERSCAN_API_KEY,
       sokol: "randomstring",
       songbird: "randomstring",
@@ -214,6 +230,22 @@ module.exports = {
         urls: {
           apiURL: "https://api.gnosisscan.io/api",
           browserURL: "https://gnosisscan.io"
+        }
+      },
+      {
+        network: "polygonZkEvm",
+        chainId: 1101,
+        urls: {
+          apiURL: "https://zkevm.polygonscan.com/api",
+          browserURL: "https://zkevm.polygonscan.com"
+        }
+      },
+      {
+        network: "polygonZkEvmTestnet",
+        chainId: 1442,
+        urls: {
+          apiURL: "https://api-testnet-zkevm.polygonscan.com/api",
+          browserURL: "https://testnet-zkevm.polygonscan.com"
         }
       }
     ]

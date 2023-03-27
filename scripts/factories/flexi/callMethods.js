@@ -1,8 +1,9 @@
-// npx hardhat run scripts/factories/flexi/callMethods.js --network opera
+// npx hardhat run scripts/factories/flexi/callMethods.js --network polygonZkEvmTestnet
 
 const forbiddenAddress = "0xC6c17896fa051083324f2aD0Ed4555dC46D96E7f";
 const factoryAddress = "0xeA2f99fE93E5D07F61334C5Eb9c54c5D5C957a6a";
 const tldAddress = "";
+const metadataAddress = "0xF51F7a532a2AaDFE8E2320bf5BA8275503bB3789";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -25,9 +26,14 @@ async function main() {
     "function mint(string memory,address,address) external payable returns(uint256)"
   ]);
 
-  const forbiddenContract = new ethers.Contract(forbiddenAddress, forbiddenInterface, deployer);
-  const factoryContract = new ethers.Contract(factoryAddress, factoryInterface, deployer);
+  const metadataInterface = new ethers.utils.Interface([
+    "function getMetadata(string calldata _domainName, string calldata _tld, uint256 _tokenId) external view returns(string memory)"
+  ]);
+
+  //const forbiddenContract = new ethers.Contract(forbiddenAddress, forbiddenInterface, deployer);
+  //const factoryContract = new ethers.Contract(factoryAddress, factoryInterface, deployer);
   //const tldContract = new ethers.Contract(tldAddress, tldInterface, deployer);
+  const metadataContract = new ethers.Contract(metadataAddress, metadataInterface, deployer);
 
   //const minterBefore = await contract.minter();
   //console.log("Minter before: " + minterBefore);
@@ -43,9 +49,9 @@ async function main() {
   //await minterContract.transferOwnership(newOwnerAddress);
 
   // MINT A NEW TLD
-  const tldName = ".fantom";
-  const tldSymbol = ".FANTOM";
-  const domainPrice = ethers.utils.parseUnits("0", "ether");
+  //const tldName = ".fantom";
+  //const tldSymbol = ".FANTOM";
+  //const domainPrice = ethers.utils.parseUnits("0", "ether");
 
   /*
   await factoryContract.ownerCreateTld(
@@ -57,10 +63,10 @@ async function main() {
   );
   */
 
-  const tldAddr = await factoryContract.tldNamesAddresses(tldName);
+  //const tldAddr = await factoryContract.tldNamesAddresses(tldName);
   
-  console.log("TLD address: ");
-  console.log(tldAddr);
+  //console.log("TLD address: ");
+  //console.log(tldAddr);
 
   /*
   await tldContract.mint(
@@ -76,6 +82,16 @@ async function main() {
   //const metadata = await tldContract.tokenURI(1);
   //console.log("metadata:");
   //console.log(metadata);
+
+  // GET METADATA FROM THE METADATA CONTRACT
+  const metadata = await metadataContract.getMetadata(
+    "tempe", // domain name (without TLD)
+    ".fantom", // TLD
+    1 // token ID
+  );
+
+  console.log("metadata:");
+  console.log(metadata);
 
   console.log("Method calls completed");
 }
