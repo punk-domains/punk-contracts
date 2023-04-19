@@ -79,6 +79,13 @@ describe("zkSoul minter contract", function () {
     // set minter contract as TLD minter address
     await tldContract.changeMinter(mintContract.address);
 
+    // ZksoulMetadata contract
+    const ZksoulMetadata = await ethers.getContractFactory("ZksoulMetadata");
+    const zksoulMetadataContract = await ZksoulMetadata.deploy();
+
+    // set metadata contract as TLD metadata address
+    await tldContract.changeMetadataAddress(zksoulMetadataContract.address);
+
     // transfer TLD ownership to owner
     await tldContract.transferOwnership(owner.address);
     await mintContract.transferOwnership(owner.address);
@@ -132,7 +139,7 @@ describe("zkSoul minter contract", function () {
     const mdResult1 = JSON.parse(mdJson1);
 
     expect(mdResult1.name).to.equal("user1"+tldName);
-    //console.log(mdResult1.image);
+    console.log(mdResult1.image);
 
     const balanceDomainAfter = await tldContract.balanceOf(user1.address);
     expect(balanceDomainAfter).to.equal(1);
