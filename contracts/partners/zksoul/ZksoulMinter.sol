@@ -11,8 +11,6 @@ interface IFlexiPunkTLD is IERC721 {
 
   function balanceOf(address) override external view returns(uint256);
   function owner() external view returns(address);
-  function royaltyFeeReceiver() external view returns(address);
-  function royaltyFeeUpdater() external view returns(address);
 
   function mint(
     string memory _domainName,
@@ -26,7 +24,6 @@ contract ZksoulMinter is Ownable, ReentrancyGuard {
   bool public paused = true;
 
   uint256 public referralFee; // share of each domain purchase (in bips) that goes to the referrer
-  uint256 public royaltyFee; // share of each domain purchase (in bips) that goes to Punk Domains
   uint256 public constant MAX_BPS = 10_000;
 
   uint256 public price1char; // 1 char domain price
@@ -41,7 +38,6 @@ contract ZksoulMinter is Ownable, ReentrancyGuard {
   constructor(
     address _tldAddress,
     uint256 _referralFee,
-    uint256 _royaltyFee,
     uint256 _price1char,
     uint256 _price2char,
     uint256 _price3char,
@@ -51,7 +47,6 @@ contract ZksoulMinter is Ownable, ReentrancyGuard {
     tldContract = IFlexiPunkTLD(_tldAddress);
 
     referralFee = _referralFee;
-    royaltyFee = _royaltyFee;
 
     price1char = _price1char;
     price2char = _price2char;
@@ -89,13 +84,6 @@ contract ZksoulMinter is Ownable, ReentrancyGuard {
     // otherwise, they need to pay the selected price
     if (domainLength < 5 || tldContract.balanceOf(_msgSender()) > 0) {
       require(msg.value >= selectedPrice, "Value below price");
-
-      // send royalty fee
-      if (royaltyFee > 0) {
-        uint256 royaltyPayment = (selectedPrice * royaltyFee) / MAX_BPS;
-        (bool sentRoyaltyFee, ) = payable(tldContract.royaltyFeeReceiver()).call{value: royaltyPayment}("");
-        require(sentRoyaltyFee, "Failed to send royalty fee");
-      }
 
       // send referral fee
       if (referralFee > 0 && _referrer != address(0)) {
@@ -160,19 +148,10 @@ contract ZksoulMinter is Ownable, ReentrancyGuard {
     paused = !paused;
   }
 
-  // withdraw ETH from contract
+  // recover ETH from contract
   function withdraw() external onlyOwner {
     (bool success, ) = owner().call{value: address(this).balance}("");
     require(success, "Failed to withdraw ETH from contract");
-  }
-
-  // OTHER WRITE METHODS
-
-  /// @notice This changes royalty fee in the minter contract
-  function changeRoyaltyFee(uint256 _royaltyFee) external {
-    require(_royaltyFee <= 6000, "Cannot exceed 60%");
-    require(_msgSender() == tldContract.royaltyFeeUpdater(), "Sender is not Royalty Fee Updater");
-    royaltyFee = _royaltyFee;
   }
 
   // RECEIVE & FALLBACK

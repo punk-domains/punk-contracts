@@ -27,7 +27,6 @@ describe("zkSoul minter contract", function () {
 
   let mintContract;
   const referralFee = 1000;
-  const royaltyFee = 1500;
 
   const price1char = ethers.utils.parseUnits("1", paymentTokenDecimals); // $10k
   const price2char = ethers.utils.parseUnits("0.5", paymentTokenDecimals);
@@ -72,7 +71,7 @@ describe("zkSoul minter contract", function () {
     const minterCode = await ethers.getContractFactory("ZksoulMinter");
     mintContract = await minterCode.deploy(
       tldContract.address, // TLD address
-      referralFee, royaltyFee, // referral & royalty fees
+      referralFee, // referral fee
       price1char, price2char, price3char, price4char, price5char // prices
     );
 
