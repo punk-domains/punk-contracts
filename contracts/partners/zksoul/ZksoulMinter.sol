@@ -10,7 +10,6 @@ import "../../lib/strings.sol";
 interface IFlexiPunkTLD is IERC721 {
 
   function balanceOf(address) override external view returns(uint256);
-  function owner() external view returns(address);
 
   function mint(
     string memory _domainName,
@@ -93,7 +92,7 @@ contract ZksoulMinter is Ownable, ReentrancyGuard {
       }
 
       // send the rest to TLD owner
-      (bool sent, ) = payable(tldContract.owner()).call{value: address(this).balance}("");
+      (bool sent, ) = payable(owner()).call{value: address(this).balance}("");
       require(sent, "Failed to send domain payment to TLD owner");
     }
 
