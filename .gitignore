@@ -2,6 +2,7 @@
 flattened
 venv
 .openzeppelin
+*.svg
 
 #Hardhat files
 cache
