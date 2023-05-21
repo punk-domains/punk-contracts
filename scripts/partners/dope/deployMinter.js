@@ -4,7 +4,7 @@
 const contractNameFactory = "DopeMinter";
 
 const daoAddress = "0xb29050965A5AC70ab487aa47546cdCBc97dAE45D"; // "0x90103beDCfbE1eeE44ded89cEd88bA8503580b3D"; // Dope DAO Safe on Optimism
-const nftAddress = "0x2582EC420195Fefb091B098da6FAdEE49f490740"; // "0xDbfEaAe58B6dA8901a8a40ba0712bEB2EE18368E"; // The Hustlers NFT on Optimism
+const nftAddress = "0xD643F10c7450F89Bf866e90c9194F589D3DFFbEd"; // "0xDbfEaAe58B6dA8901a8a40ba0712bEB2EE18368E"; // The Hustlers NFT on Optimism
 const tldAddress = "0x68a172F375Bf4525eeAC5257E7ED17A67b6A76DA";
 
 const referralFee = 1000;

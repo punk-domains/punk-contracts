@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../lib/strings.sol";
 
@@ -22,6 +23,7 @@ interface IFlexiPunkTLD is IERC721 {
 }
 
 /// @title Domain minter contract for Dope Wars TLD (.dope)
+/// @notice This contract allows Hustlers ERC-1155 holders to mint domains for Dope Wars TLD
 contract DopeMinter is Ownable, ReentrancyGuard {
   address public daoAddress;
   address public nftAddress;
@@ -72,8 +74,8 @@ contract DopeMinter is Ownable, ReentrancyGuard {
   // READ
 
   /// @notice Returns true or false if address is eligible to mint a domain
-  function canUserMint(address _user) public view returns(bool) {
-    if (IERC721(nftAddress).balanceOf(_user) > 0) {
+  function canUserMint(address _user, uint256 _tokenId) public view returns(bool) {
+    if (IERC1155(nftAddress).balanceOf(_user, _tokenId) > 0) {
       return true;
     }
 
@@ -85,10 +87,11 @@ contract DopeMinter is Ownable, ReentrancyGuard {
   function mint(
     string memory _domainName,
     address _domainHolder,
-    address _referrer
+    address _referrer,
+    uint256 _tokenId // token ID is needed to check ERC-1155 token balance
   ) external nonReentrant payable returns(uint256 tokenId) {
     require(!paused, "Minting paused");
-    require(canUserMint(msg.sender), "Not eligible for minting");
+    require(canUserMint(msg.sender, _tokenId), "Not eligible for minting");
 
     // find price
     uint256 domainLength = strings.len(strings.toSlice(_domainName));
