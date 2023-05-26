@@ -1,8 +1,8 @@
 // Deploy FlexiPunkMetadata contract
-// npx hardhat run scripts/partners/dope/deployMetadata.js --network polygonMumbai // optimisticEthereum
+// npx hardhat run scripts/partners/dope/deployMetadata.js --network optimisticEthereum
 // metadata contract will be automatically added to TLD contract (if not, do it manually)
 
-const tldAddress = "0x68a172F375Bf4525eeAC5257E7ED17A67b6A76DA";
+const tldAddress = "0x1d33989185AA79a3B9173bC7B1137E527C6A262b";
 
 async function main() {
   const contractName = "DopeMetadata";
