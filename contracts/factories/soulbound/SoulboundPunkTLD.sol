@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.4;
 
-import "../flexi/interfaces/IFlexiPunkMetadata.sol";
-import "../../interfaces/IBasePunkTLD.sol";
-import "../../lib/strings.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { IERC5192 } from "./IERC5192.sol";
+import { IFlexiPunkMetadata } from "../flexi/interfaces/IFlexiPunkMetadata.sol";
+import { IBasePunkTLD } from "../../interfaces/IBasePunkTLD.sol";
+import { strings } from "../../lib/strings.sol";
+import { ERC721, IERC165 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "base64-sol/base64.sol";
 
 /// @title Punk Domains TLD contract (Soulbound)
 /// @author Tempe Techie
 /// @notice Dynamically generated NFT contract which represents a top-level domain
-contract SoulboundPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
+contract SoulboundPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard, IERC5192 {
   using strings for string;
 
   // Domain struct is defined in IBasePunkTLD
@@ -74,6 +75,15 @@ contract SoulboundPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
 
   function getDomainData(string calldata _domainName) public override view returns(string memory) {
     return domains[strings.lower(_domainName)].data; // should be a JSON object
+  }
+
+  function locked(uint256 tokenId) external override view returns (bool) {
+    return true; // all domain names are locked aka soulbound
+  }
+
+  // Interface support
+  function supportsInterface(bytes4 interfaceId) public view override(ERC721, IERC165) returns (bool) {
+    return interfaceId == type(IERC5192).interfaceId || super.supportsInterface(interfaceId);
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -172,6 +182,7 @@ contract SoulboundPunkTLD is IBasePunkTLD, ERC721, Ownable, ReentrancyGuard {
     }
     
     emit DomainCreated(_msgSender(), _domainHolder, string(abi.encodePacked(_domainName, name())));
+    emit Locked(idCounter); // emit that the token is locked (soulbound)
 
     ++idCounter;
     ++totalSupply;
